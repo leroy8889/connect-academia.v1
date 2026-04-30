@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/Applications/MAMP/Library/bin/mysql -u root -proot connect_academia -e \"SHOW TABLES;\")",
+      "Bash(/Applications/MAMP/Library/bin/mysql80/bin/mysql -u root -proot connect_academia -e \"SHOW TABLES;\")",
+      "Bash(/Applications/MAMP/Library/bin/mysql80/bin/mysql -u root -proot connect_academia -e \"DESCRIBE ia_conversations;\")",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' -X POST 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyCoJAh_Okx6had13hcUewafRaOEuHOOf4U' -H 'Content-Type: application/json' -d '{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"Bonjour\"}]}],\"systemInstruction\":{\"parts\":[{\"text\":\"Tu es un assistant.\"}]}}')",
+      "Bash(curl -s -X POST 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyCoJAh_Okx6had13hcUewafRaOEuHOOf4U' -H 'Content-Type: application/json' -d '{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"Bonjour\"}]}],\"systemInstruction\":{\"parts\":[{\"text\":\"Tu es un assistant.\"}]}}')",
+      "Bash(curl -s -X POST 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCoJAh_Okx6had13hcUewafRaOEuHOOf4U' -H 'Content-Type: application/json' -d '{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"Dis juste: OK\"}]}],\"systemInstruction\":{\"parts\":[{\"text\":\"Tu es un assistant.\"}]}}')",
+      "Bash(curl -s \"https://generativelanguage.googleapis.com/v1beta/models?key=AIzaSyCoJAh_Okx6had13hcUewafRaOEuHOOf4U\")",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(m['name'], '-', m.get\\('displayName',''\\)\\) for m in data.get\\('models',[]\\) if 'generateContent' in m.get\\('supportedGenerationMethods',[]\\)]\")",
+      "Bash(curl -s -X POST 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyCoJAh_Okx6had13hcUewafRaOEuHOOf4U' -H 'Content-Type: application/json' -d '{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"Dis juste: OK\"}]}],\"systemInstruction\":{\"parts\":[{\"text\":\"Tu es un assistant concis.\"}]}}')",
+      "Bash(curl -s -X POST 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyCoJAh_Okx6had13hcUewafRaOEuHOOf4U' -H 'Content-Type: application/json' -d '{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"Dis juste: bonjour\"}]}],\"systemInstruction\":{\"parts\":[{\"text\":\"Tu es un assistant pédagogique.\"}]}}')",
+      "Bash(php -l \"/Applications/MAMP/htdocs/Apprentissage 2/api/gemini.php\")",
+      "Bash(php -l \"/Applications/MAMP/htdocs/Apprentissage 2/api/progression.php\")",
+      "Bash(/Applications/MAMP/bin/php/php8.3.1/bin/php -l \"/Applications/MAMP/htdocs/Apprentissage 2/api/gemini.php\")",
+      "Bash(/Applications/MAMP/bin/php/php8.3.1/bin/php -l \"/Applications/MAMP/htdocs/Apprentissage 2/api/progression.php\")",
+      "Bash(/Applications/MAMP/bin/php/php8.5.2/bin/php -l \"/Applications/MAMP/htdocs/Apprentissage 2/api/gemini.php\")",
+      "Bash(/Applications/MAMP/bin/php/php8.5.2/bin/php -l \"/Applications/MAMP/htdocs/Apprentissage 2/api/progression.php\")",
+      "Bash(curl -s -X POST 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyCoJAh_Okx6had13hcUewafRaOEuHOOf4U' -H 'Content-Type: application/json' -d '{ *)",
+      "Bash(curl -s -o /dev/null -w 'HTTP %{http_code}\\\\n' -X POST 'https://generativelanguage.googleapis.com/v1beta/models/__TRACKED_VAR__:generateContent?key=AIzaSyCoJAh_Okx6had13hcUewafRaOEuHOOf4U' -H 'Content-Type: application/json' -d '{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"OK\"}]}]}')",
+      "Bash(curl -s -X POST 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyCoJAh_Okx6had13hcUewafRaOEuHOOf4U' -H 'Content-Type: application/json' -d '{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"OK\"}]}]}')",
+      "Bash(python3 -c ' *)",
+      "Bash(curl -s -X POST 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyCoJAh_Okx6had13hcUewafRaOEuHOOf4U' -H 'Content-Type: application/json' -d '{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"OK\"}]}],\"systemInstruction\":{\"parts\":[{\"text\":\"Assistant pédagogique.\"}]}}')",
+      "Bash(curl -s -X POST 'https://generativelanguage.googleapis.com/v1beta/models/__TRACKED_VAR__:generateContent?key=AIzaSyCoJAh_Okx6had13hcUewafRaOEuHOOf4U' -H 'Content-Type: application/json' -d '{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"Dis OK\"}]}],\"systemInstruction\":{\"parts\":[{\"text\":\"Assistant.\"}]}}')",
+      "Bash(python3 -c \" import sys,json d=json.load\\(sys.stdin\\) if 'candidates' in d: print\\('OK ->', d['candidates'][0]['content']['parts'][0]['text'][:50]\\) else: err=d.get\\('error',{}\\) print\\('ERR', err.get\\('code'\\), '-', err.get\\('status'\\), '-', err.get\\('message',''\\)[:80]\\) \" done)",
+      "Bash(curl -s -w ' | HTTP:%{http_code}' -o /dev/null -X POST 'https://generativelanguage.googleapis.com/v1beta/models/__TRACKED_VAR__:generateContent?key=AIzaSyCoJAh_Okx6had13hcUewafRaOEuHOOf4U' -H 'Content-Type: application/json' -d '{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"OK\"}]}]}')",
+      "Bash(curl -s -X POST 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyCoJAh_Okx6had13hcUewafRaOEuHOOf4U' -H 'Content-Type: application/json' -d '{ *)",
+      "Bash(curl -s \"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash?key=AIzaSyCoJAh_Okx6had13hcUewafRaOEuHOOf4U\")"
+    ]
+  }
+}

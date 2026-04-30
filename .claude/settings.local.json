@@ -1,0 +1,52 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mysql -u root -proot -e \"SHOW DATABASES;\")",
+      "Bash(/Applications/MAMP/Library/bin/mysql -u root -proot --host=127.0.0.1 --port=8889 -e \"SHOW DATABASES;\")",
+      "Bash(/Applications/MAMP/Library/bin/mysql80/bin/mysql -u root -proot --host=127.0.0.1 --port=8889 -e \"SHOW DATABASES;\")",
+      "Bash(/Applications/MAMP/Library/bin/mysql80/bin/mysql -u root -proot --host=127.0.0.1 --port=3306 -e \"SHOW DATABASES;\")",
+      "Bash(/Applications/MAMP/Library/bin/mysql80/bin/mysql -u root -proot --socket=/Applications/MAMP/tmp/mysql/mysql.sock -e \"SHOW DATABASES;\")",
+      "Bash(cat)",
+      "Bash(bash /tmp/build_communaute_css.sh)",
+      "Bash(cp /tmp/communaute.css /Applications/MAMP/htdocs/connect\\\\'academia.v1/public/assets/css/communaute.css)",
+      "Bash(sed -i '' -e 's|/api/posts|/api/communaute/posts|g' -e 's|window\\\\.STUDYLINK_CONFIG|window.CA|g' '/Applications/MAMP/htdocs/connect'\\\\''academia.v1/public/assets/js/components/feed.js')",
+      "Bash(sed -i '' -e 's|/api/posts|/api/communaute/posts|g' -e 's|window\\\\.STUDYLINK_CONFIG|window.CA|g' '/Applications/MAMP/htdocs/connect'\\\\''academia.v1/public/assets/js/components/post-composer.js')",
+      "Bash(sed -i '' -e 's|/api/posts/${currentPostId}/comments|/api/communaute/posts/${currentPostId}/comments|g' -e 's|/api/comments/${commentId}/replies|/api/communaute/comments/${commentId}/replies|g' -e 's|/api/comments/${commentId}/like|/api/communaute/comments/${commentId}/like|g' -e 's|window\\\\.STUDYLINK_CONFIG|window.CA|g' '/Applications/MAMP/htdocs/connect'\\\\''academia.v1/public/assets/js/components/comments.js')",
+      "Bash(sed -i '' -e 's|window\\\\.STUDYLINK_CONFIG|window.CA|g' '/Applications/MAMP/htdocs/connect'\\\\''academia.v1/public/assets/js/components/notifications.js')",
+      "Bash(sed -i '' -e 's|window\\\\.STUDYLINK_CONFIG|window.CA|g' '/Applications/MAMP/htdocs/connect'\\\\''academia.v1/public/assets/js/components/follow.js')",
+      "Bash(/Applications/MAMP/bin/php/php8.1.0/bin/php --version)",
+      "Read(//Applications/MAMP/bin/php/**)",
+      "Read(//usr/local/**)",
+      "Read(//opt/homebrew/bin/**)",
+      "Bash(grep -E \"\\\\.\\(png|jpg|jpeg|svg|webp\\)$\")",
+      "Bash(php -l /Applications/MAMP/htdocs/connect\\\\'academia.v1/app/Controllers/OrientationController.php)",
+      "Bash(php -l /Applications/MAMP/htdocs/connect\\\\'academia.v1/app/Controllers/HubController.php)",
+      "Bash(php -l /Applications/MAMP/htdocs/connect\\\\'academia.v1/config/routes.php)",
+      "Bash(php -l /Applications/MAMP/htdocs/connect\\\\'academia.v1/app/Views/hub/index.php)",
+      "Bash(php -l /Applications/MAMP/htdocs/connect\\\\'academia.v1/app/Views/orientation/index.php)",
+      "Bash(/Applications/MAMP/bin/php/php8.1.0/bin/php -l /Applications/MAMP/htdocs/connect\\\\'academia.v1/app/Controllers/OrientationController.php)",
+      "Bash(/Applications/MAMP/bin/php/php8.1.0/bin/php -l /Applications/MAMP/htdocs/connect\\\\'academia.v1/app/Controllers/HubController.php)",
+      "Bash(/Applications/MAMP/bin/php/php8.1.0/bin/php -l /Applications/MAMP/htdocs/connect\\\\'academia.v1/config/routes.php)",
+      "Bash(/Applications/MAMP/bin/php/php8.1.0/bin/php -l /Applications/MAMP/htdocs/connect\\\\'academia.v1/app/Views/hub/index.php)",
+      "Bash(/Applications/MAMP/bin/php/php8.1.0/bin/php -l /Applications/MAMP/htdocs/connect\\\\'academia.v1/app/Views/orientation/index.php)",
+      "Bash(/Applications/MAMP/bin/php/php8.3.30/bin/php -l '/Applications/MAMP/htdocs/connect'\\\\''academia.v1/app/Controllers/OrientationController.php')",
+      "Bash(/Applications/MAMP/bin/php/php8.3.30/bin/php -l '/Applications/MAMP/htdocs/connect'\\\\''academia.v1/app/Controllers/HubController.php')",
+      "Bash(/Applications/MAMP/bin/php/php8.3.30/bin/php -l '/Applications/MAMP/htdocs/connect'\\\\''academia.v1/config/routes.php')",
+      "Bash(/Applications/MAMP/bin/php/php8.3.30/bin/php -l '/Applications/MAMP/htdocs/connect'\\\\''academia.v1/app/Views/hub/index.php')",
+      "Bash(/Applications/MAMP/bin/php/php8.3.30/bin/php -l '/Applications/MAMP/htdocs/connect'\\\\''academia.v1/app/Views/orientation/index.php')",
+      "Bash(rm \"/Applications/MAMP/htdocs/connect'academia.v1/app/Controllers/OrientationController.php\")",
+      "Bash(rm \"/Applications/MAMP/htdocs/connect'academia.v1/app/Views/orientation/index.php\")",
+      "Bash(rmdir \"/Applications/MAMP/htdocs/connect'academia.v1/app/Views/orientation/\")",
+      "Bash(rm \"/Applications/MAMP/htdocs/connect'academia.v1/public/assets/css/orientation.css\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:8888/connect'academia.v1/public/orientation/orientation.html\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:8888/connect'academia.v1/assets/css/style.css\")",
+      "Bash(mkdir -p /Applications/MAMP/db/redis)",
+      "Bash(mkdir -p /Applications/MAMP/logs)",
+      "Bash(/Applications/MAMP/Library/bin/redis-server /tmp/mamp_redis.conf)",
+      "Bash(/Applications/MAMP/bin/php/php8.3.30/bin/php -c /Applications/MAMP/bin/php/php8.3.30/conf/php.ini -m)"
+    ],
+    "additionalDirectories": [
+      "/Applications/MAMP/bin/php/php8.3.30/conf"
+    ]
+  }
+}

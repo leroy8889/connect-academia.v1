@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- 
+    - primary meta tag
+  -->
+  <title>Connect'Academia - Tarifs</title>
+  <meta name="title" content="Connect'Academia - Tarifs">
+  <meta name="description" content="Découvrez nos tarifs et abonnements pour accéder à toutes les fonctionnalités de Connect'Academia">
+
+  <!-- 
+    - favicon
+  -->
+  <link rel="shortcut icon" href="../../assets/images/Logo 1 CA COMPLET.svg" type="image/svg+xml">
+
+  <!-- 
+    - custom css link
+  -->
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <link rel="stylesheet" href="tarifs.css">
+  <link href='https://cdn.boxicons.com/3.0.6/fonts/basic/boxicons.min.css' rel='stylesheet'>
+
+  <!-- 
+    - google font link
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Ajoutez ceci avec vos autres liens de polices -->
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/clash-display">
+  
+
+  <!-- 
+    - preload images
+  -->
+  <link rel="preload" as="image" href="../../assets/images/hero-bg.svg">
+  <link rel="preload" as="image" href="../../assets/images/hero-banner-1.jpg">
+  <link rel="preload" as="image" href="../../assets/images/hero-banner-2.jpg">
+  <link rel="preload" as="image" href="../../assets/images/hero-shape-1.svg">
+  <link rel="preload" as="image" href="../../assets/images/hero-shape-2.png">
+
+  <style>
+
+body {
+  background-image: url('../../assets/images/image-mesh-gradient.png') ;
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+
+}
+    /* --- Styles Section Pricing --- */
+.pricing-section {
+    padding: 100px 20px;
+    background-color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-top-left-radius: 85px;
+    border-bottom-right-radius: 85px;
+}
+
+/* Header & Promo */
+.pricing-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.promo-text {
+    font-size: 20px;
+    color: #1f2937;
+    margin-bottom: 20px;
+}
+
+.old-price { text-decoration: line-through; color: #ef4444; font-weight: bold; }
+.new-discount { color: #8b5cf6; font-size: 32px; font-weight: 900; }
+
+.satisfaction-badge {
+    background: #fff;
+    border: 1px solid #f3f4f6;
+    padding: 10px 25px;
+    border-radius: 12px;
+    display: inline-block;
+    font-size: 14px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    margin-bottom: 30px;
+}
+
+.section-subtitle {
+    margin-top: 20px;
+}
+
+.purple-bold { color: #8b5cf6; font-weight: 700; }
+
+/* Toggle Switch Style */
+.toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 15px;
+    color: #4b5563;
+}
+
+.bold-text { font-weight: 700; color: #000; }
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #e5e7eb;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px; width: 20px;
+    left: 3px; bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider { background-color: #d1d5db; }
+input:checked + .slider:before { transform: translateX(24px); }
+
+/* Pricing Grid */
+.pricing-grid {
+    display: flex;
+    justify-content: center;
+    gap: 100px; /* Grande distance entre les plans comme demandé */
+    max-width: 1000px;
+    width: 80%;
+}
+
+.pricing-card {
+    flex: 1;
+    background: #fff;
+    border-radius: 24px;
+    padding: 50px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.card-light-pink { border: 2px solid #fce7f3; }
+
+.card-popular { 
+    border: 3px solid #8b5cf6; 
+    transform: scale(1.05); /* Légèrement plus grand pour l'effet populaire */
+}
+
+.popular-badge {
+    position: absolute;
+    top: -20px;
+    background: #8b5cf6;
+    color: white;
+    padding: 8px 25px;
+    border-radius: 12px;
+    font-weight: 900;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.plan-name {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 25px;
+    color: #1f2937;
+    font-family: 'Clash Display'
+}
+
+.plan-price { margin-bottom: 40px; }
+.price-big { font-size: 35px; font-weight: 800; color: #000; font-family: 'Clash Display' }
+.price-details { font-size: 14px; color: #6b7280; font-weight: 600; }
+
+/* Features List */
+.plan-features {
+    list-style: none;
+    padding: 0;
+    width: 100%;
+    margin-bottom: 40px;
+}
+
+.plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 18px;
+    font-size: 14px;
+    color: #374151;
+    font-weight: 500;
+}
+
+.check-pink, .check-purple {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.check-pink { background-color: #fce7f3; color: #ec4899; }
+.check-purple { background-color: #ede9fe; color: #8b5cf6; }
+
+.plan-features svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 3; }
+
+.engagement-note { font-size: 12px; color: #9ca3af; margin-bottom: 10px; font-style: italic; }
+.divider { width: 100%; height: 1px; background: #e5e7eb; margin-bottom: 30px; }
+
+/* Boutons */
+.btn-pricing {
+    width: 100%;
+    padding: 15px;
+    background-color: #7c3aed;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.h2.section-title {
+    font-family: 'Montserrat';
+}
+
+.faq-header h2 {
+    font-family: 'Montserrat'; 
+}
+
+.btn-pricing:hover { background-color: #6d28d9; }
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+    .pricing-grid {
+        flex-direction: column;
+        gap: 60px;
+        align-items: center;
+    }
+    .pricing-card { width: 100%; max-width: 400px; transform: none; }
+}
+  </style>
+
+</head>
+
+<body id="top">
+
+  <!-- 
+    - #HEADER
+  -->
+
+  <header class="header" data-header>
+    <div class="container">
+
+      <a href="../../index.html" class="logo">
+        <img src="../../assets/images/Logo 1 CA COMPLET.svg" width="80" height="15" alt="Connect'Academia logo">
+      </a>
+
+      <nav class="navbar" data-navbar>
+
+        <div class="wrapper">
+          <a href="../../index.html" class="logo">
+            <img src="../../assets/images/Logo 1 CA COMPLET.svg" width="162" height="50" alt="Connect'Academia logo">
+          </a>
+
+          <button class="nav-close-btn" aria-label="close menu" data-nav-toggler>
+            <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+          </button>
+        </div>
+
+        <ul class="navbar-list">
+
+          <li class="navbar-item">
+            <a href="../../index.html#home" class="navbar-link" data-nav-link>Acceuil</a>
+          </li>
+
+          <li class="navbar-item">
+            <a href="../../index.html#about" class="navbar-link" data-nav-link>About</a>
+          </li>
+
+          
+
+          <li class="navbar-item">
+            <a href="tarifs.html" class="navbar-link" data-nav-link>Tarifs</a>
+          </li>
+
+          <li class="navbar-item">
+            <a href="../../../../public/orientation/orientation.html" class="navbar-link" data-nav-link>Orientations</a>
+          </li>
+
+          
+
+          <li class="navbar-item">
+            <a href="contact.html" class="navbar-link" data-nav-link>Contact</a>
+          </li>
+
+        </ul>
+
+      </nav>
+
+      <div class="header-actions">
+
+        <a href="../../connexion/inscription.html" class="btn has-before">
+          <span class="span">Connexion</span>
+
+          <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+        </a>
+
+        <button class="header-action-btn" aria-label="open menu" data-nav-toggler>
+          <ion-icon name="menu-outline" aria-hidden="true"></ion-icon>
+        </button>
+
+      </div>
+
+      <div class="overlay" data-nav-toggler data-overlay></div>
+
+    </div>
+  </header>
+
+
+  <main>
+    <article>
+
+      <!-- 
+        - #TARIFS SECTION
+      -->
+
+      <section class="section" aria-label="tarifs" style="padding-top: 120px;">
+        <div class="container">
+
+          <p class="section-subtitle">Tarifs</p>
+
+          <h2 class="h2 section-title">
+            Choisissez le <span class="span">plan</span> qui vous convient
+          </h2>
+
+          <p class="section-text">
+            Découvrez nos offres d'abonnement et accédez à toutes les fonctionnalités de Connect'Academia.
+          </p>
+
+         <!-- Section Tarification -->
+<section class="pricing-section">
+    <!-- Header de la section -->
+    <div class="pricing-header">
+        
+
+        <div class="toggle-container">
+            <span>Sans engagement</span>
+            <label class="switch">
+                <input type="checkbox" id="engagement-toggle" checked>
+                <span class="slider round"></span>
+            </label>
+            <span class="bold-text">Engagement 12 mois</span>
+        </div>
+    </div>
+
+    <!-- Grille des prix (2 colonnes) -->
+    <div class="pricing-grid">
+        
+        <!-- Plan GRATUIT -->
+        <div class="pricing-card card-light-pink">
+            <h3 class="plan-name">Plan Découverte</h3>
+            <div class="plan-price">
+                <span class="price-big">0FCFA</span>
+                <span class="price-details">/ pendant 10jrs <sup>HT</sup></span>
+            </div>
+            
+            <ul class="plan-features">
+                <li><span class="check-pink"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Communauté Connect’ (Illimité)</li>
+                <li><span class="check-pink"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Orientation Post-Bac (Illimité)</li>
+                <li><span class="check-pink"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Accès Catalogue d’Annales, Sujets et Corrigés (Illimité)</li>
+                <li><span class="check-pink"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Accès Catalogue National (24h)</li>
+                <li><span class="check-pink"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Assistant IA Découverte</li>
+                <li><span class="check-pink"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Générations d'essai </li>
+                
+            </ul>
+
+            <button class="btn-pricing">Démarrer gratuitement</button>
+        </div>
+
+        <!-- Plan PRO FLEETER (Populaire) -->
+        <div class="pricing-card card-popular">
+            <div class="popular-badge">LA PLUS POPULAIRE ✨</div>
+            <h3 class="plan-name">CONNECT+</h3>
+            <div class="plan-price">
+                <span class="price-big" data-price-monthly="2000" data-price-yearly="18000">2000 FCFA</span>
+                <span class="price-details">/ mois <sup>HT</sup></span>
+            </div>
+            
+            <ul class="plan-features">
+                <li><span class="check-purple"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Tous les avantages du plan Découverte</li>
+                <li><span class="check-purple"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Accès Illimité au Catalogue</li>
+                <li><span class="check-purple"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Assistant IA "Illimité"</li>
+                <li><span class="check-purple"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Générations Magiques Illimitées</li>
+                <li><span class="check-purple"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Priorité fonctionnalités</li>
+                
+
+            <p class="engagement-note" id="engagement-note">Sans engagement</p>
+            <div class="divider"></div>
+            <button class="btn-pricing">Démarrer gratuitement</button>
+        </div>
+
+    </div>
+</section>
+
+        </div>
+      </section>
+
+    </article>
+  </main>
+
+  <!-- Section FAQ -->
+<section class="faq-section">
+  <div class="faq-header">
+      <h2>QUESTIONS FRÉQUENTES</h2>
+      <div class="title-underline"></div>
+  </div>
+
+  <div class="faq-container">
+      <!-- Question 1 -->
+      <div class="faq-item">
+          <button class="faq-question">
+              <span>1.	L'IA est-elle fiable pour mes cours ?</span>
+              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+          <div class="faq-answer">
+              <p>○	Réponse : Notre IA "Zéro Hallucination" garantit un alignement parfait avec le contenu des cours du programme national. Elle est incapable de produire des informations hors-sujet.</p>
+          </div>
+      </div>
+
+     
+
+      <!-- Question 3 -->
+      <div class="faq-item">
+          <button class="faq-question">
+              <span>2.	La plateforme couvre-t-elle tous les niveaux ?</span>
+              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+          <div class="faq-answer">
+              <p>○	Réponse : Pour l'instant, Connect'Academia est optimisée uniquement pour certaines classes (la Terminale), mais elle a pour objectif de couvrir l'ensemble du cycle secondaire à l'avenir.</p>
+          </div>
+      </div>
+
+      <!-- Question 4 -->
+      <div class="faq-item">
+          <button class="faq-question">
+              <span>3.	Comment fonctionne le comparateur d'écoles ?</span>
+              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+          <div class="faq-answer">
+              <p>○	Réponse : Nous agrégeons les données officielles (reconnaissance CAMES, frais, localisation) pour vous permettre de comparer les établissements objectivement.</p>
+          </div>
+      </div>
+
+      <!-- Question 5 -->
+      <div class="faq-item">
+          <button class="faq-question">
+              <span>4.	Puis-je gérer mes documents administratifs sur le site ?</span>
+              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+          <div class="faq-answer">
+              <p>○	Réponse : Oui. Nous déployons progressivement des outils pour simplifier vos démarches (inscriptions, suivi de dossiers, bourses) directement depuis votre espace personnel.</p>
+          </div>
+      </div>
+
+      <!-- Question 6 -->
+      <div class="faq-item">
+          <button class="faq-question">
+              <span>5.	Est-ce que l'accès est gratuit ?</span>
+              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+          <div class="faq-answer">
+              <p>○	Réponse : L'inscription est gratuite et donne accès aux fonctionnalités de base. Des formules Premium permettent de débloquer l'IA illimitée et les outils avancés</p>
+          </div>
+      </div>
+  
+
+    <div class="faq-footer">
+        <p>Vous n'avez pas trouvé la réponse à vos questions ?</p>
+        <p><a href="contact.html">Cliquez-ici</a> </p>
+    </div>
+  </section>
+  
+  
+
+
+
+  <!-- 
+    - #FOOTER
+  -->
+
+  <footer class="footer" style="background-image: url('../../assets/images/footer-bg.png')">
+
+    <div class="footer-top section">
+      <div class="container grid-list">
+
+        <div class="footer-brand">
+
+          <a href="../../index.html" class="logo">
+            <img src="../../assets/images/logo1-removebg-preview.png" width="162" height="50" border-radius="50px" alt="Connect'Academia logo">
+          </a>
+
+          <p class="footer-brand-text">
+            Connect'Academia accompagne les étudiants dans leur orientation en leur proposant 
+            les meilleures filières, établissements et conseils pour réussir leur parcours académique au Gabon.
+          </p>
+
+          <div class="wrapper">
+            <span class="span">Add:</span>
+
+            <address class="address">70-80 Upper St Norwich NR2</address>
+          </div>
+
+          <div class="wrapper">
+            <span class="span">Call:</span>
+
+            <a href="tel:+011234567890" class="footer-link">+01 123 4567 890</a>
+          </div>
+
+          <div class="wrapper">
+            <span class="span">Email:</span>
+
+            <a href="mailto:info@connectacademia.ga" class="footer-link">info@connectacademia.ga</a>
+          </div>
+
+        </div>
+
+        <ul class="footer-list">
+
+          <li>
+            <p class="footer-list-title">Online Platform</p>
+          </li>
+
+          <li>
+            <a href="../../index.html#about" class="footer-link">About</a>
+          </li>
+
+          <li>
+            <a href="../../index.html#courses" class="footer-link">Courses</a>
+          </li>
+
+          <li>
+            <a href="#" class="footer-link">Instructor</a>
+          </li>
+
+          <li>
+            <a href="#" class="footer-link">Events</a>
+          </li>
+
+          <li>
+            <a href="#" class="footer-link">Instructor Profile</a>
+          </li>
+
+          <li>
+            <a href="tarifs.html" class="footer-link">Purchase Guide</a>
+          </li>
+
+        </ul>
+
+        <ul class="footer-list">
+
+          <li>
+            <p class="footer-list-title">Links</p>
+          </li>
+
+          <li>
+            <a href="contact.html" class="footer-link">Contact Us</a>
+          </li>
+
+          <li>
+            <a href="#" class="footer-link">Gallery</a>
+          </li>
+
+          <li>
+            <a href="../../index.html#blog" class="footer-link">News & Articles</a>
+          </li>
+
+          <li>
+            <a href="../../index.html" class="footer-link">FAQ's</a>
+          </li>
+
+          <li>
+            <a href="#" class="footer-link">Sign In/Registration</a>
+          </li>
+
+          <li>
+            <a href="#" class="footer-link">Coming Soon</a>
+          </li>
+
+        </ul>
+
+        <div class="footer-list">
+
+          <p class="footer-list-title">Contacts</p>
+
+          <p class="footer-list-text">
+            Enter your email address to register to our newsletter subscription
+          </p>
+
+          <form action="" class="newsletter-form">
+            <input type="email" name="email_address" placeholder="Your email" required class="input-field">
+
+            <button type="submit" class="btn has-before">
+              <span class="span">Subscribe</span>
+
+              <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+            </button>
+          </form>
+
+          <ul class="social-list">
+
+            <li>
+              <a href="https://www.facebook.com/people/Connect-Academia/61568164406172/#" class="social-link">
+                <ion-icon name="logo-facebook"></ion-icon>
+              </a>
+            </li>
+
+             <li>
+              <a href="https://www.instagram.com/connectacademia.ga" class="social-link">
+                <ion-icon name="logo-instagram"></ion-icon>
+              </a>
+            </li>
+
+            <li>
+              <a href="https://chat.whatsapp.com/BiE25HR0QjQFnPJTfqtDmx" class="social-link">
+                <ion-icon name="logo-whatsapp"></ion-icon>
+              </a>
+            </li>
+
+             <li>
+              <a href="https://www.tiktok.com/@connect.academia.ga" class="social-link">
+                <ion-icon name="logo-tiktok"></ion-icon>
+              </a>
+            </li>
+
+
+          </ul>
+
+        </div>
+
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container">
+
+        <p class="copyright">
+          Copyright 2026 All Rights Reserved by <a href="https://www.instagram.com/500_vault" class="copyright-link">500_vault</a>
+        </p>
+
+      </div>
+    </div>
+
+  </footer>
+
+
+
+
+  <!-- 
+    - #BACK TO TOP
+  -->
+
+  <a href="#top" class="back-top-btn" aria-label="back top top" data-back-top-btn>
+    <ion-icon name="chevron-up" aria-hidden="true"></ion-icon>
+  </a>
+
+
+
+
+  <!-- 
+    - custom js link
+  -->
+  <script src="../../assets/js/script.js" defer></script>
+
+  <!-- 
+    - ionicon link
+  -->
+  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+
+  <!-- 
+    - Pricing Toggle Script
+  -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const toggle = document.getElementById('engagement-toggle');
+      const priceElement = document.querySelector('.card-popular .price-big');
+      const engagementNote = document.getElementById('engagement-note');
+      
+      // Prix par défaut (engagement 12 mois activé)
+      const monthlyPrice = priceElement.getAttribute('data-price-monthly');
+      const yearlyPrice = priceElement.getAttribute('data-price-yearly');
+      
+      // Initialiser le prix à 24 000 FCFA (engagement activé par défaut)
+      if (toggle.checked) {
+        priceElement.textContent = yearlyPrice + ' FCFA';
+        engagementNote.textContent = 'Engagement 12 mois';
+      }
+      
+      // Gérer le changement de prix
+      toggle.addEventListener('change', function() {
+        if (this.checked) {
+          // Engagement 12 mois activé
+          priceElement.textContent = yearlyPrice + ' FCFA';
+          engagementNote.textContent = 'Engagement 12 mois';
+        } else {
+          // Sans engagement
+          priceElement.textContent = monthlyPrice + ' FCFA';
+          engagementNote.textContent = 'Sans engagement';
+        }
+      });
+    });
+  </script>
+
+  <script>
+    document.querySelectorAll('.faq-question').forEach(button => {
+        button.addEventListener('click', () => {
+            const faqItem = button.parentElement;
+            
+            // Fermer les autres questions si nécessaire (optionnel)
+            // document.querySelectorAll('.faq-item').forEach(item => {
+            //     if (item !== faqItem) item.classList.remove('active');
+            // });
+
+            faqItem.classList.toggle('active');
+        });
+    });
+  </script>
+
+</body>
+
+</html>
+
