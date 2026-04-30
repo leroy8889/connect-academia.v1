@@ -1,0 +1,3 @@
+# Ce fichier permet de garder le dossier uploads/ressources dans git
+# Les fichiers PDF uploadés ne seront pas versionnés (voir .gitignore)
+

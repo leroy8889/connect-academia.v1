@@ -1,0 +1,416 @@
+/**
+ * Connect'Academia - Styles Back-Office Admin
+ */
+
+/* Layout Admin */
+.admin-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.admin-main {
+    flex: 1;
+    margin-left: 240px;
+    background: #F9FAFB;
+    min-height: 100vh;
+}
+
+.admin-content {
+    padding: 32px;
+}
+
+/* Sidebar Admin (fond sombre) */
+.admin-sidebar {
+    width: 240px;
+    height: 100vh;
+    background: var(--color-dark);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 100;
+    overflow-y: auto;
+}
+
+.admin-sidebar__logo {
+    padding: 0 20px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-sidebar__logo img {
+    height: 28px;
+}
+
+.admin-sidebar__logo span {
+    color: var(--color-white);
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.admin-sidebar__nav {
+    flex: 1;
+    padding: 12px 0;
+}
+
+.admin-sidebar__nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    color: #9CA3AF;
+    font-size: 14px;
+    text-decoration: none;
+    transition: all 0.15s;
+    border-radius: var(--radius-md);
+    margin: 2px 8px;
+}
+
+.admin-sidebar__nav-item:hover {
+    background: rgba(255,255,255,0.08);
+    color: var(--color-white);
+}
+
+.admin-sidebar__nav-item.active {
+    background: var(--color-primary);
+    color: var(--color-white);
+    font-weight: 600;
+}
+
+/* Topbar Admin */
+.admin-topbar {
+    background: var(--color-white);
+    border-bottom: 1px solid var(--color-border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.admin-topbar__breadcrumb {
+    font-size: 14px;
+    color: var(--color-text-light);
+}
+
+.admin-topbar__actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* Tableaux Admin */
+.admin-table {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 2px 8px var(--color-shadow);
+}
+
+/* Cartes de graphiques Admin */
+.admin-chart-card {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 2px 8px var(--color-shadow);
+}
+
+.admin-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th {
+    background: #F9FAFB;
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.admin-table td {
+    padding: 12px 16px;
+    border-top: 1px solid var(--color-border);
+    font-size: 14px;
+}
+
+.admin-table tr:hover {
+    background: #F9FAFB;
+}
+
+/* Formulaire Admin */
+.admin-form {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: 0 2px 8px var(--color-shadow);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-dark);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color var(--transition);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Zone d'upload */
+.upload-zone {
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+    border-color: var(--color-primary);
+    background: var(--color-primary-bg);
+}
+
+.upload-zone__icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 16px;
+    color: var(--color-primary);
+}
+
+/* Barre de progression upload */
+.upload-progress {
+    margin-top: 16px;
+    display: none;
+}
+
+.upload-progress.active {
+    display: block;
+}
+
+.upload-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--color-primary-bg);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.upload-progress-fill {
+    height: 100%;
+    background: var(--color-primary);
+    transition: width 0.3s;
+}
+
+/* Responsive Admin */
+/* Menu hamburger pour admin mobile */
+.admin-mobile-menu-toggle {
+    display: none;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 1001;
+    background: var(--color-dark);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+}
+
+.admin-mobile-menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.admin-mobile-menu-toggle i {
+    width: 24px;
+    height: 24px;
+    color: var(--color-white);
+}
+
+/* Overlay pour admin */
+.admin-sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.admin-sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Tablette (641px à 1024px) */
+@media (min-width: 641px) and (max-width: 1024px) {
+    .admin-main {
+        margin-left: 64px;
+    }
+    .admin-sidebar {
+        width: 64px;
+    }
+    .admin-sidebar__logo span,
+    .admin-sidebar__nav-item span {
+        display: none;
+    }
+    .admin-content {
+        padding: 24px 20px;
+    }
+    
+    /* Tableaux responsive */
+    .admin-table {
+        overflow-x: auto;
+    }
+    
+    .admin-table table {
+        min-width: 600px;
+    }
+}
+
+/* Mobile (jusqu'à 640px) */
+@media (max-width: 640px) {
+    .admin-mobile-menu-toggle {
+        display: flex;
+    }
+
+    .admin-main {
+        margin-left: 0;
+        padding-top: 60px;
+    }
+
+    .admin-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        width: 280px;
+        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .admin-sidebar.open {
+        transform: translateX(0);
+    }
+
+    .admin-sidebar__logo span,
+    .admin-sidebar__nav-item span {
+        display: block;
+    }
+
+    .admin-content {
+        padding: 16px;
+    }
+
+    .admin-topbar {
+        padding: 10px 16px 10px 72px;
+        flex-wrap: wrap;
+        gap: 8px;
+        min-height: 56px;
+        align-items: center;
+    }
+
+    .admin-topbar__breadcrumb {
+        font-size: 12px;
+    }
+
+    .admin-topbar__actions {
+        gap: 8px;
+    }
+
+    /* Tableaux responsive */
+    .admin-table {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-table table {
+        min-width: 560px;
+        font-size: 13px;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        padding: 10px 10px;
+    }
+
+    /* Formulaires responsive */
+    .admin-form {
+        padding: 20px 16px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    /* Zone d'upload responsive */
+    .upload-zone {
+        padding: 24px 16px;
+    }
+
+    /* Grilles de graphiques */
+    .admin-chart-card {
+        margin-bottom: 16px;
+    }
+
+    /* KPI cards admin */
+    .kpi-card__value {
+        font-size: 22px;
+    }
+}
+
+/* Améliorations pour très petits écrans */
+@media (max-width: 375px) {
+    .admin-content {
+        padding: 12px;
+    }
+    
+    .admin-form {
+        padding: 16px 12px;
+    }
+    
+    .admin-table table {
+        min-width: 500px;
+        font-size: 12px;
+    }
+}
+

@@ -1,0 +1,11 @@
+.env
+/public/uploads/avatars/*
+/public/uploads/posts/*
+!/public/uploads/avatars/.gitkeep
+!/public/uploads/posts/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+.DS_Store
+*.swp
+*.swo
+

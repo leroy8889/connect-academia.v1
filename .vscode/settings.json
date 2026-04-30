@@ -1,0 +1,6 @@
+{
+    "liveServer.settings.port": 5508,
+    "github.copilot.chat.anthropic.thinking.maxTokens": 1024,
+    "chat.extensionUnification.enabled": false,
+    "github.copilot.chat.agent.autoFix": true
+}

@@ -1,0 +1,31 @@
+# Fichiers de configuration sensibles
+includes/config.local.php
+
+# Uploads
+uploads/ressources/*
+!uploads/ressources/.htaccess
+!uploads/ressources/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# Fichiers temporaires
+*.tmp
+*.cache
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Base de données (ne pas versionner les backups)
+*.sql.backup
+*.sql.gz
+

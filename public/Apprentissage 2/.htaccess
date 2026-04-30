@@ -1,0 +1,36 @@
+# Connect'Academia - Configuration Apache
+
+# Activer la réécriture
+RewriteEngine On
+
+# Sécurité : bloquer accès aux fichiers sensibles
+<FilesMatch "\.(sql|log|env|ini|conf)$">
+    Deny from all
+</FilesMatch>
+
+# Désactiver le listing des dossiers
+Options -Indexes
+
+# GZIP compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json
+</IfModule>
+
+# Cache navigateur sur assets statiques
+<FilesMatch "\.(css|js|png|jpg|jpeg|svg|ico|woff|woff2)$">
+    Header set Cache-Control "max-age=86400, public"
+</FilesMatch>
+
+# En-têtes de sécurité
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Redirection vers index.php si fichier non trouvé
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+

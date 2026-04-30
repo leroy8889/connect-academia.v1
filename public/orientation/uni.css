@@ -1,0 +1,247 @@
+/* Import d'une police Serif pour le titre (proche de l'image) */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+
+.banner-public {
+    position: relative;
+    width: 100%;
+    height: 650px; /* Ajustable selon tes besoins */
+    min-height: 300px;
+    background-image: url('../../assets/images/Backgroud_etablissements.PNG'); /* Image du Lycée Léon Mba */
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    margin-top: 50px; /* Espace par rapport à la section précédente */
+}
+
+/* Le dégradé qui part de la gauche (identique à l'image) */
+.banner-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Dégradé du bleu-gris vers le transparent */
+    background: linear-gradient(to right, 
+        rgba(184, 201, 217, 1) 0%, 
+        rgba(184, 201, 217, 0.112) 30%, 
+        rgba(184, 201, 217, 0) 90%
+    );
+    z-index: 1;
+}
+
+.banner-container {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 5%;
+}
+
+.banner-title {
+    color: #ffffff;
+    font-family: 'Playfair Display', serif; /* Style Serif comme sur l'image */
+    font-size: clamp(2.9rem, 6vw, 4.9rem); /* Taille adaptative */
+    line-height: 1.1;
+    margin: 0;
+    font-weight: 900;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .banner-public {
+        height: 300px;
+    }
+    
+    .banner-gradient {
+        /* Sur mobile, on rend le dégradé un peu plus présent pour la lisibilité */
+        background: linear-gradient(to right, 
+            rgba(184, 201, 217, 0.95) 0%, 
+            rgba(184, 201, 217, 0.6) 100%
+        );
+    }
+
+    .banner-title {
+        font-size: 2.2rem;
+        text-align: center; /* Centré sur mobile pour un meilleur look */
+    }
+    
+    .banner-container {
+        padding: 0 20px;
+    }
+}
+
+.section-universites {
+    padding: 60px 5%;
+    
+    margin: 0 auto;
+    font-family: 'Montserrat', sans-serif;
+    background-image: url("../../assets/images/image-mesh-gradient.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.title-universites {
+    text-align: center;
+    font-family: 'Playfair Display', serif; /* Pour garder le style du titre précédent */
+    font-size: 2.5rem;
+    color: #2D2D2D;
+    margin-bottom: 50px;
+}
+
+.grid-universites {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 colonnes comme sur l'image */
+    gap: 40px 60px;
+}
+
+.uni-card {
+    display: flex;
+    align-items: center;
+    position: relative;
+    min-height: 200px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 24px;
+    
+}
+
+/* Le carré blanc avec le logo */
+.uni-logo {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    background: #fff;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); /* Ombre forte du logo */
+    flex-shrink: 0;
+    border-radius: 50px;
+}
+
+.uni-logo img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* Le rectangle gris avec les détails */
+.uni-details {
+    background-color: #F8F8F8; /* Gris très clair de l'image */
+    padding: 30px 30px 30px 60px;
+    margin-left: -40px; /* Chevauchement du logo */
+    width: 100%;
+    z-index: 1;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.uni-details h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: #2D2D2D;
+    font-weight: 700;
+}
+
+.uni-details .sigle {
+    color: #D9534F; /* Couleur rouge/orange du sigle */
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin: 5px 0;
+    display: block;
+}
+
+.uni-details .web-link {
+    font-size: 0.85rem;
+    color: #777;
+    margin: 5px 0 15px 0;
+}
+
+.uni-details .web-link a {
+    color: #5BC0DE; /* Bleu clair des liens */
+    text-decoration: none;
+}
+
+.action-icons-left {
+    display: flex;
+    align-items: center;
+    margin: 8px 0 12px 0;
+}
+
+.action-icons-left a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background-color: #8B52FA;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.action-icons-left a:hover {
+    background-color: #6d3fd6;
+    transform: scale(1.1);
+}
+
+.uni-social {
+    display: flex;
+    gap: 15px;
+}
+
+.uni-social a {
+    color: #B0B0B0; /* Gris des icônes sociales */
+    font-size: 1rem;
+    transition: 0.3s;
+}
+
+.uni-social a:hover {
+    color: #8B52FA; /* Ton violet au survol */
+}
+
+/* RESPONSIVITÉ */
+
+/* Sur tablette (on réduit un peu les marges) */
+@media (max-width: 1024px) {
+    .grid-universites {
+        gap: 30px;
+    }
+}
+
+/* Sur Mobile (tout passe sur une seule colonne) */
+@media (max-width: 768px) {
+    .grid-universites {
+        grid-template-columns: 1fr;
+    }
+    
+    .uni-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .uni-logo {
+        width: 140px;
+        height: 140px;
+        margin-bottom: -30px; /* Le logo chevauche le haut sur mobile */
+        margin-left: 20px;
+    }
+    
+    .uni-details {
+        margin-left: 0;
+        padding: 50px 20px 20px 20px;
+    }
+}

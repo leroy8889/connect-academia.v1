@@ -1,0 +1,232 @@
+/**
+ * Connect'Academia - Styles communs
+ */
+
+:root {
+    /* Couleurs */
+    --color-primary:    #8B52FA;
+    --color-primary-bg: #F3EFFF;
+    --color-dark:       #2D2D2D;
+    --color-white:      #FFFFFF;
+    --color-text:       #333333;
+    --color-text-light: #6B7280;
+    --color-border:     #E5E7EB;
+    --color-shadow:     rgba(0,0,0,0.08);
+    --color-success:    #2DC653;
+    --color-warning:    #E85D04;
+    --color-info:       #4A90D9;
+    
+    /* Typographie */
+    --font-main:  'Inter', 'Poppins', system-ui, -apple-system, sans-serif;
+    --font-size-base: 15px;
+    
+    /* Spacing */
+    --radius-sm:  6px;
+    --radius-md:  8px;
+    --radius-lg:  12px;
+    
+    /* Transitions */
+    --transition: 0.2s ease;
+}
+
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-main);
+    font-size: var(--font-size-base);
+    color: var(--color-text);
+    line-height: 1.6;
+    background: #F9FAFB;
+}
+
+/* Typographie */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: var(--color-dark);
+    line-height: 1.2;
+}
+
+h1 { font-size: 36px; font-weight: 700; }
+h2 { font-size: 26px; }
+h3 { font-size: 20px; }
+
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color var(--transition);
+}
+
+a:hover {
+    color: #7540E0;
+}
+
+/* Boutons */
+.btn-primary {
+    background: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition), transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary:hover {
+    background: #7540E0;
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-secondary {
+    background: var(--color-primary-bg);
+    color: var(--color-primary);
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-md);
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+.btn-secondary:hover {
+    background: #E8DEFF;
+}
+
+.btn-danger {
+    background: #FEF2F2;
+    color: #DC2626;
+    border: 1px solid #FECACA;
+    border-radius: var(--radius-md);
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-danger:hover {
+    background: #FEE2E2;
+}
+
+/* Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-cours { background: var(--color-primary-bg); color: var(--color-primary); }
+.badge-td { background: #EFF6FF; color: #3B82F6; }
+.badge-ancienne_epreuve { background: #FFF7ED; color: var(--color-warning); }
+
+.badge-serie-A1 { background: var(--color-primary-bg); color: var(--color-primary); }
+.badge-serie-A2 { background: #EDE9FE; color: #6C3FC9; }
+.badge-serie-B { background: #EFF6FF; color: var(--color-info); }
+.badge-serie-C { background: #FFF7ED; color: var(--color-warning); }
+.badge-serie-D { background: #ECFDF5; color: var(--color-success); }
+
+.badge-en-cours { background: #FFF7ED; color: #D97706; }
+.badge-termine { background: #ECFDF5; color: #059669; }
+
+/* Barre de progression */
+.progress-bar-container {
+    background: var(--color-primary-bg);
+    border-radius: 10px;
+    height: 6px;
+    overflow: hidden;
+}
+
+.progress-bar-container.lg {
+    height: 10px;
+}
+
+.progress-bar-fill {
+    background: var(--color-primary);
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+/* Focus visible (accessibilité) */
+*:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--color-text-light);
+}
+
+.empty-state__icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 20px;
+    color: var(--color-text-light);
+    opacity: 0.5;
+}
+
+/* Skeleton loading */
+.skeleton {
+    background: linear-gradient(90deg, #F0F0F0 25%, #E0E0E0 50%, #F0F0F0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: var(--radius-md);
+}
+
+@keyframes skeleton-loading {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    h1 { font-size: 26px; }
+    h2 { font-size: 20px; }
+    h3 { font-size: 17px; }
+
+    .btn-primary,
+    .btn-secondary {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+
+    .empty-state {
+        padding: 40px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 { font-size: 22px; }
+    h2 { font-size: 18px; }
+
+    .btn-primary,
+    .btn-secondary {
+        padding: 9px 14px;
+        font-size: 13px;
+    }
+
+    .badge {
+        font-size: 11px;
+        padding: 2px 8px;
+    }
+}
+
