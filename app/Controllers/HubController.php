@@ -13,7 +13,7 @@ class HubController
         if (Session::isLoggedIn()) {
             Response::redirect('/hub');
         }
-        Response::redirect('/auth/connexion');
+        Response::view('landing', [], '');
     }
 
     public function index(): void
