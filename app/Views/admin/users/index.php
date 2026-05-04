@@ -91,8 +91,8 @@ if (!function_exists('humanTimeDiff')) {
         <td>
           <div class="user-cell">
             <div class="user-avatar" style="background:<?= $u['is_active'] ? 'var(--ap)' : 'var(--txt-l)' ?>;">
-              <?php if (!empty($u['photo_profil'])): ?>
-                <img src="<?= e($u['photo_profil']) ?>" alt="">
+              <?php if (!empty($u['photo_profil_url'])): ?>
+                <img src="<?= e($u['photo_profil_url']) ?>" alt="">
               <?php else: ?>
                 <?= strtoupper(mb_substr($u['prenom'], 0, 1) . mb_substr($u['nom'], 0, 1)) ?>
               <?php endif; ?>

@@ -196,7 +196,7 @@
               </button>
 
               <video class="video-player" controls style="display: none;">
-                <source src="<?= BASE_URL ?>/assets/images/video-presentation.MOV" type="video/mp4">
+                <source src="<?= BASE_URL ?>/assets/images/video-presntation.MOV" type="video/mp4">
                 Votre navigateur ne supporte pas la lecture de vidéos.
               </video>
             </div>

@@ -12,20 +12,13 @@ if ($is2fa) {
 ?>
 
 <style>
-    /* Styles pour l'intégration propre du QR Code et des alertes */
-    .qr-container { background: white; padding: 10px; border-radius: 12px; margin: 20px auto; width: fit-content; border: 1px solid rgba(139,82,250,0.2); }
+    /* QR Code — non défini dans admin.css */
+    .qr-container { background: #fff; padding: 12px; border-radius: 14px; margin: 20px auto; width: fit-content; border: 1px solid rgba(139,82,250,0.18); box-shadow: 0 4px 16px rgba(139,82,250,0.08); }
     .qr-container img { width: 130px; height: 130px; display: block; }
-    .qr-label { color: #2D1B69; font-size: 10px; text-align: center; margin-top: 5px; font-weight: bold; }
-    .admin-alert { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
-    .admin-alert-error { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
-    .admin-alert-success { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
-    /* Correction alignement OTP */
-    .otp-inputs { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
-    .otp-input { width: 45px; height: 55px; text-align: center; font-size: 1.5rem; font-weight: bold; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9; }
-    
-    /* Styles pour le toggle password (œil) */
-    .password-toggle { background: none; border: none; padding: 0 10px; cursor: pointer; color: #8B52FA; display: flex; align-items: center; }
-    .password-toggle .hidden { display: none; }
+    .qr-label { font-family: var(--font-mid); color: #2D1B69; font-size: 10px; text-align: center; margin-top: 6px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+    /* label champs formulaire */
+    .field-label { display: block; font-family: var(--font-mid); font-size: 12px; font-weight: 600; color: var(--txt-m); margin-bottom: 7px; letter-spacing: 0.02em; }
+    .hidden { display: none; }
 </style>
 
 <div class="admin-auth-card">
@@ -34,10 +27,7 @@ if ($is2fa) {
 
     <div class="admin-auth-brand">
       <div class="admin-auth-brand-icon">
-        <svg width="20" height="20" viewBox="0 0 40 40" fill="none">
-          <path d="M8 28L20 10L32 28H8Z" fill="white" fill-opacity="0.9"/>
-          <circle cx="20" cy="20" r="5" fill="white"/>
-        </svg>
+        <img src="<?= asset('images/logo-officiel.png') ?>" alt="Connect'Academia logo">
       </div>
       <div class="admin-auth-brand-text">
         <strong>Connect'Academia</strong>
@@ -104,11 +94,12 @@ if ($is2fa) {
       <input type="hidden" name="_csrf_token" value="<?= \Core\Session::getCsrfToken() ?>">
 
       <div class="admin-field">
+        <label class="field-label" for="admin-email">Adresse e-mail</label>
         <div class="admin-input-wrap">
           <span class="field-icon">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           </span>
-          <input type="email" name="email" class="admin-input"
+          <input type="email" id="admin-email" name="email" class="admin-input"
                  placeholder="admin@connect-academia.ga"
                  value="<?= e(\Core\Session::getFlash('old_email', '')) ?>"
                  required autocomplete="email">
@@ -116,6 +107,7 @@ if ($is2fa) {
       </div>
 
       <div class="admin-field">
+        <label class="field-label" for="admin-pwd">Mot de passe</label>
         <div class="admin-input-wrap">
           <span class="field-icon">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>

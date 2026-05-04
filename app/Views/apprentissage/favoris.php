@@ -87,7 +87,7 @@ $typeLabels = ['cours' => 'Cours', 'td' => 'TD', 'ancienne_epreuve' => 'Ancienne
           <a href="<?= url('/apprentissage/viewer/' . (int)$r['id']) ?>" style="text-decoration:none;display:flex;flex-direction:column;gap:10px;flex:1">
 
             <div style="display:flex;align-items:flex-start;gap:12px;padding-right:50px">
-              <div class="resource-card__icon">
+              <div class="resource-card__icon resource-card__icon--<?= e($r['type'] ?? 'cours') ?>">
                 <?= typeIconFav($r['type'] ?? '') ?>
               </div>
               <div style="min-width:0;flex:1">

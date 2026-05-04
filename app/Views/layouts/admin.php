@@ -50,10 +50,7 @@ function adminNavActive(string $path, string $current, string $base): string {
     <!-- Logo -->
     <div class="sidebar-logo">
       <div class="sidebar-logo-icon">
-        <svg width="20" height="20" viewBox="0 0 40 40" fill="none">
-          <path d="M8 28L20 10L32 28H8Z" fill="white" fill-opacity="0.9"/>
-          <circle cx="20" cy="20" r="5" fill="white"/>
-        </svg>
+        <img src="<?= asset('images/logo-officiel.png') ?>" alt="Connect'Academia logo">
       </div>
       <div class="sidebar-logo-text">
         <strong>Connect'Academia</strong>
