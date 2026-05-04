@@ -1,3 +1,7 @@
+/*
+ *   Copyright (c) 2026 
+ *   All rights reserved.
+ */
 /**
  * StudyLink — Admin Dashboard JavaScript
  * Chart.js integration, real-data stats, sidebar toggle, interactions

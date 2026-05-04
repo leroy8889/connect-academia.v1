@@ -5,6 +5,7 @@ namespace Controllers\Admin;
 
 use Core\{Response, Session, Database};
 use Models\Admin;
+use Models\User; // Ajout nécessaire pour utiliser la méthode de normalisation
 use PDO;
 
 class UsersController
@@ -37,6 +38,12 @@ class UsersController
         $total      = $this->model->countUsers($filters);
         $totalPages = (int) ceil($total / $perPage) ?: 1;
         $users      = $this->model->getAllUsers($filters, $perPage, $offset);
+
+        // --- TRAITEMENT DES PHOTOS DE PROFIL ---
+        foreach ($users as &$user) {
+            $user['photo_profil_url'] = User::normalizePhotoPath($user['photo_profil'] ?? null);
+        }
+
         $counts     = $this->model->getUserCountsByRole();
         $series     = $this->db->query(
             "SELECT id, nom FROM series WHERE is_active = 1 ORDER BY nom"

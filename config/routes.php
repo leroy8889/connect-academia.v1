@@ -83,6 +83,12 @@ $router->post('/api/communaute/comments/{id}/like',         'Communaute\CommentC
 // ── ADMIN ─────────────────────────────────────────────────────────────────
 $router->get('/admin/login',                                'Admin\AdminAuthController@showLogin');
 $router->post('/admin/login',                               'Admin\AdminAuthController@login',               ['csrf']);
+// AJOUT : Routes pour Mot de passe oublié Admin
+$router->get('/admin/forgot-password',                      'Admin\AdminAuthController@forgotPassword');
+$router->post('/admin/forgot-password',                     'Admin\AdminAuthController@sendResetLink',        ['csrf']);
+$router->get('/admin/reset-password',                       'Admin\AdminAuthController@showResetPassword');
+$router->post('/admin/reset-password',                      'Admin\AdminAuthController@updatePassword',      ['csrf']);
+
 $router->post('/admin/verifier-2fa',                        'Admin\AdminAuthController@verify2fa',           ['csrf']);
 $router->post('/admin/logout',                              'Admin\AdminAuthController@logout',              ['csrf']);
 
@@ -105,6 +111,8 @@ $router->get('/admin/api/matieres',                         'Admin\ContenuContro
 $router->get('/admin/series-matieres',                      'Admin\SeriesController@index',                  ['admin']);
 $router->post('/admin/api/series/serie',                    'Admin\SeriesController@storeSerie',              ['admin', 'csrf']);
 $router->post('/admin/api/series/matiere',                  'Admin\SeriesController@storeMatiere',            ['admin', 'csrf']);
+// AJOUT : Route de suppression pour les séries
+$router->delete('/admin/api/series/serie/{id}',             'Admin\SeriesController@deleteSerie',            ['admin', 'csrf']);
 
 $router->get('/admin/communaute',                           'Admin\CommunauteController@index',              ['admin']);
 $router->delete('/admin/api/communaute/posts/{id}',         'Admin\CommunauteController@deletePost',         ['admin', 'csrf']);
@@ -127,3 +135,6 @@ $router->post('/admin/parametres/password',                 'Admin\ParametresCon
 $router->post('/admin/api/cache/clear',                     'Admin\ParametresController@clearCache',          ['admin', 'csrf']);
 $router->post('/admin/api/admins',                          'Admin\ParametresController@storeAdmin',          ['admin', 'csrf']);
 $router->delete('/admin/api/admins/{id}',                   'Admin\ParametresController@deleteAdmin',         ['admin', 'csrf']);
+
+// TEST : Route temporaire sans CSRF pour isoler l'erreur d'upload
+$router->post('/admin/api/contenu/ressource/test',          'Admin\ContenuController@storeRessource',        ['admin']);

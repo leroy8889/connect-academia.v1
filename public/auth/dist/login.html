@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Mon Espace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+     <link rel="shortcut icon" href="../../../assets/images/Logo 1 CA COMPLET.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+            --bg-input: #f3f4f6;
+            --text-main: #1f2937;
+            --text-sub: #6b7280;
+            --radius: 10px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body, html {
+            height: 100%;
+            background-color: #fff;
+            overflow-x: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Section Gauche - Image */
+        .image-section {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 48%;
+            height: 100vh;
+            background: url('../../../assets/images/Images en 409x610 - Page de Connexion 2.png') no-repeat center center;
+            background-size: cover;
+            z-index: 1;
+        }
+
+        /* Section Droite - Formulaire */
+        .form-section {
+            position: relative;
+            flex: 1;
+            margin-left: 55%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            background: white;
+            z-index: 2;
+            min-height: 100vh;
+        }
+
+        .form-wrapper {
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+        }
+
+        /* Logo */
+        .logo-container {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .logo-container img {
+            max-width: 150px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* Titres */
+        .title-small {
+            font-size: 18px;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .title-main {
+            font-size: 32px;
+            font-weight: 800;
+            text-transform: uppercase;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 40px;
+            letter-spacing: 1px;
+        }
+
+        /* Champs de saisie */
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #000;
+        }
+
+        label span {
+            color: #ef4444;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            padding-right: 45px;
+            border-radius: var(--radius);
+            border: none;
+            background-color: var(--bg-input);
+            font-size: 14px;
+            outline: none;
+            color: var(--text-main);
+        }
+
+        .eye-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .eye-icon:hover {
+            color: #6366f1;
+        }
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 10px;
+            margin-bottom: 30px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e5e7eb;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        input:checked + .slider {
+            background: #7c3aed;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        .toggle-label {
+            font-size: 13px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* Bouton */
+        .btn-submit {
+            width: 60%;
+            padding: 12px;
+            background-color: #f3f4f6;
+            color: #9ca3af;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .btn-submit:hover {
+            background-color: #7c3aed;
+            color: #ffffff;
+        }
+
+        /* Liens de bas de page */
+        .footer-links {
+            margin-top: 35px;
+        }
+
+        .link-gray {
+            color: var(--text-sub);
+            text-decoration: none;
+            font-size: 13px;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        .signup-text {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .signup-text a {
+            color: #c084fc;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .copyright {
+            margin-top: 30px;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .image-section {
+                display: none;
+            }
+            .form-section {
+                margin-left: 0;
+                flex: 1;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <!-- Image de gauche -->
+        <div class="image-section"></div>
+
+        <!-- Formulaire de droite -->
+        <div class="form-section">
+            <div class="form-wrapper">
+                <!-- Logo -->
+                <div class="logo-container">
+                    <img src="../../../assets/images/logo1.jpeg" alt="Logo Connect'Academia">
+                </div>
+
+                <div class="title-small">Se connecter à</div>
+                <div class="title-main">MON ESPACE</div>
+
+                <form>
+                    <div class="form-group">
+                        <label>Email <span>*</span></label>
+                        <input type="email" placeholder="Entrez votre email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mot de passe <span>*</span></label>
+                        <div class="input-wrapper">
+                            <input type="password" id="password-input" placeholder="Entrez votre mot de passe" required>
+                            <span class="eye-icon" id="eye-icon" onclick="togglePassword()">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="toggle-container">
+                        <label class="switch">
+                            <input type="checkbox" id="remember-me" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <label for="remember-me" class="toggle-label">Se souvenir de moi</label>
+                    </div>
+
+                    <button type="sub" class="btn-submit">Se connecter</button>
+                </form>
+
+                <div class="footer-links">
+                    <a href="#" class="link-gray">Mot de passe oublié ?</a>
+                    <p class="signup-text">Pas encore membre ? <a href="inscription.html">S'inscrire</a></p>
+                    <p class="copyright">Tous droits réservés - Connect'Academia</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password-input');
+            const eyeIcon = document.getElementById('eye-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,3 +1,7 @@
+/*
+ *   Copyright (c) 2026 
+ *   All rights reserved.
+ */
 /* ============================================================
    Connect'Academia — Admin Design System
    Police: Plus Jakarta Sans (titres) + Manrope (corps)
@@ -2262,4 +2266,125 @@ table.admin-table tbody tr:hover .table-actions { opacity: 1; }
 @media (max-width: 768px) {
   .communaute-stats-row { grid-template-columns: 1fr 1fr; }
   .settings-tabs-v2 { position: static; }
+}
+/* ════════════════════════════════════════════════════════════
+   RESPONSIVE DESIGN (MOBILE & TABLETTE)
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Ajustements Tablette (Largeur < 1024px) ──────────────── */
+@media (max-width: 1024px) {
+    :root {
+        --sidebar-w: 80px; /* On réduit la largeur de la sidebar */
+    }
+
+    .sidebar-logo-text, 
+    .sidebar-section-label, 
+    .sidebar-link span, 
+    .sidebar-badge,
+    .sidebar-admin-info {
+        display: none; /* On cache le texte pour ne garder que les icônes */
+    }
+
+    .sidebar-link {
+        justify-content: center;
+        padding: 12px;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 colonnes au lieu de 4 */
+    }
+
+    .charts-grid, .widgets-grid, .bottom-grid {
+        grid-template-columns: 1fr; /* On empile les graphiques */
+    }
+}
+
+/* ── Ajustements Mobile (Largeur < 768px) ─────────────────── */
+@media (max-width: 768px) {
+    /* 1. Reset du Layout */
+    .admin-layout {
+        display: block; /* On casse le flex pour empiler */
+    }
+
+    .admin-sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        bottom: auto;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .admin-main {
+        margin-left: 0 !important; /* On annule la marge de la sidebar */
+    }
+
+    .admin-topbar {
+        padding: 0 15px;
+        flex-wrap: wrap;
+        height: auto;
+        padding-bottom: 10px;
+    }
+
+    .topbar-search {
+        order: 3; /* On passe la recherche en dessous */
+        max-width: 100%;
+        margin-top: 10px;
+    }
+
+    /* 2. Cartes et Grilles */
+    .kpi-grid {
+        grid-template-columns: 1fr; /* 1 seule colonne KPI */
+    }
+
+    .admin-content {
+        padding: 15px;
+    }
+
+    /* 3. Tableaux Responsives (Scroll horizontal) */
+    .admin-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table.admin-table {
+        min-width: 600px; /* Force le scroll pour garder la lisibilité */
+    }
+
+    /* 4. Auth Card (Login) */
+    .admin-auth-card {
+        grid-template-columns: 1fr; /* Cache l'illustration sur mobile */
+    }
+
+    .admin-auth-left {
+        display: none; /* On cache le panneau bleu/violet à gauche */
+    }
+
+    .admin-auth-right {
+        padding: 30px 20px;
+    }
+
+    /* 5. Kanban Moderation */
+    .kanban-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
+
+/* ── Ajustements petits écrans (Largeur < 480px) ───────────── */
+@media (max-width: 480px) {
+    .admin-page-header-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-primary {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .otp-input {
+        width: 40px;
+        height: 48px;
+        font-size: 18px;
+    }
 }

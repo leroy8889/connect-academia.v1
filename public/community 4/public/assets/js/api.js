@@ -1,3 +1,7 @@
+/*
+ *   Copyright (c) 2026 
+ *   All rights reserved.
+ */
 /**
  * StudyLink — API Helper
  * Gère toutes les requêtes HTTP vers le backend

@@ -84,8 +84,14 @@ $series = $pdo->query("SELECT * FROM series ORDER BY nom ASC")->fetchAll();
                                         <?= $serie['is_active'] ? 'ACTIF' : 'INACTIF' ?>
                                     </span>
                                 </td>
-                                <td>
+                                <td style="display: flex; gap: 8px;">
                                     <button class="btn-secondary" style="font-size: 12px; padding: 6px 12px;">Modifier</button>
+                                    
+                                    <button class="btn-delete" 
+                                            onclick="deleteSerie(<?= $serie['id'] ?>, '<?= e($serie['nom']) ?>')"
+                                            style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; cursor: pointer; transition: all 0.2s;">
+                                        <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                                    </button>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -98,7 +104,35 @@ $series = $pdo->query("SELECT * FROM series ORDER BY nom ASC")->fetchAll();
     
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script src="../assets/js/admin.js"></script>
-    <script>lucide.createIcons();</script>
+    <script>
+        lucide.createIcons();
+
+        /**
+         * Fonction pour supprimer une série proprement
+         */
+        function deleteSerie(id, nom) {
+            if (confirm(`Voulez-vous vraiment supprimer la série "${nom}" ?\nCette action est irréversible.`)) {
+                fetch(`/admin/api/series/serie/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-Token': '<?= \Core\Session::getCsrfToken() ?>' // Assurez-vous que cette méthode est dispo
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || "Une erreur est survenue.");
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Erreur réseau lors de la suppression.");
+                });
+            }
+        }
+    </script>
 </body>
 </html>
-

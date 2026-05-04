@@ -235,4 +235,26 @@ class Post extends BaseModel
         unset($post);
         return $posts;
     }
+
+    /**
+     * Supprime un post (Soft Delete) et décrémente le compteur de l'utilisateur
+     */
+    public function delete(int $id): bool
+    {
+        // On récupère d'abord l'ID de l'utilisateur pour mettre à jour ses stats
+        $post = $this->query("SELECT user_id FROM posts WHERE id = ? AND is_deleted = 0", [$id])->fetch();
+        
+        if (!$post) return false;
+
+        $deleted = $this->query(
+            "UPDATE posts SET is_deleted = 1, updated_at = NOW() WHERE id = ?", 
+            [$id]
+        )->rowCount() > 0;
+
+        if ($deleted) {
+            (new User())->decrementCount((int) $post['user_id'], 'posts_count');
+        }
+
+        return $deleted;
+    }
 }
