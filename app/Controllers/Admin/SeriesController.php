@@ -107,4 +107,33 @@ class SeriesController
 
         Response::json(['success' => true, 'message' => "Matière {$nom} créée avec succès."]);
     }
+
+    /**
+     * Supprime une série (passage en is_active = 0 ou suppression réelle)
+     */
+    public function deleteSerie(int $id): void
+    {
+        // On vérifie si la série contient des élèves avant de supprimer
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM users WHERE serie_id = ? AND is_deleted = 0");
+        $stmt->execute([$id]);
+        $hasUsers = (int) $stmt->fetchColumn();
+
+        if ($hasUsers > 0) {
+            Response::json([
+                'success' => false, 
+                'message' => "Impossible de supprimer : cette série contient encore des élèves."
+            ], 400);
+            return;
+        }
+
+        // Suppression logique (recommandé) ou physique
+        $stmt = $this->db->prepare("UPDATE series SET is_active = 0 WHERE id = ?");
+        $success = $stmt->execute([$id]);
+
+        if ($success) {
+            Response::json(['success' => true, 'message' => "La série a été supprimée."]);
+        } else {
+            Response::json(['success' => false, 'message' => "Erreur lors de la suppression."], 500);
+        }
+    }
 }

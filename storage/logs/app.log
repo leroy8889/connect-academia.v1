@@ -3254,6 +3254,7 @@ Stack trace:
 #6 /Applications/MAMP/htdocs/connect'academia.v1/index.php(142): Core\Router->dispatch()
 #7 {main}
   thrown in /Applications/MAMP/htdocs/connect'academia.v1/app/Core/Database.php on line 41
+<<<<<<< HEAD
 [30-Apr-2026 17:29:38 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000] [2002] Connection refused in /Applications/MAMP/htdocs/connect'academia.v1/app/Core/Database.php:41
 Stack trace:
 #0 /Applications/MAMP/htdocs/connect'academia.v1/app/Core/Database.php(41): PDO->__construct('mysql:host=127....', 'root', Object(SensitiveParameterValue), Array)
@@ -8534,3 +8535,678 @@ Stack trace:
 [04-May-2026 13:15:25 UTC] [Session] Fallback fichiers : Connection refused
 [04-May-2026 13:15:25 UTC] [Session] Fallback fichiers : Connection refused
 [04-May-2026 13:15:25 UTC] [Session] Fallback fichiers : Connection refused
+=======
+[03-May-2026 09:38:45 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:38:47 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:38:54 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:39:00 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:39:01 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:44:48 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:51:37 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:51:38 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:51:42 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:52:53 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:52:53 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:52:58 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:54:26 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:54:31 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:54:31 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:54:33 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:55:45 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:55:45 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:55:47 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:57:18 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:57:18 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 09:57:20 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 10:10:56 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 10:10:56 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 10:10:58 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 10:13:00 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 10:13:00 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 10:13:03 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 10:34:34 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 10:34:34 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 10:34:36 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 10:39:20 UTC] PHP Warning:  require_once(config.php): Failed to open stream: No such file or directory in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/auth/login.php on line 6
+[03-May-2026 10:39:20 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'config.php' (include_path='.:/opt/homebrew/Cellar/php/8.5.5/share/php/pear') in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/auth/login.php:6
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/AdminAuthController.php(27): Core\Response::view('admin/auth/logi...', Array, 'admin-auth')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\AdminAuthController->showLogin()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\AdminAuth...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(142): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/auth/login.php on line 6
+[03-May-2026 10:48:43 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 10:48:44 UTC] PHP Fatal error:  Uncaught Error: Class "PHPMailer\PHPMailer\PHPMailer" not found in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/AdminAuthController.php:131
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/AdminAuthController.php(76): Controllers\Admin\AdminAuthController->sendOTPEmail('nguemaferdinand...', '759815')
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\AdminAuthController->login()
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\AdminAuth...', Array)
+#3 /Applications/MAMP/htdocs/connect-academia.v1/index.php(142): Core\Router->dispatch()
+#4 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/AdminAuthController.php on line 131
+[03-May-2026 10:51:51 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 10:54:09 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000] [2002] Connection refused in /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Database.php:41
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Database.php(41): PDO->__construct('mysql:host=127....', 'root', Object(SensitiveParameterValue), Array)
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Database.php(47): Core\Database->__construct()
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Models/BaseModel.php(18): Core\Database::getInstance()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Middleware/AuthMiddleware.php(20): Models\BaseModel->__construct()
+#4 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(91): Middleware\AuthMiddleware->handle()
+#5 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(65): Core\Router->runMiddleware(Array)
+#6 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#7 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Database.php on line 41
+[03-May-2026 10:56:39 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 10:56:44 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:03:27 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:03:33 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:09:35 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:09:41 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:09:47 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:10:18 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:10:19 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:51:20 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:51:24 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:51:32 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:51:37 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:51:50 UTC] PHP Deprecated:  Function imagedestroy() is deprecated since 8.5, as it has no effect since PHP 8.0 in /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Uploader.php on line 101
+[03-May-2026 11:51:50 UTC] PHP Deprecated:  Function imagedestroy() is deprecated since 8.5, as it has no effect since PHP 8.0 in /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Uploader.php on line 114
+[03-May-2026 11:51:56 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:55:42 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:55:43 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:55:43 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:55:44 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:55:44 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:55:45 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:55:45 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:55:46 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:55:48 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:55:49 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:55:58 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:56:10 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:56:30 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:56:30 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:56:33 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:56:46 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:58:57 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:58:57 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:58:58 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:58:58 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:58:58 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:58:58 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:58:59 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:58:59 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 11:58:59 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:05:55 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:05:56 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:07:57 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:07:58 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:07:58 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:07:59 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:08:00 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:19:53 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:19:54 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:19:54 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:21:08 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:21:08 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:21:14 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:21:14 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:25:44 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:25:45 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:05 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:30 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:30 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:26:31 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:31 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:26:31 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:31 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:26:31 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:31 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:26:31 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:31 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:26:32 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:32 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:26:32 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:32 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:26:32 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:32 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:26:32 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:32 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:26:32 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:32 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:26:32 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:32 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:26:32 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:32 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:26:32 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:32 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:26:33 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:33 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:26:33 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:33 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:26:33 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:26:33 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 124
+[03-May-2026 12:27:39 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:27:39 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:27:40 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:27:40 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:04 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:04 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 128
+[03-May-2026 12:28:14 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:14 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:15 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:15 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:20 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:22 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:25 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:28 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:30 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:33 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:36 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:39 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:42 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:45 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:48 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:50 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:52 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:54 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:57 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:28:59 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:29:02 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:29:04 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:29:07 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:29:07 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:29:08 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:29:08 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:29:08 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:31:08 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:31:09 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:31:09 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:31:09 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:31:10 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:31:10 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:31:10 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:31:10 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:31:24 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:31:25 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:31:42 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 12:31:42 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 137
+[03-May-2026 16:13:19 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 16:13:20 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 16:13:20 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 16:13:21 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 16:13:21 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 16:13:22 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 16:13:22 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 16:46:52 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 16:46:52 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/contenu/index.php:149
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php(95): Core\Response::view('admin/contenu/i...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\ContenuController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\ContenuCo...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/contenu/index.php on line 149
+[03-May-2026 16:46:54 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 16:46:54 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/contenu/index.php:149
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php(95): Core\Response::view('admin/contenu/i...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\ContenuController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\ContenuCo...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/contenu/index.php on line 149
+[03-May-2026 16:47:29 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 16:49:50 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 16:50:45 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 16:50:45 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 137
+[03-May-2026 16:52:14 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 16:52:14 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 137
+[03-May-2026 16:52:17 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 16:52:17 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 137
+[03-May-2026 17:10:55 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:10:57 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:10:57 UTC] PHP Warning:  Undefined variable $pending in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php on line 11
+[03-May-2026 17:10:57 UTC] PHP Fatal error:  Uncaught TypeError: count(): Argument #1 ($value) must be of type Countable|array, null given in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php:11
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/index.php(86): require_once()
+#1 [internal function]: {closure:/Applications/MAMP/htdocs/connect-academia.v1/index.php:83}('Controllers\\Adm...')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(101): class_exists('Controllers\\Adm...')
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php on line 11
+[03-May-2026 17:14:42 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:14:42 UTC] PHP Warning:  Undefined variable $pending in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php on line 11
+[03-May-2026 17:14:42 UTC] PHP Fatal error:  Uncaught TypeError: count(): Argument #1 ($value) must be of type Countable|array, null given in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php:11
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/index.php(86): require_once()
+#1 [internal function]: {closure:/Applications/MAMP/htdocs/connect-academia.v1/index.php:83}('Controllers\\Adm...')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(101): class_exists('Controllers\\Adm...')
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php on line 11
+[03-May-2026 17:14:43 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:14:43 UTC] PHP Warning:  Undefined variable $pending in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php on line 11
+[03-May-2026 17:14:43 UTC] PHP Fatal error:  Uncaught TypeError: count(): Argument #1 ($value) must be of type Countable|array, null given in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php:11
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/index.php(86): require_once()
+#1 [internal function]: {closure:/Applications/MAMP/htdocs/connect-academia.v1/index.php:83}('Controllers\\Adm...')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(101): class_exists('Controllers\\Adm...')
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php on line 11
+[03-May-2026 17:14:43 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:14:43 UTC] PHP Warning:  Undefined variable $pending in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php on line 11
+[03-May-2026 17:14:43 UTC] PHP Fatal error:  Uncaught TypeError: count(): Argument #1 ($value) must be of type Countable|array, null given in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php:11
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/index.php(86): require_once()
+#1 [internal function]: {closure:/Applications/MAMP/htdocs/connect-academia.v1/index.php:83}('Controllers\\Adm...')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(101): class_exists('Controllers\\Adm...')
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php on line 11
+[03-May-2026 17:14:44 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:14:44 UTC] PHP Warning:  Undefined variable $pending in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php on line 11
+[03-May-2026 17:14:44 UTC] PHP Fatal error:  Uncaught TypeError: count(): Argument #1 ($value) must be of type Countable|array, null given in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php:11
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/index.php(86): require_once()
+#1 [internal function]: {closure:/Applications/MAMP/htdocs/connect-academia.v1/index.php:83}('Controllers\\Adm...')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(101): class_exists('Controllers\\Adm...')
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php on line 11
+[03-May-2026 17:17:48 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:17:48 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:17:50 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:17:50 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:17:51 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:17:51 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:18:19 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:18:20 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:18:20 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:18:20 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:18:20 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:18:20 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:18:28 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:18:28 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:18:29 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:18:29 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:18:29 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:18:29 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:19:20 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:20 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:19:20 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:20 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:19:20 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:20 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:19:21 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:21 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:19:21 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:21 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:19:21 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:21 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:19:21 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:21 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:19:22 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:22 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:19:23 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:25 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:26 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:27 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:27 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:28 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:28 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:29 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:29 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:19:32 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:33 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:34 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:19:34 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:23:49 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:23:50 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:23:52 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:23:52 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:23:56 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:24:02 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:24:03 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:24:03 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:24:03 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:24:03 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:24:35 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:24:35 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 137
+[03-May-2026 17:26:49 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000] [2002] Connection refused in /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Database.php:41
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Database.php(41): PDO->__construct('mysql:host=127....', 'root', Object(SensitiveParameterValue), Array)
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Database.php(47): Core\Database->__construct()
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Models/BaseModel.php(18): Core\Database::getInstance()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Middleware/AuthMiddleware.php(20): Models\BaseModel->__construct()
+#4 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(91): Middleware\AuthMiddleware->handle()
+#5 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(65): Core\Router->runMiddleware(Array)
+#6 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#7 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Database.php on line 41
+[03-May-2026 17:32:45 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:32:45 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:32:47 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:32:56 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:32:56 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:32:56 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:33:05 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:33:06 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:33:06 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:33:26 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:33:30 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:33:36 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:33:46 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:33:47 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:33:47 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:34:46 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:34:46 UTC] PHP Deprecated:  Function finfo_close() is deprecated since 8.5, as finfo objects are freed automatically in /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/ContenuController.php on line 137
+[03-May-2026 17:34:50 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:35:10 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:35:12 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:35:14 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:35:16 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:35:18 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:35:20 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:35:22 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:35:26 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:35:26 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:35:41 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:35:44 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:35:44 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Core\Session::csrf() in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php:172
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/Admin/SignalementsController.php(24): Core\Response::view('admin/signaleme...', Array, 'admin')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\Admin\SignalementsController->index()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('Admin\\Signaleme...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/admin/signalements/index.php on line 172
+[03-May-2026 17:36:27 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:36:30 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 17:36:31 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 18:45:56 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 18:46:05 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 18:46:15 UTC] [Redis] Extension PHP redis non chargée.
+[03-May-2026 18:59:34 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000] [2002] Connection refused in /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Database.php:41
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Database.php(41): PDO->__construct('mysql:host=127....', 'root', Object(SensitiveParameterValue), Array)
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Database.php(47): Core\Database->__construct()
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Models/BaseModel.php(18): Core\Database::getInstance()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Middleware/AuthMiddleware.php(20): Models\BaseModel->__construct()
+#4 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(91): Middleware\AuthMiddleware->handle()
+#5 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(65): Core\Router->runMiddleware(Array)
+#6 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#7 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Database.php on line 41
+[03-May-2026 19:05:39 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000] [2002] Connection refused in /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Database.php:41
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Database.php(41): PDO->__construct('mysql:host=127....', 'root', Object(SensitiveParameterValue), Array)
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Database.php(47): Core\Database->__construct()
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Models/BaseModel.php(18): Core\Database::getInstance()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Middleware/AuthMiddleware.php(20): Models\BaseModel->__construct()
+#4 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(91): Middleware\AuthMiddleware->handle()
+#5 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(65): Core\Router->runMiddleware(Array)
+#6 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#7 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Database.php on line 41
+[04-May-2026 08:48:48 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:49:18 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:49:18 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:49:20 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:49:24 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:49:25 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:49:25 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:49:36 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:49:39 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:49:56 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:49:58 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:50:03 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:50:05 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:50:07 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:50:07 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:50:08 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:50:08 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:50:09 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:52:15 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:52:16 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:52:16 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:52:16 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:52:20 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:52:33 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:52:34 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:52:43 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:52:45 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:52:50 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:53:43 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:53:52 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:53:58 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:54:12 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:54:14 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 08:54:16 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 09:02:56 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 09:03:05 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 09:03:05 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 09:03:07 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 09:03:08 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 09:03:08 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 09:03:09 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 09:03:27 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 09:03:44 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 09:03:51 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 09:03:54 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 09:03:55 UTC] [Redis] Extension PHP redis non chargée.
+[04-May-2026 09:57:14 UTC] PHP Fatal error:  Uncaught Error: Class "Core\CSRF" not found in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/auth/mot-de-passe-oublie.php:40
+Stack trace:
+#0 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Response.php(36): require()
+#1 /Applications/MAMP/htdocs/connect-academia.v1/app/Controllers/AuthController.php(138): Core\Response::view('auth/mot-de-pas...', Array, 'auth')
+#2 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(117): Controllers\AuthController->showForgot()
+#3 /Applications/MAMP/htdocs/connect-academia.v1/app/Core/Router.php(66): Core\Router->callHandler('AuthController@...', Array)
+#4 /Applications/MAMP/htdocs/connect-academia.v1/index.php(147): Core\Router->dispatch()
+#5 {main}
+  thrown in /Applications/MAMP/htdocs/connect-academia.v1/app/Views/auth/mot-de-passe-oublie.php on line 40
+[04-May-2026 10:02:18 UTC] Erreur BDD forgot: SQLSTATE[HY000]: General error: 1364 Field 'expires_at' doesn't have a default value
+[04-May-2026 10:14:22 UTC] Erreur BDD forgot: SQLSTATE[HY000]: General error: 1364 Field 'expires_at' doesn't have a default value
+[04-May-2026 10:25:21 UTC] Erreur BDD forgot: SQLSTATE[HY000]: General error: 1364 Field 'expires_at' doesn't have a default value
+[04-May-2026 10:25:46 UTC] Erreur BDD forgot: SQLSTATE[HY000]: General error: 1364 Field 'expires_at' doesn't have a default value
+[04-May-2026 10:31:33 UTC] Erreur BDD forgot: SQLSTATE[HY000]: General error: 1364 Field 'expires_at' doesn't have a default value
+[04-May-2026 10:35:13 UTC] Erreur BDD forgot: SQLSTATE[HY000]: General error: 1364 Field 'expires_at' doesn't have a default value
+[04-May-2026 10:38:45 UTC] Erreur BDD forgot: SQLSTATE[HY000]: General error: 1364 Field 'expires_at' doesn't have a default value
+[04-May-2026 10:46:27 UTC] Erreur BDD forgot: SQLSTATE[HY000]: General error: 1364 Field 'expires_at' doesn't have a default value
+[04-May-2026 10:51:40 UTC] Erreur BDD forgot: SQLSTATE[HY000]: General error: 1364 Field 'expires_at' doesn't have a default value
+[04-May-2026 11:01:22 UTC] Erreur BDD forgot: SQLSTATE[HY000]: General error: 1364 Field 'expires_at' doesn't have a default value
+>>>>>>> origin/ferdy

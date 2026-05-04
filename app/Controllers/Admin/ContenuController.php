@@ -6,6 +6,7 @@ namespace Controllers\Admin;
 use Core\{Response, Session};
 use Core\Database;
 use PDO;
+use Exception;
 
 class ContenuController
 {
@@ -16,12 +17,17 @@ class ContenuController
         $this->db = Database::getInstance()->getConnection();
     }
 
+    /**
+     * Affiche la bibliothèque des ressources
+     */
     public function index(): void
     {
+        // Récupération des séries pour les filtres
         $series = $this->db->query(
             "SELECT id, nom FROM series WHERE is_active = 1 ORDER BY nom"
         )->fetchAll(PDO::FETCH_ASSOC);
 
+        // Récupération des matières groupées par série
         $matieresBySerie = [];
         $matiStmt = $this->db->query(
             "SELECT id, nom, serie_id FROM matieres WHERE is_active = 1 ORDER BY serie_id, ordre, nom"
@@ -30,6 +36,7 @@ class ContenuController
             $matieresBySerie[(int)$m['serie_id']][] = ['id' => (int)$m['id'], 'nom' => $m['nom']];
         }
 
+        // Construction des filtres de recherche
         $where  = ['r.is_deleted = 0'];
         $params = [];
 
@@ -46,8 +53,9 @@ class ContenuController
             $params[] = $_GET['type'];
         }
 
+        // Requête principale avec récupération du chemin du fichier
         $stmt = $this->db->prepare(
-            "SELECT r.id, r.titre, r.type, r.nb_vues, r.created_at,
+            "SELECT r.id, r.titre, r.type, r.nb_vues, r.created_at, r.fichier_path,
                     m.nom AS matiere, s.nom AS serie
              FROM ressources r
              JOIN matieres m ON m.id = r.matiere_id
@@ -59,6 +67,22 @@ class ContenuController
         $stmt->execute($params);
         $ressources = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        // --- NORMALISATION DES URLS POUR LA VISUALISATION ---
+        foreach ($ressources as &$res) {
+            $path = $res['fichier_path'] ?? '';
+            if (!empty($path)) {
+                // Nettoyage du chemin pour pointer vers le dossier public
+                if (!str_starts_with($path, '/public/') && !str_starts_with($path, 'public/')) {
+                    $path = '/public/' . ltrim($path, '/');
+                }
+                if (!str_starts_with($path, '/')) $path = '/' . $path;
+                $res['file_url'] = (defined('BASE_URL') && BASE_URL !== '') ? BASE_URL . $path : $path;
+            } else {
+                $res['file_url'] = '#';
+            }
+        }
+
+        // Statistiques du mois
         $totalRessources = (int) $this->db->query(
             "SELECT COUNT(*) FROM ressources WHERE is_deleted = 0"
         )->fetchColumn();
@@ -81,152 +105,146 @@ class ContenuController
         ], 'admin');
     }
 
+    /**
+     * Enregistre une nouvelle ressource (Upload PDF)
+     */
     public function storeRessource(): void
     {
-        $titre     = trim($_POST['titre'] ?? '');
-        $matiereId = (int) ($_POST['matiere_id'] ?? 0);
-        $type      = $_POST['type'] ?? '';
-        $serieId   = (int) ($_POST['serie_id'] ?? 0);
-        $annee     = !empty($_POST['annee']) ? (int) $_POST['annee'] : null;
-        $desc      = trim($_POST['description'] ?? '');
+        try {
+            $titre     = trim($_POST['titre'] ?? '');
+            $matiereId = (int) ($_POST['matiere_id'] ?? 0);
+            $type      = $_POST['type'] ?? 'cours';
+            $serieId   = (int) ($_POST['serie_id'] ?? 0);
+            $annee     = !empty($_POST['annee']) ? (int) $_POST['annee'] : null;
+            $desc      = trim($_POST['description'] ?? '');
 
-        if (!$titre || !$matiereId || !in_array($type, ['cours', 'td', 'ancienne_epreuve', 'corrige'])) {
-            Response::json(['success' => false, 'message' => 'Champs obligatoires manquants.'], 422);
+            // 1. Validation des champs
+            if (!$titre || !$matiereId) {
+                Response::json(['success' => false, 'message' => 'Titre et matière requis.'], 422);
+                return;
+            }
+
+            // 2. Gestion de l'upload
+            $upload = $_FILES['fichier'] ?? null;
+            if (!$upload || $upload['error'] !== UPLOAD_ERR_OK) {
+                Response::json(['success' => false, 'message' => 'Erreur lors du téléchargement du fichier.'], 422);
+                return;
+            }
+
+            // Vérification du type MIME (PDF uniquement)
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mime  = finfo_file($finfo, $upload['tmp_name']);
+            finfo_close($finfo);
+            if ($mime !== 'application/pdf') {
+                Response::json(['success' => false, 'message' => 'Seuls les fichiers PDF sont acceptés.'], 415);
+                return;
+            }
+
+            // 3. Préparation du dossier de destination
+            $uploadDir = BASE_PATH . '/public/uploads/ressources/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+
+            $filename = uniqid('res_', true) . '.pdf';
+            $destPath = $uploadDir . $filename;
+
+            // 4. Déplacement du fichier et insertion en base
+            if (move_uploaded_file($upload['tmp_name'], $destPath)) {
+                $filePath    = 'uploads/ressources/' . $filename;
+                $fileNom     = $upload['name'] ?? $filename;
+                $tailleOctet = $upload['size'] ?? 0;
+
+                // Récupération automatique du serie_id si manquant
+                if ($serieId === 0) {
+                    $mStmt = $this->db->prepare("SELECT serie_id FROM matieres WHERE id = ?");
+                    $mStmt->execute([$matiereId]);
+                    $serieId = (int) ($mStmt->fetchColumn() ?: 0);
+                }
+
+                $stmt = $this->db->prepare(
+                    "INSERT INTO ressources (titre, description, type, matiere_id, serie_id, annee,
+                                             fichier_path, fichier_nom, taille_fichier, admin_id, created_at)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())"
+                );
+
+                $stmt->execute([
+                    $titre, $desc, $type, $matiereId, $serieId, $annee,
+                    $filePath, $fileNom, $tailleOctet, Session::adminId()
+                ]);
+
+                Response::json([
+                    'success' => true,
+                    'message' => "La ressource « {$titre} » a été publiée avec succès.",
+                    'id'      => (int) $this->db->lastInsertId()
+                ]);
+            } else {
+                Response::json(['success' => false, 'message' => 'Échec du déplacement du fichier sur le serveur.'], 500);
+            }
+
+        } catch (Exception $e) {
+            // Capture l'erreur réelle pour éviter le message "Réponse invalide" générique
+            Response::json([
+                'success' => false,
+                'message' => 'Erreur base de données : ' . $e->getMessage()
+            ], 500);
         }
-
-        $upload = $_FILES['fichier'] ?? null;
-        if (!$upload || $upload['error'] !== UPLOAD_ERR_OK) {
-            Response::json(['success' => false, 'message' => 'Fichier requis.'], 422);
-        }
-
-        $maxMb = (int) ($this->getSetting('max_upload_mb') ?? 50);
-        if ($upload['size'] > $maxMb * 1024 * 1024) {
-            Response::json(['success' => false, 'message' => "Fichier trop lourd (max {$maxMb} Mo)."], 413);
-        }
-
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mime  = finfo_file($finfo, $upload['tmp_name']);
-        finfo_close($finfo);
-        if ($mime !== 'application/pdf') {
-            Response::json(['success' => false, 'message' => 'Seuls les fichiers PDF sont acceptés.'], 415);
-        }
-
-        $uploadDir = BASE_PATH . '/public/uploads/ressources/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-
-        $filename = uniqid('res_', true) . '.pdf';
-        $destPath = $uploadDir . $filename;
-
-        if (!move_uploaded_file($upload['tmp_name'], $destPath)) {
-            Response::json(['success' => false, 'message' => 'Erreur lors du déplacement du fichier.'], 500);
-        }
-
-        $filePath    = 'uploads/ressources/' . $filename;
-        $fileNom     = $upload['name'] ?? $filename;
-        $tailleOctet = $upload['size'] ?? 0;
-
-        // Récupérer le serie_id depuis la matière
-        $matiereRow = $this->db->prepare("SELECT serie_id FROM matieres WHERE id = ?");
-        $matiereRow->execute([$matiereId]);
-        $serieId = (int) ($matiereRow->fetchColumn() ?: ($serieId ?? 0));
-
-        $this->db->prepare(
-            "INSERT INTO ressources (titre, description, type, matiere_id, serie_id, annee,
-                                     fichier_path, fichier_nom, taille_fichier, admin_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        )->execute([$titre, $desc, $type, $matiereId, $serieId, $annee,
-                    $filePath, $fileNom, $tailleOctet, Session::adminId()]);
-
-        $id = (int) $this->db->lastInsertId();
-
-        Response::json([
-            'success' => true,
-            'message' => "Ressource « {$titre} » publiée avec succès.",
-            'id'      => $id,
-        ]);
     }
 
+    /**
+     * Supprime une ressource (Soft delete)
+     */
     public function deleteRessource(array $params): void
     {
         $id = (int) ($params['id'] ?? 0);
-
-        $res = $this->db->prepare(
-            "SELECT fichier_path FROM ressources WHERE id = ? AND is_deleted = 0"
-        );
-        $res->execute([$id]);
-        $row = $res->fetch(PDO::FETCH_ASSOC);
-
-        if (!$row) {
-            Response::json(['success' => false, 'message' => 'Ressource introuvable.'], 404);
-        }
-
-        $this->db->prepare(
-            "UPDATE ressources SET is_deleted = 1, updated_at = NOW() WHERE id = ?"
-        )->execute([$id]);
-
-        Response::json(['success' => true, 'message' => 'Ressource supprimée.']);
+        $this->db->prepare("UPDATE ressources SET is_deleted = 1, updated_at = NOW() WHERE id = ?")->execute([$id]);
+        Response::json(['success' => true, 'message' => 'Ressource supprimée avec succès.']);
     }
 
-    // ── PATCH /admin/api/contenu/ressource/{id} ───────────────────────────
+    /**
+     * Met à jour les informations d'une ressource
+     */
     public function updateRessource(array $params): void
     {
         $id    = (int) ($params['id'] ?? 0);
         $titre = trim($_POST['titre'] ?? '');
         $desc  = trim($_POST['description'] ?? '');
-        $type  = $_POST['type'] ?? '';
+        $type  = $_POST['type'] ?? 'cours';
         $annee = !empty($_POST['annee']) ? (int) $_POST['annee'] : null;
 
         if (!$id || !$titre) {
-            Response::json(['success' => false, 'message' => 'Titre obligatoire.'], 422);
-        }
-
-        if (!in_array($type, ['cours', 'td', 'ancienne_epreuve', 'corrige'], true)) {
-            Response::json(['success' => false, 'message' => 'Type invalide.'], 422);
-        }
-
-        $exists = $this->db->prepare("SELECT id FROM ressources WHERE id = ? AND is_deleted = 0");
-        $exists->execute([$id]);
-        if (!$exists->fetch()) {
-            Response::json(['success' => false, 'message' => 'Ressource introuvable.'], 404);
+            Response::json(['success' => false, 'message' => 'Le titre est obligatoire.'], 422);
+            return;
         }
 
         $this->db->prepare(
             "UPDATE ressources SET titre=?, description=?, type=?, annee=?, updated_at=NOW() WHERE id=?"
-        )->execute([$titre, $desc ?: null, $type, $annee, $id]);
+        )->execute([$titre, $desc, $type, $annee, $id]);
 
         Response::json(['success' => true, 'message' => 'Ressource mise à jour.']);
     }
 
-    // ── GET /admin/api/matieres?serie_id=X ───────────────────────────────
+    /**
+     * API pour charger les matières dynamiquement selon la série
+     */
     public function getMatieres(): void
     {
         $serieId = (int) ($_GET['serie_id'] ?? 0);
-
-        if (!$serieId) {
-            Response::json(['success' => false, 'message' => 'serie_id requis.'], 422);
-        }
-
         $matieres = $this->db->prepare(
             "SELECT id, nom FROM matieres WHERE serie_id = ? AND is_active = 1 ORDER BY ordre, nom"
         );
         $matieres->execute([$serieId]);
-
         Response::json(['success' => true, 'matieres' => $matieres->fetchAll(PDO::FETCH_ASSOC)]);
     }
 
+    /**
+     * Récupère un réglage système
+     */
     private function getSetting(string $key): ?string
     {
-        try {
-            $stmt = $this->db->prepare(
-                "SELECT setting_value FROM settings WHERE setting_key = ?"
-            );
-            $stmt->execute([$key]);
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $row ? $row['setting_value'] : null;
-        } catch (\Throwable $e) {
-            return null;
-        }
+        $stmt = $this->db->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
+        $stmt->execute([$key]);
+        $val = $stmt->fetchColumn();
+        return $val !== false ? (string)$val : null;
     }
 }
