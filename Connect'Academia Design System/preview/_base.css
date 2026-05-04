@@ -1,0 +1,53 @@
+/* Shared base for design-system preview cards */
+@import url('../colors_and_type.css');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: var(--font-sans);
+  background: var(--bg-main);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  padding: 20px;
+  min-height: 100vh;
+}
+
+.row { display: flex; gap: 16px; align-items: stretch; }
+.col { display: flex; flex-direction: column; gap: 12px; }
+.grow { flex: 1; }
+
+.eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.swatch {
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 96px;
+  border: 1px solid var(--border-subtle);
+}
+.swatch .name { font-size: 13px; font-weight: 600; }
+.swatch .hex  { font-size: 11px; font-family: ui-monospace, 'SF Mono', monospace; opacity: 0.85; }
+
+.token-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--bg-surface);
+  font-size: 12px;
+}
+.token-row .label { font-weight: 600; color: var(--text-primary); }
+.token-row .val { font-family: ui-monospace, 'SF Mono', monospace; color: var(--text-secondary); }

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Brand — Voice</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  body { padding: 32px; }
+  .stage { max-width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  .header p  { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+  .hero {
+    border-radius: 24px;
+    padding: 36px;
+    background:
+      radial-gradient(circle at 80% 20%, rgba(255,255,255,0.20), transparent 50%),
+      linear-gradient(135deg, #8B52FA, #6B2FE6);
+    color: #fff;
+    display: flex; flex-direction: column; gap: 18px;
+    position: relative; overflow: hidden;
+  }
+  .hero img { position: absolute; right: -40px; bottom: -40px; width: 280px; opacity: 0.18; }
+  .hero .eb { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.85; font-weight: 700; }
+  .hero h2 { font-size: 36px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; max-width: 540px; }
+  .hero h2 em { font-style: normal; font-weight: 300; opacity: 0.85; }
+  .hero p { font-size: 15px; max-width: 460px; line-height: 1.55; opacity: 0.95; }
+
+  .pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .pillar { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+  .pillar .num { font-family: ui-monospace, monospace; font-size: 12px; color: var(--purple-neon); font-weight: 700; }
+  .pillar h3 { font-size: 16px; font-weight: 700; }
+  .pillar p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+  .pillar .ico { width: 40px; height: 40px; border-radius: 12px; background: var(--purple-tint); color: var(--purple-press); display: grid; place-items: center; }
+  .pillar .ico svg { width: 22px; height: 22px; }
+
+  .voice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .voice-cell { border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border-subtle); }
+  .voice-cell.do { background: rgba(0,200,83,0.08); border-color: rgba(0,200,83,0.25); }
+  .voice-cell.dont { background: rgba(255,82,82,0.08); border-color: rgba(255,82,82,0.25); }
+  .voice-cell .lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.10em; }
+  .voice-cell.do .lbl { color: #007A33; }
+  .voice-cell.dont .lbl { color: #B23535; }
+  .voice-cell ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .voice-cell li { font-size: 13px; color: var(--text-primary); display: flex; gap: 8px; align-items: flex-start; }
+  .voice-cell li::before { content: "•"; flex: none; }
+  .voice-cell.do li::before { color: #00C853; }
+  .voice-cell.dont li::before { color: #FF5252; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="header">
+      <span class="eyebrow">Marque · Voix</span>
+      <h1>Vision & Tone of Voice</h1>
+      <p>Connect'Academia — la première plateforme tout-en-un pour les élèves et étudiants du Gabon.</p>
+    </div>
+
+    <div class="hero">
+      <img src="../assets/logo-mark.png" alt="" />
+      <span class="eb">Promesse de marque</span>
+      <h2>Ta passerelle vers <em>le Bac</em><br/>et au-delà.</h2>
+      <p>Un compagnon encourageant, jamais condescendant. On dit "tu". On célèbre les petites victoires. On rend chaque étape du parcours plus claire.</p>
+    </div>
+
+    <div class="pillars">
+      <div class="pillar">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+        <span class="num">01 / Apprentissage</span>
+        <h3>Cours, révisions & IA</h3>
+        <p>Pour réviser le Bac avec un tuteur IA qui s'adapte au programme gabonais.</p>
+      </div>
+      <div class="pillar">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <span class="num">02 / Communauté</span>
+        <h3>Fil d'actualité académique</h3>
+        <p>Pose ta question, obtiens des réponses des autres élèves et des aînés.</p>
+      </div>
+      <div class="pillar">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/></svg></div>
+        <span class="num">03 / Orientation</span>
+        <h3>Trouve ta voie</h3>
+        <p>Découvre l'école et la filière qui te correspondent — au Gabon et au-delà.</p>
+      </div>
+    </div>
+
+    <div class="voice-grid">
+      <div class="voice-cell do">
+        <span class="lbl">À faire</span>
+        <ul>
+          <li>"Continuer mon parcours"</li>
+          <li>"Bonne réponse !"</li>
+          <li>"Pas encore de question. Pose la première."</li>
+          <li>Adresser l'élève en <strong>tu</strong>, encourager.</li>
+        </ul>
+      </div>
+      <div class="voice-cell dont">
+        <span class="lbl">À éviter</span>
+        <ul>
+          <li>"VEUILLEZ POURSUIVRE VOTRE PROGRESSION"</li>
+          <li>"Erreur fatale. Réponse incorrecte."</li>
+          <li>"Aucun élément à afficher."</li>
+          <li><strong>Vous</strong> en interface, ton corporate, jargon.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

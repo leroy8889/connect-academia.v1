@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Colors — Semantic</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  body { padding: 32px; background: var(--bg-main); }
+  .stage { max-width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  .header p  { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  .card {
+    border-radius: 24px; padding: 20px; border: 1px solid var(--border-subtle);
+    background: var(--bg-surface);
+    display: flex; flex-direction: column; gap: 14px;
+    min-height: 220px;
+  }
+  .stripe { height: 64px; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; }
+  .meta { display: flex; flex-direction: column; gap: 2px; }
+  .meta .name { font-size: 14px; font-weight: 700; }
+  .meta .hex  { font-family: ui-monospace, monospace; font-size: 11px; color: var(--text-muted); }
+  .desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+  .toast { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+  .toast .ico { width: 22px; height: 22px; border-radius: 999px; display: grid; place-items: center; color: #fff; font-size: 13px; flex: none; }
+
+  .toast.success { background: rgba(0,200,83,0.10); color: #007A33; }
+  .toast.success .ico { background: #00C853; }
+  .toast.error { background: rgba(255,82,82,0.10); color: #B23535; }
+  .toast.error .ico { background: #FF5252; }
+  .toast.warning { background: rgba(255,171,0,0.12); color: #8A5C00; }
+  .toast.warning .ico { background: #FFAB00; color: #1A1A1A; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="header">
+      <span class="eyebrow">04 — Feedback sémantique</span>
+      <h1>Status Colors</h1>
+      <p>Trois couleurs pour communiquer l'état du système. Identiques en Light et Dark Mode. Jamais utilisées en décor.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="stripe" style="background:#00C853;">✓</div>
+        <div class="meta"><span class="name">Success</span><span class="hex">#00C853</span></div>
+        <p class="desc">Validation, "Compte créé", bonne réponse au quiz.</p>
+        <div class="toast success"><span class="ico">✓</span><span>Compte créé. Bienvenue !</span></div>
+      </div>
+
+      <div class="card">
+        <div class="stripe" style="background:#FF5252;">!</div>
+        <div class="meta"><span class="name">Error</span><span class="hex">#FF5252</span></div>
+        <p class="desc">Erreur de connexion, champ manquant, mauvaise réponse.</p>
+        <div class="toast error"><span class="ico">!</span><span>Mot de passe incorrect. Réessaie.</span></div>
+      </div>
+
+      <div class="card">
+        <div class="stripe" style="background:#FFAB00; color:#1A1A1A;">⚠</div>
+        <div class="meta"><span class="name">Warning</span><span class="hex">#FFAB00</span></div>
+        <p class="desc">Alertes, notifications importantes.</p>
+        <div class="toast warning"><span class="ico">⚠</span><span>Bac dans 14 jours.</span></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

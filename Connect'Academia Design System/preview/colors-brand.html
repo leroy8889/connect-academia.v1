@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Colors — Brand</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  body { padding: 32px; }
+  .stage { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  .header { display: flex; flex-direction: column; gap: 4px; }
+  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  .header p  { font-size: 13px; color: var(--text-secondary); }
+
+  .grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+
+  .hero {
+    border-radius: 24px;
+    padding: 28px;
+    background: var(--purple-neon);
+    color: #fff;
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 260px;
+    box-shadow: 0 16px 40px rgba(139,82,250,0.35);
+    position: relative; overflow: hidden;
+  }
+  .hero::before{
+    content:""; position:absolute; inset:auto -40px -60px auto; width:240px; height:240px;
+    background: radial-gradient(circle, rgba(255,255,255,0.25), transparent 60%);
+    border-radius:50%;
+  }
+  .hero .num { font-size: 64px; font-weight: 800; letter-spacing: -0.04em; line-height:1; }
+  .hero .name { font-size: 20px; font-weight: 700; }
+  .hero .meta { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.30);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-family: ui-monospace, 'SF Mono', monospace;
+  }
+
+  .side { display: flex; flex-direction: column; gap: 16px; }
+  .glow-card, .tint-card {
+    border-radius: 20px;
+    padding: 18px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-surface);
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .tint-card { background: var(--purple-tint); }
+  .glow-demo {
+    height: 60px;
+    border-radius: 14px;
+    background: var(--purple-neon);
+    box-shadow: 0 8px 24px var(--purple-glow-30);
+  }
+  .row-tag { display: flex; justify-content: space-between; align-items: center; }
+  .row-tag .name { font-weight: 700; font-size: 13px; }
+  .row-tag .hex { font-family: ui-monospace, monospace; font-size: 11px; color: var(--text-secondary); }
+  .desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+  .usage {
+    border-radius: 20px;
+    background: var(--bg-surface);
+    padding: 16px 18px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px;
+  }
+  .use { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-secondary); }
+  .dot { width: 10px; height: 10px; border-radius: 999px; background: var(--purple-neon); flex: none; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="header">
+      <span class="eyebrow">01 — Identité de marque</span>
+      <h1>Purple Neon</h1>
+      <p>Couleur unique de marque. Identique en Light Mode et Dark Mode pour préserver l'identité visuelle.</p>
+    </div>
+
+    <div class="grid">
+      <div class="hero">
+        <div>
+          <div class="num">01</div>
+          <div class="name" style="margin-top:8px;">Purple Neon</div>
+        </div>
+        <div class="meta">
+          <span class="pill">HEX&nbsp;·&nbsp;#8B52FA</span>
+          <span class="pill">RGB&nbsp;·&nbsp;139 82 250</span>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="glow-card">
+          <div class="row-tag">
+            <span class="name">Purple Glow</span>
+            <span class="hex">rgba(139,82,250,.30)</span>
+          </div>
+          <div class="glow-demo"></div>
+          <p class="desc">Lueur portée derrière les CTA actifs et les cartes promues.</p>
+        </div>
+
+        <div class="tint-card">
+          <div class="row-tag">
+            <span class="name" style="color: var(--purple-press);">Purple Tint</span>
+            <span class="hex" style="color: var(--purple-press);">#F3EFFF</span>
+          </div>
+          <p class="desc" style="color: var(--purple-press);">Surface promue, fond de sélection, badge actif.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="usage">
+      <div class="use"><span class="dot"></span>CTA principaux (Valider, S'inscrire)</div>
+      <div class="use"><span class="dot"></span>État actif (onglet, focus, sélection)</div>
+      <div class="use"><span class="dot"></span>Anneau de focus, bordure d'input</div>
+      <div class="use"><span class="dot"></span>Barres de graphique, accent unique</div>
+    </div>
+  </div>
+</body>
+</html>
