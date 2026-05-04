@@ -14,7 +14,6 @@ $serieColors = [
 ];
 ?>
 
-<!-- Header -->
 <div class="admin-page-header-row">
   <div>
     <h1>Séries &amp; Matières</h1>
@@ -26,7 +25,6 @@ $serieColors = [
   </button>
 </div>
 
-<!-- Cartes séries -->
 <div class="series-grid mb-24">
   <?php foreach ($series as $s):
     $initial = mb_strtoupper(mb_substr($s['nom'], 0, 3));
@@ -49,9 +47,9 @@ $serieColors = [
       </div>
     </div>
     <button class="action-btn" style="position:absolute;top:14px;right:14px;"
-            onclick="event.stopPropagation()">
+            onclick="event.stopPropagation(); if(confirm('Supprimer la série <?= e($s['nom']) ?> ?')) deleteSerie(<?= $s['id'] ?>)">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
       </svg>
     </button>
   </div>
@@ -63,7 +61,6 @@ $serieColors = [
   <?php endif; ?>
 </div>
 
-<!-- Matières de la série active -->
 <?php if ($activeSerie && !empty($matieres)): ?>
 <div class="admin-table-wrap">
   <div class="admin-table-header">
@@ -125,7 +122,6 @@ $serieColors = [
 </div>
 <?php endif; ?>
 
-<!-- Modal nouvelle matière -->
 <div class="admin-modal-overlay" id="modal-new-matiere">
   <div class="admin-modal">
     <div class="admin-modal-header">
@@ -164,7 +160,6 @@ $serieColors = [
   </div>
 </div>
 
-<!-- Modal nouvelle série -->
 <div class="admin-modal-overlay" id="modal-new-serie">
   <div class="admin-modal">
     <div class="admin-modal-header">
@@ -199,3 +194,24 @@ $serieColors = [
     </div>
   </div>
 </div>
+
+<script>
+function deleteSerie(id) {
+    fetch('<?= url('/admin/api/series/serie/') ?>' + id, {
+        method: 'DELETE',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': '<?= \Core\Session::getCsrfToken() ?>'
+        }
+    }).then(res => res.json()).then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert(data.message || 'Erreur lors de la suppression');
+        }
+    }).catch(err => {
+        console.error(err);
+        alert('Erreur réseau');
+    });
+}
+</script>

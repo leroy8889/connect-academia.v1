@@ -161,6 +161,19 @@ class User extends BaseModel
         $this->query("UPDATE users SET is_verified = 1, email_token = NULL WHERE id = ?", [$userId]);
     }
 
+    public function getAllForAdmin(): array
+    {
+        $users = $this->query(
+            "SELECT * FROM users WHERE is_deleted = 0 ORDER BY created_at DESC"
+        )->fetchAll(PDO::FETCH_ASSOC);
+        
+        foreach ($users as &$user) {
+            $user['photo_profil_url'] = self::normalizePhotoPath($user['photo_profil']);
+        }
+        
+        return $users;
+    }
+
     private function generateUuid(): string
     {
         $data    = random_bytes(16);

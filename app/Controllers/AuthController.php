@@ -5,6 +5,9 @@ namespace Controllers;
 
 use Core\{Response, Session, Validator, RateLimiter};
 use Models\User;
+// Import de PHPMailer
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 class AuthController
 {
@@ -33,7 +36,6 @@ class AuthController
             Response::redirect('/auth/connexion');
         }
 
-        // Rate limiting via Redis : 10 tentatives / 15 minutes par IP
         $rlKey = RateLimiter::ipKey('user_login');
         if (RateLimiter::tooManyAttempts($rlKey, 10)) {
             $waitMin = max(1, (int) ceil(RateLimiter::availableIn($rlKey) / 60));
@@ -45,7 +47,7 @@ class AuthController
         $user      = $userModel->findByEmail($email);
 
         if (!$user || !$userModel->verifyPassword($password, $user['password_hash'])) {
-            RateLimiter::hit($rlKey, 900); // fenêtre 15 min
+            RateLimiter::hit($rlKey, 900);
             Session::flash('errors', ['general' => 'Email ou mot de passe incorrect.']);
             Session::flash('old', ['email' => $email]);
             Response::redirect('/auth/connexion');
@@ -56,9 +58,7 @@ class AuthController
             Response::redirect('/auth/connexion');
         }
 
-        // Connexion réussie : on réinitialise le compteur d'échecs
         RateLimiter::clear($rlKey);
-
         Session::regenerate();
         $this->setUserSession($user);
         $userModel->updateLastLogin((int) $user['id']);
@@ -107,7 +107,6 @@ class AuthController
         }
 
         $userModel = new User();
-
         if ($userModel->findByEmail($data['email'])) {
             Session::flash('errors', ['email' => 'Cette adresse email est déjà utilisée.']);
             Session::flash('old', array_merge($data, ['password' => '']));
@@ -115,15 +114,14 @@ class AuthController
         }
 
         try {
-            $userId = $userModel->create($data);
+            $userModel->create($data);
         } catch (\Exception $e) {
             error_log('Inscription error: ' . $e->getMessage());
-            Session::flash('errors', ['general' => 'Erreur lors de la création du compte. Réessayez.']);
-            Session::flash('old', array_merge($data, ['password' => '']));
+            Session::flash('errors', ['general' => 'Erreur lors de la création du compte.']);
             Response::redirect('/auth/inscription');
         }
 
-        Session::flash('success', 'Compte créé avec succès ! Bienvenue sur Connect\'Academia.');
+        Session::flash('success', 'Compte créé avec succès !');
         Response::redirect('/auth/connexion');
     }
 
@@ -139,6 +137,7 @@ class AuthController
             'pageTitle' => "Mot de passe oublié — Connect'Academia",
             'errors'    => Session::getFlash('errors', []),
             'success'   => Session::getFlash('success'),
+            'old'       => Session::getFlash('old', []),
         ], 'auth');
     }
 
@@ -151,22 +150,94 @@ class AuthController
             Response::redirect('/auth/mot-de-passe-oublie');
         }
 
-        // Toujours confirmer (ne pas révéler si l'email existe)
         $userModel = new User();
         $user = $userModel->findByEmail($email);
 
         if ($user) {
-            $token   = bin2hex(random_bytes(32));
-            $expires = date('Y-m-d H:i:s', time() + 3600);
-            // TODO Phase 9: envoyer email + insérer dans password_resets
+            $token = bin2hex(random_bytes(32));
+            try {
+                $db = \Core\Database::getInstance()->getConnection();
+                $stmt = $db->prepare("DELETE FROM password_resets WHERE email = ?");
+                $stmt->execute([$email]);
+
+                $stmt = $db->prepare("INSERT INTO password_resets (email, token, created_at) VALUES (?, ?, ?)");
+                $stmt->execute([$email, $token, date('Y-m-d H:i:s')]);
+
+                // Appel de l'envoi du mail
+                $this->sendResetEmail($email, $token);
+
+            } catch (\Exception $e) {
+                error_log("Erreur BDD forgot: " . $e->getMessage());
+                Session::flash('errors', ['general' => 'Erreur technique de base de données.']);
+                Response::redirect('/auth/mot-de-passe-oublie');
+            }
         }
 
+        // Utilise la clé 'success' attendue par ta vue
         Session::flash('success', 'Si cette adresse est enregistrée, vous recevrez un email sous peu.');
         Response::redirect('/auth/mot-de-passe-oublie');
     }
 
+    private function sendResetEmail(string $email, string $token): void
+    {
+        $mail = new PHPMailer(true);
+        try {
+            $mail->isSMTP();
+            $mail->Host       = 'smtp.gmail.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = 'nguemaferdinand02@gmail.com'; 
+            $mail->Password   = 'plauhcjfwnxapcja'; 
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+            $mail->Port       = 465;
+            $mail->CharSet    = 'UTF-8';
+
+            // Options pour éviter les blocages SSL en local
+            $mail->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true
+                ]
+            ];
+
+            $mail->setFrom('security@connectacademia.com', "Connect'Academia");
+            $mail->addAddress($email);
+            $mail->isHTML(true);
+            $mail->Subject = "Réinitialisation de votre mot de passe";
+
+            $link = "http://localhost:8000/auth/reinitialiser/" . $token;
+
+            $mail->Body = "
+                <div style='background: #1c1c1e; color: #ffffff; padding: 40px; font-family: sans-serif; border-radius: 20px;'>
+                    <h2 style='color: #8C52FF;'>Bonjour,</h2>
+                    <p>Vous avez demandé la réinitialisation de votre mot de passe Connect'Academia.</p>
+                    <p>Cliquez sur le bouton ci-dessous pour continuer :</p>
+                    <div style='text-align: center; margin: 30px 0;'>
+                        <a href='$link' style='display: inline-block; padding: 15px 25px; background: #8C52FF; color: white; text-decoration: none; border-radius: 10px; font-weight: bold;'>Réinitialiser mon mot de passe</a>
+                    </div>
+                    <p style='font-size: 12px; color: #94a3b8;'>Si vous n'êtes pas à l'origine de cette demande, ignorez cet email. Ce lien expirera dans 1 heure.</p>
+                </div>";
+
+            $mail->send();
+        } catch (Exception $e) {
+            error_log("Erreur PHPMailer : " . $mail->ErrorInfo);
+            // Si le mail échoue, on flash l'erreur technique pour le debug
+            Session::flash('errors', ['general' => "Le mail n'a pas pu être envoyé : " . $mail->ErrorInfo]);
+        }
+    }
+
     public function showReset(string $token): void
     {
+        $db = \Core\Database::getInstance()->getConnection();
+        $stmt = $db->prepare("SELECT * FROM password_resets WHERE token = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)");
+        $stmt->execute([$token]);
+        $reset = $stmt->fetch();
+
+        if (!$reset) {
+            Session::flash('errors', ['general' => 'Le lien est invalide ou a expiré.']);
+            Response::redirect('/auth/mot-de-passe-oublie');
+        }
+
         Response::view('auth/reinitialiser', [
             'pageTitle' => "Nouveau mot de passe — Connect'Academia",
             'token'     => htmlspecialchars($token),
@@ -176,8 +247,40 @@ class AuthController
 
     public function reset(): void
     {
-        Session::flash('errors', ['general' => 'Fonctionnalité bientôt disponible.']);
-        Response::redirect('/auth/connexion');
+        $token    = $_POST['token'] ?? '';
+        $password = $_POST['password'] ?? '';
+        $confirm  = $_POST['password_confirmation'] ?? '';
+
+        if (empty($token) || strlen($password) < 8 || $password !== $confirm) {
+            Session::flash('errors', ['general' => 'Informations invalides (min 8 caractères).']);
+            Response::redirect('/auth/reinitialiser/' . $token);
+        }
+
+        try {
+            $db = \Core\Database::getInstance()->getConnection();
+            $stmt = $db->prepare("SELECT email FROM password_resets WHERE token = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)");
+            $stmt->execute([$token]);
+            $reset = $stmt->fetch();
+
+            if ($reset) {
+                $userModel = new User();
+                $hashedPassword = password_hash($password, PASSWORD_ARGON2ID);
+                
+                $update = $db->prepare("UPDATE users SET password_hash = ? WHERE email = ?");
+                $update->execute([$hashedPassword, $reset['email']]);
+
+                $delete = $db->prepare("DELETE FROM password_resets WHERE email = ?");
+                $delete->execute([$reset['email']]);
+
+                Session::flash('success', 'Votre mot de passe a été mis à jour.');
+                Response::redirect('/auth/connexion');
+            }
+        } catch (\Exception $e) {
+            error_log("Reset error: " . $e->getMessage());
+        }
+
+        Session::flash('errors', ['general' => 'Une erreur est survenue.']);
+        Response::redirect('/auth/mot-de-passe-oublie');
     }
 
     private function setUserSession(array $user): void
