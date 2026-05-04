@@ -73,6 +73,56 @@ class Admin extends BaseModel
         return $this->lastInsertId();
     }
 
+    // ── Nouvelles méthodes pour la réinitialisation de mot de passe ──────
+
+    /**
+     * Recherche un admin via son token de réinitialisation
+     * On vérifie idéalement que le token a été créé il y a moins de 2 heures
+     */
+    public function findByResetToken(string $token): array|false
+    {
+        return $this->query(
+            "SELECT id, email FROM admins 
+             WHERE reset_token = ? 
+             AND reset_expires_at > NOW() 
+             AND is_active = 1",
+            [$token]
+        )->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Enregistre un token de réinitialisation pour un admin
+     */
+    public function setResetToken(int $id, string $token): bool
+    {
+        return (bool) $this->query(
+            "UPDATE admins SET reset_token = ?, reset_expires_at = DATE_ADD(NOW(), INTERVAL 2 HOUR) WHERE id = ?",
+            [$token, $id]
+        );
+    }
+
+    /**
+     * Met à jour le mot de passe et nettoie le token
+     */
+    public function updatePassword(int $id, string $hashedPassword): bool
+    {
+        return (bool) $this->query(
+            "UPDATE admins SET password_hash = ?, reset_token = NULL, reset_expires_at = NULL, updated_at = NOW() WHERE id = ?",
+            [$hashedPassword, $id]
+        );
+    }
+
+    /**
+     * Supprime explicitement un token (utilisé après succès ou invalidation)
+     */
+    public function deleteResetToken(string $token): void
+    {
+        $this->query(
+            "UPDATE admins SET reset_token = NULL, reset_expires_at = NULL WHERE reset_token = ?",
+            [$token]
+        );
+    }
+
     // ── Stats globales pour le dashboard ─────────────────────────────────
 
     public function getDashboardStats(): array

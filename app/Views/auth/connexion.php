@@ -5,6 +5,67 @@
 
   <!-- Formulaire droit -->
   <div class="form-section">
+
+    <!-- STYLE PROFESSIONNEL AUX COULEURS DE CONNECT'ACADEMIA -->
+    <style>
+      .btn-back-landing {
+        position: absolute;
+        top: 30px;
+        right: 40px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 20px;
+        background-color: transparent;
+        color: #6b7280; /* Couleur grise sub-text */
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-radius: 50px; /* Style pilule plus moderne */
+        border: 1.5px solid #e5e7eb;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 10;
+      }
+
+      .btn-back-landing svg {
+        transition: transform 0.3s ease;
+      }
+
+      /* Effet au survol avec tes couleurs primary-gradient */
+      .btn-back-landing:hover {
+        color: #1f2937;
+        border-color: #a855f7; /* Une des couleurs de ton dégradé */
+        background: white;
+        box-shadow: 0 10px 15px -3px rgba(168, 85, 247, 0.1);
+        transform: translateY(-2px);
+      }
+
+      .btn-back-landing:hover svg {
+        transform: translateX(-5px);
+        stroke: #6366f1; /* Couleur Indigo de ton gradient */
+      }
+
+      @media (max-width: 900px) {
+        .btn-back-landing {
+          top: 20px;
+          right: 20px;
+          padding: 8px 15px;
+          font-size: 11px;
+        }
+      }
+    </style>
+
+    <!-- BOUTON RETOUR PROFESSIONNEL -->
+    <a href="<?= url('/') ?>" class="btn-back-landing">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Retour au site
+    </a>
+
     <div class="form-wrapper">
 
       <!-- Logo -->
@@ -86,17 +147,3 @@
   </div>
 
 </div>
-
-<script>
-function togglePassword() {
-    const input = document.getElementById('password-input');
-    const btn   = document.getElementById('eye-icon');
-    if (input.type === 'password') {
-        input.type = 'text';
-        btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
-    } else {
-        input.type = 'password';
-        btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
-    }
-}
-</script>

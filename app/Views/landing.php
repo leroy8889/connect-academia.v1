@@ -1185,6 +1185,70 @@
 
   </footer>
 
+<style>
+    /* Design Pro Cookie Card */
+    #cookie-card {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      max-width: 350px;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      z-index: 10001;
+      display: none;
+      font-family: sans-serif;
+      border: 1px solid #eee;
+      animation: slideInUp 0.6s ease-out;
+    }
+    @keyframes slideInUp {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .cookie-title { font-weight: bold; font-size: 18px; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; color: #333; }
+    .cookie-text { font-size: 14px; color: #666; line-height: 1.4; margin-bottom: 15px; }
+    .btn-accept-pro { background: #ffbb00; color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; }
+    .btn-accept-pro:hover { background: #e5a900; }
+
+    /* WhatsApp Float */
+    .whatsapp-pro {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      background: #25d366;
+      color: white;
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 9999;
+      transition: 0.3s;
+    }
+    .whatsapp-pro:hover { transform: scale(1.1); color: white; }
+
+    /* Footer Responsive Patch */
+    @media (max-width: 768px) {
+      .footer-list { width: 100% !important; text-align: center !important; }
+      .footer-top .container { flex-direction: column !important; }
+      #cookie-card { left: 10px; right: 10px; max-width: none; }
+    }
+  </style>
+
+  <div id="cookie-card">
+    <div class="cookie-title"><ion-icon name="cookie-outline" style="color: #ffbb00;"></ion-icon> Cookies</div>
+    <p class="cookie-text">Nous utilisons des cookies pour améliorer votre expérience sur Connect'Academia.</p>
+    <button class="btn-accept-pro" onclick="acceptCookies()">Accepter & Fermer</button>
+  </div>
+
+  <a href="https://wa.me/24100000000" class="whatsapp-pro" target="_blank">
+    <ion-icon name="logo-whatsapp"></ion-icon>
+  </a>
 
   <a href="#top" class="back-top-btn" aria-label="back top top" data-back-top-btn>
     <ion-icon name="chevron-up" aria-hidden="true"></ion-icon>
@@ -1222,7 +1286,17 @@
     window.addEventListener("resize", function() {
       map.invalidateSize();
     });
+
+    // --- Logique Cookies ---
+    if (!localStorage.getItem('cookies_accepted')) {
+      document.getElementById('cookie-card').style.display = 'block';
+    }
   });
+
+  function acceptCookies() {
+    localStorage.setItem('cookies_accepted', 'true');
+    document.getElementById('cookie-card').style.display = 'none';
+  }
 </script>
 
   <script src="<?= BASE_URL ?>/assets/js/script.js" defer></script>

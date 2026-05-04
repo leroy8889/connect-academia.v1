@@ -2,11 +2,34 @@
 $is2fa   = !empty($_SESSION['admin_2fa_pending']);
 $error   = \Core\Session::getFlash('error', '');
 $success = \Core\Session::getFlash('success');
+
+// Logique pour le QR Code si on est en mode 2FA
+$qr_url = "";
+if ($is2fa) {
+    $otp_code = $_SESSION['admin_2fa_pending']['otp'] ?? '000000';
+    $qr_url = "https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=" . urlencode("OTP:$otp_code") . "&choe=UTF-8";
+}
 ?>
+
+<style>
+    /* Styles pour l'intégration propre du QR Code et des alertes */
+    .qr-container { background: white; padding: 10px; border-radius: 12px; margin: 20px auto; width: fit-content; border: 1px solid rgba(139,82,250,0.2); }
+    .qr-container img { width: 130px; height: 130px; display: block; }
+    .qr-label { color: #2D1B69; font-size: 10px; text-align: center; margin-top: 5px; font-weight: bold; }
+    .admin-alert { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
+    .admin-alert-error { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+    .admin-alert-success { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
+    /* Correction alignement OTP */
+    .otp-inputs { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
+    .otp-input { width: 45px; height: 55px; text-align: center; font-size: 1.5rem; font-weight: bold; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9; }
+    
+    /* Styles pour le toggle password (œil) */
+    .password-toggle { background: none; border: none; padding: 0 10px; cursor: pointer; color: #8B52FA; display: flex; align-items: center; }
+    .password-toggle .hidden { display: none; }
+</style>
 
 <div class="admin-auth-card">
 
-  <!-- ── Panneau gauche illustré ──────────────────────────── -->
   <div class="admin-auth-left">
 
     <div class="admin-auth-brand">
@@ -22,43 +45,26 @@ $success = \Core\Session::getFlash('success');
       </div>
     </div>
 
-    <!-- Illustration padlock -->
     <div class="admin-auth-illustration">
       <svg width="200" height="220" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- Blob bg -->
         <ellipse cx="100" cy="200" rx="80" ry="16" fill="rgba(139,82,250,0.15)"/>
-
-        <!-- Padlock corps -->
         <rect x="32" y="92" width="136" height="108" rx="18" fill="#2D1B69"/>
         <rect x="38" y="98" width="124" height="96" rx="14" fill="#1F1248"/>
-
-        <!-- Padlock anneau -->
         <path d="M55 92V62C55 38 145 38 145 62V92" stroke="rgba(196,160,248,0.7)" stroke-width="16" stroke-linecap="round" fill="none"/>
-
-        <!-- Fingerprint icon -->
         <g transform="translate(100,146)" stroke="#8B52FA" stroke-linecap="round" fill="none">
           <path d="M0-24C13-24 24-13 24 0C24 13 13 24 0 24C-13 24-24 13-24 0" stroke-width="2.5" stroke-dasharray="4 4"/>
           <path d="M0-16C9-16 16-9 16 0C16 9 9 16 0 16C-9 16-16 9-16 0" stroke-width="2.5"/>
           <path d="M0-8C4-8 8-4 8 0C8 4 4 8 0 8C-4 8-8 4-8 0" stroke-width="2.5"/>
           <circle cx="0" cy="0" r="2" fill="#8B52FA"/>
         </g>
-
-        <!-- Keyhole -->
         <circle cx="100" cy="146" r="10" fill="#8B52FA" opacity="0.3"/>
-
-        <!-- Étudiant gauche -->
         <g transform="translate(16,155)">
-          <!-- Corps -->
           <ellipse cx="22" cy="50" rx="14" ry="6" fill="rgba(139,82,250,0.2)"/>
           <rect x="14" y="28" width="16" height="18" rx="5" fill="#C4A0F8"/>
-          <!-- Tête -->
           <circle cx="22" cy="20" r="9" fill="#C4A0F8"/>
-          <!-- Laptop -->
           <rect x="8" y="44" width="28" height="5" rx="2" fill="#E8D5FF"/>
           <rect x="10" y="39" width="24" height="8" rx="2" fill="#D4B5FF"/>
         </g>
-
-        <!-- Étudiant droite -->
         <g transform="translate(148,155)">
           <ellipse cx="18" cy="50" rx="14" ry="6" fill="rgba(139,82,250,0.2)"/>
           <rect x="10" y="28" width="16" height="18" rx="5" fill="#C4A0F8"/>
@@ -74,11 +80,9 @@ $success = \Core\Session::getFlash('success');
     </div>
   </div>
 
-  <!-- ── Panneau droit formulaire ─────────────────────────── -->
   <div class="admin-auth-right">
 
     <?php if (!$is2fa): ?>
-    <!-- === FORMULAIRE LOGIN === -->
     <div class="admin-auth-badge">Portail Sécurisé</div>
     <h1>Connexion administrateur</h1>
     <p class="auth-desc">Accédez au tableau de bord pour gérer la plateforme, les utilisateurs et la communauté.</p>
@@ -130,7 +134,7 @@ $success = \Core\Session::getFlash('success');
           <input type="checkbox" name="remember" value="1">
           Rester connecté
         </label>
-        <a href="#" class="admin-forgot">Mot de passe oublié ?</a>
+        <a href="<?= url('/admin/forgot-password') ?>" class="admin-forgot">Mot de passe oublié ?</a>
       </div>
 
       <button type="submit" class="btn-admin-primary">
@@ -152,21 +156,25 @@ $success = \Core\Session::getFlash('success');
     </div>
 
     <?php else: ?>
-    <!-- === FORMULAIRE 2FA === -->
     <div class="admin-auth-badge">Vérification 2FA</div>
     <h1>Code de sécurité</h1>
-    <p class="auth-desc">Entrez le code à 6 chiffres de votre application d'authentification (Google Authenticator, Authy…).</p>
+    <p class="auth-desc">Entrez le code à 6 chiffres envoyé par mail ou scannez le QR code ci-dessous.</p>
 
-    <?php if (!empty($errors['otp'])): ?>
+    <?php if ($error): ?>
       <div class="admin-alert admin-alert-error">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
-        <?= e($errors['otp']) ?>
+        <?= e($error) ?>
       </div>
     <?php endif; ?>
 
+    <div class="qr-container">
+        <img src="<?= $qr_url ?>" alt="QR Code OTP">
+        <div class="qr-label">SCANNEZ L'OTP</div>
+    </div>
+
     <form action="<?= url('/admin/verifier-2fa') ?>" method="POST" id="otp-form">
       <input type="hidden" name="_csrf_token" value="<?= \Core\Session::getCsrfToken() ?>">
-      <input type="hidden" name="otp_code" id="otp-code-hidden">
+      <input type="hidden" name="otp_code_val" id="otp-code-hidden">
 
       <div class="otp-inputs">
         <?php for ($i = 0; $i < 6; $i++): ?>
@@ -174,7 +182,7 @@ $success = \Core\Session::getFlash('success');
         <?php endfor; ?>
       </div>
 
-      <button type="submit" class="btn-admin-primary">VÉRIFIER</button>
+      <button type="submit" class="btn-admin-primary">VÉRIFIER LE CODE</button>
     </form>
 
     <div class="admin-auth-divider">OU</div>
@@ -193,3 +201,56 @@ $success = \Core\Session::getFlash('success');
 <p class="admin-auth-page-footer">
   © 2026 <strong>Connect'Academia</strong> · Plateforme d'apprentissage et d'orientation des Terminales · Libreville, Gabon
 </p>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Logique du Toggle Password (Oeil)
+    const toggleBtn = document.querySelector('.password-toggle');
+    const pwdInput = document.getElementById('admin-pwd');
+    if (toggleBtn && pwdInput) {
+        const eyeIcon = toggleBtn.querySelector('.icon-eye');
+        const eyeOffIcon = toggleBtn.querySelector('.icon-eye-off');
+
+        toggleBtn.addEventListener('click', function() {
+            const isPassword = pwdInput.type === 'password';
+            pwdInput.type = isPassword ? 'text' : 'password';
+            eyeIcon.classList.toggle('hidden', isPassword);
+            eyeOffIcon.classList.toggle('hidden', !isPassword);
+        });
+    }
+
+    const otpForm = document.getElementById('otp-form');
+    if (otpForm) {
+        const inputs = otpForm.querySelectorAll('.otp-input');
+        const hiddenInput = document.getElementById('otp-code-hidden');
+
+        // Passage automatique au suivant
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value.length === 1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            });
+
+            // Retour arrière
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+        });
+
+        // Fusionner avant l'envoi
+        otpForm.addEventListener('submit', (e) => {
+            let fullCode = "";
+            inputs.forEach(input => fullCode += input.value);
+            hiddenInput.value = fullCode;
+            
+            if (fullCode.length !== 6) {
+                e.preventDefault();
+                alert("Veuillez entrer les 6 chiffres.");
+            }
+        });
+    }
+});
+</script>
