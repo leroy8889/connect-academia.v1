@@ -1,17 +1,18 @@
 /**
- * Connect'Academia — Viewer PDF
- * Gère l'affichage iframe + progression + IA chat
+ * Connect'Academia — Viewer
+ * Gère progression + IA chat BACY + mobile drawer
  */
 'use strict';
 
 let ressourceId   = null;
 let saveProgression = null;
 
+/* Logo SVG plateforme — utilisé dans les avatars IA */
+const BACY_LOGO_SVG = `<svg width="18" height="18" viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M8 28L20 10L32 28H8Z" fill="white" fill-opacity="0.92"/><circle cx="20" cy="20" r="5" fill="white"/></svg>`;
+
 function initViewer(ressId, lastPage, pdfUrl, progressionPct) {
     ressourceId     = ressId;
     saveProgression = initProgressionAuto(ressourceId);
-
-    // Mettre à jour la barre de progression si déjà en cours
     updateProgressBar(progressionPct || 0);
 }
 
@@ -52,12 +53,42 @@ const IaChat = (() => {
         textarea.addEventListener('input', () => {
             textarea.style.height = 'auto';
             textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+            sendBtn.disabled = textarea.value.trim().length === 0;
         });
         sendBtn.addEventListener('click', send);
 
+        // Desktop toggle
         toggleBtn?.addEventListener('click', () => {
             panel?.classList.toggle('ia-panel--hidden');
         });
+
+        // Mobile FAB — ouvre le drawer
+        const mobileFab     = document.getElementById('ia-mobile-fab');
+        const mobileOverlay = document.getElementById('ia-mobile-overlay');
+        const closeBtn      = document.getElementById('ia-close-mobile');
+        const handle        = document.getElementById('ia-panel-handle');
+
+        function openMobile() {
+            if (!panel) return;
+            panel.classList.remove('ia-panel--hidden');
+            panel.classList.add('mobile-open');
+            if (mobileOverlay) mobileOverlay.style.display = 'block';
+            if (closeBtn) closeBtn.style.display = 'flex';
+            // Focus textarea pour UX mobile
+            setTimeout(() => textarea?.focus(), 300);
+        }
+
+        function closeMobile() {
+            if (!panel) return;
+            panel.classList.remove('mobile-open');
+            if (mobileOverlay) mobileOverlay.style.display = 'none';
+            if (closeBtn) closeBtn.style.display = 'none';
+        }
+
+        mobileFab?.addEventListener('click', openMobile);
+        mobileOverlay?.addEventListener('click', closeMobile);
+        closeBtn?.addEventListener('click', closeMobile);
+        handle?.addEventListener('click', closeMobile);
 
         loadHistorique();
     }
@@ -133,11 +164,15 @@ const IaChat = (() => {
 
         const avatar = document.createElement('div');
         avatar.className = 'ia-msg__avatar';
-        avatar.textContent = role === 'ia' ? '✦' : '👤';
+
+        if (role === 'ia') {
+            avatar.innerHTML = BACY_LOGO_SVG;
+        } else {
+            avatar.textContent = '👤';
+        }
 
         const bubble = document.createElement('div');
         bubble.className = 'ia-msg__bubble';
-        // Rendu Markdown basique
         bubble.innerHTML = renderMarkdown(text);
 
         if (role === 'ia') {
@@ -157,19 +192,18 @@ const IaChat = (() => {
         const div = document.createElement('div');
         div.id = id;
         div.className = 'ia-msg ia-msg--ia';
-        div.innerHTML = `<div class="ia-msg__avatar">✦</div>
-            <div class="ia-msg__bubble" style="display:flex;gap:4px;align-items:center">
-                <span style="animation:blink 1s infinite">●</span>
-                <span style="animation:blink 1s .3s infinite">●</span>
-                <span style="animation:blink 1s .6s infinite">●</span>
-            </div>`;
+
+        const avatar = document.createElement('div');
+        avatar.className = 'ia-msg__avatar';
+        avatar.innerHTML = BACY_LOGO_SVG;
+
+        const bubble = document.createElement('div');
+        bubble.className = 'ia-msg__bubble';
+        bubble.innerHTML = `<div class="ia-loading"><span></span><span></span><span></span></div>`;
+
+        div.append(avatar, bubble);
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
-
-        const style = document.createElement('style');
-        style.textContent = '@keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}';
-        document.head.appendChild(style);
-
         return id;
     }
 

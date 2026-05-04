@@ -133,7 +133,7 @@ $typeLabel = fn(string $t) => $types[$t] ?? ucfirst(str_replace('_', ' ', $t));
           <a href="<?= url('/apprentissage/viewer/' . (int)$r['id']) ?>" style="display:flex;flex-direction:column;gap:10px;flex:1;text-decoration:none">
 
             <div style="display:flex;align-items:flex-start;gap:12px;padding-right:56px">
-              <div class="resource-card__icon">
+              <div class="resource-card__icon resource-card__icon--<?= e($r['type'] ?? 'cours') ?>">
                 <?= typeIconRes($r['type'] ?? '') ?>
               </div>
               <div style="min-width:0;flex:1">

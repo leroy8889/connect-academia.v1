@@ -109,31 +109,44 @@ class SeriesController
     }
 
     /**
-     * Supprime une série (passage en is_active = 0 ou suppression réelle)
+     * Supprime une série et toutes ses données associées
      */
     public function deleteSerie(int $id): void
     {
-        // On vérifie si la série contient des élèves avant de supprimer
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM users WHERE serie_id = ? AND is_deleted = 0");
+        // Vérifie que la série existe
+        $stmt = $this->db->prepare("SELECT id, nom FROM series WHERE id = ?");
         $stmt->execute([$id]);
-        $hasUsers = (int) $stmt->fetchColumn();
+        $serie = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($hasUsers > 0) {
-            Response::json([
-                'success' => false, 
-                'message' => "Impossible de supprimer : cette série contient encore des élèves."
-            ], 400);
+        if (!$serie) {
+            Response::json(['success' => false, 'message' => "Série introuvable."], 404);
             return;
         }
 
-        // Suppression logique (recommandé) ou physique
-        $stmt = $this->db->prepare("UPDATE series SET is_active = 0 WHERE id = ?");
-        $success = $stmt->execute([$id]);
+        try {
+            $this->db->beginTransaction();
 
-        if ($success) {
-            Response::json(['success' => true, 'message' => "La série a été supprimée."]);
-        } else {
-            Response::json(['success' => false, 'message' => "Erreur lors de la suppression."], 500);
+            // 1. Détacher les élèves de cette série (leur serie_id = NULL)
+            $this->db->prepare("UPDATE users SET serie_id = NULL WHERE serie_id = ?")->execute([$id]);
+
+            // 2. Soft-delete les ressources liées aux matières de cette série
+            $this->db->prepare(
+                "UPDATE ressources SET is_deleted = 1, updated_at = NOW()
+                 WHERE matiere_id IN (SELECT id FROM matieres WHERE serie_id = ?)"
+            )->execute([$id]);
+
+            // 3. Soft-delete les matières de cette série
+            $this->db->prepare("UPDATE matieres SET is_active = 0 WHERE serie_id = ?")->execute([$id]);
+
+            // 4. Suppression physique de la série
+            $this->db->prepare("DELETE FROM series WHERE id = ?")->execute([$id]);
+
+            $this->db->commit();
+
+            Response::json(['success' => true, 'message' => "La série \"{$serie['nom']}\" a été supprimée."]);
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            Response::json(['success' => false, 'message' => "Erreur lors de la suppression : " . $e->getMessage()], 500);
         }
     }
 }

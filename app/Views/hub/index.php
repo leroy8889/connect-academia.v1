@@ -1,9 +1,9 @@
 <?php
-$userName = e(\Core\Session::get('user_name', 'utilisateur'));
-$hour     = (int) date('H');
-$greeting = $hour < 12 ? 'Bonjour' : ($hour < 18 ? 'Bon après-midi' : 'Bonsoir');
-$serie    = $user['serie_id'] ?? null;
-$serieLabel = '';
+$userName    = e(\Core\Session::get('user_name', 'utilisateur'));
+$hour        = (int) date('H');
+$greeting    = $hour < 12 ? 'Bonjour' : ($hour < 18 ? 'Bon après-midi' : 'Bonsoir');
+$serie       = $user['serie_id'] ?? null;
+$serieLabel  = '';
 if ($serie) {
     $serieNames = [1 => 'A', 2 => 'B', 3 => 'C', 4 => 'D', 5 => 'F3', 6 => 'G'];
     $serieLabel = $serieNames[$serie] ?? '';
@@ -18,7 +18,7 @@ $progGlobale = (int) ($stats['progression_globale'] ?? 0);
     <div class="hub__hero-content">
       <div class="hub__hero-text">
         <p class="hub__hero-greeting"><?= $greeting ?>,</p>
-        <h1 class="hub__hero-name"><?= $userName ?> 👋</h1>
+        <h1 class="hub__hero-name"><?= $userName ?></h1>
 
         <?php if ($serieLabel): ?>
         <span class="hub__serie-badge">Série <?= $serieLabel ?></span>
@@ -27,16 +27,12 @@ $progGlobale = (int) ($stats['progression_globale'] ?? 0);
         <?php if ($acces): ?>
           <?php if ($resteGratuit > 0): ?>
           <p class="hub__hero-sub">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-            </svg>
-            Période gratuite — il vous reste <?= ceil($resteGratuit / 3600) ?>h d'accès
+            <i data-lucide="clock"></i>
+            Période gratuite — il te reste <?= ceil($resteGratuit / 3600) ?>h d'accès
           </p>
           <?php else: ?>
           <p class="hub__hero-sub hub__hero-sub--premium">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
+            <i data-lucide="star"></i>
             Abonnement actif — accès complet
           </p>
           <?php endif; ?>
@@ -52,11 +48,8 @@ $progGlobale = (int) ($stats['progression_globale'] ?? 0);
 
         <?php else: ?>
         <p class="hub__hero-sub hub__hero-sub--warning">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-          Votre période gratuite est expirée —
+          <i data-lucide="alert-triangle"></i>
+          Période gratuite expirée —
           <a href="<?= url('/abonnement/choisir') ?>">S'abonner pour 2 000 XAF/mois</a>
         </p>
         <?php endif; ?>
@@ -71,15 +64,14 @@ $progGlobale = (int) ($stats['progression_globale'] ?? 0);
     </div>
   </section>
 
-  <!-- ── STATS ──────────────────────────────────────────────────────────────── -->
+  <!-- ── STATS ─────────────────────────────────────────────────────────────── -->
   <section class="hub__stats">
+    <p class="hub__section-eyebrow">Ton activité</p>
     <div class="hub__stats-grid">
+
       <div class="hub__stat-card">
         <div class="hub__stat-icon hub__stat-icon--purple">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-          </svg>
+          <i data-lucide="book-open"></i>
         </div>
         <div class="hub__stat-info">
           <span class="hub__stat-num" id="stat-cours"><?= (int) ($stats['cours_consultes'] ?? 0) ?></span>
@@ -89,10 +81,7 @@ $progGlobale = (int) ($stats['progression_globale'] ?? 0);
 
       <div class="hub__stat-card">
         <div class="hub__stat-icon hub__stat-icon--green">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 11 12 14 22 4"/>
-            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-          </svg>
+          <i data-lucide="check-square"></i>
         </div>
         <div class="hub__stat-info">
           <span class="hub__stat-num" id="stat-termines"><?= (int) ($stats['cours_termines'] ?? 0) ?></span>
@@ -102,9 +91,7 @@ $progGlobale = (int) ($stats['progression_globale'] ?? 0);
 
       <div class="hub__stat-card">
         <div class="hub__stat-icon hub__stat-icon--blue">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
+          <i data-lucide="message-square"></i>
         </div>
         <div class="hub__stat-info">
           <span class="hub__stat-num" id="stat-posts"><?= (int) ($stats['posts'] ?? 0) ?></span>
@@ -114,22 +101,21 @@ $progGlobale = (int) ($stats['progression_globale'] ?? 0);
 
       <div class="hub__stat-card">
         <div class="hub__stat-icon hub__stat-icon--orange">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
+          <i data-lucide="users"></i>
         </div>
         <div class="hub__stat-info">
           <span class="hub__stat-num" id="stat-abonnes"><?= (int) ($stats['abonnes'] ?? 0) ?></span>
           <span class="hub__stat-label">Abonnés</span>
         </div>
       </div>
+
     </div>
   </section>
 
   <!-- ── COURS EN COURS ─────────────────────────────────────────────────────── -->
   <?php if (!empty($enCours)): ?>
   <section class="hub__encours">
+    <p class="hub__section-eyebrow">En cours</p>
     <h2 class="hub__section-title">Continuer l'apprentissage</h2>
     <div class="hub__encours-list">
       <?php foreach ($enCours as $cours): ?>
@@ -153,6 +139,7 @@ $progGlobale = (int) ($stats['progression_globale'] ?? 0);
 
   <!-- ── MODULES ────────────────────────────────────────────────────────────── -->
   <section class="hub__modules">
+    <p class="hub__section-eyebrow">Plateforme</p>
     <h2 class="hub__section-title">Mes modules</h2>
     <div class="hub__modules-grid">
 
@@ -161,17 +148,11 @@ $progGlobale = (int) ($stats['progression_globale'] ?? 0);
          class="hub__module-card hub__module-card--apprentissage <?= !$acces ? 'hub__module-card--locked' : '' ?>">
         <div class="hub__module-card__header">
           <div class="hub__module-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-            </svg>
+            <i data-lucide="book-open"></i>
           </div>
           <?php if (!$acces): ?>
           <span class="hub__module-lock">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
+            <i data-lucide="lock"></i>
           </span>
           <?php else: ?>
           <span class="hub__module-badge hub__module-badge--active">Accès</span>
@@ -180,17 +161,14 @@ $progGlobale = (int) ($stats['progression_globale'] ?? 0);
         <h3 class="hub__module-title">Apprentissage</h3>
         <p class="hub__module-desc">Cours, TD et épreuves par série et matière. Assistant IA intégré.</p>
         <div class="hub__module-features">
-          <span>📚 Cours PDF</span>
-          <span>📝 TD et exercices</span>
-          <span>🤖 IA Gemini</span>
-          <span>📊 Progression</span>
+          <span><i data-lucide="file-text"></i> Cours PDF</span>
+          <span><i data-lucide="pen-tool"></i> TD et exercices</span>
+          <span><i data-lucide="cpu"></i> IA Gemini</span>
+          <span><i data-lucide="bar-chart-2"></i> Progression</span>
         </div>
         <div class="hub__module-cta">
           <?= $acces ? 'Accéder' : "S'abonner" ?>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="12 5 19 12 12 19"/>
-          </svg>
+          <i data-lucide="arrow-right"></i>
         </div>
       </a>
 
@@ -199,19 +177,11 @@ $progGlobale = (int) ($stats['progression_globale'] ?? 0);
          class="hub__module-card hub__module-card--communaute <?= !$acces ? 'hub__module-card--locked' : '' ?>">
         <div class="hub__module-card__header">
           <div class="hub__module-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
+            <i data-lucide="users"></i>
           </div>
           <?php if (!$acces): ?>
           <span class="hub__module-lock">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
+            <i data-lucide="lock"></i>
           </span>
           <?php else: ?>
           <span class="hub__module-badge hub__module-badge--active">Accès</span>
@@ -220,46 +190,36 @@ $progGlobale = (int) ($stats['progression_globale'] ?? 0);
         <h3 class="hub__module-title">Communauté</h3>
         <p class="hub__module-desc">Échangez avec d'autres élèves et étudiants. Posez vos questions, partagez vos astuces.</p>
         <div class="hub__module-features">
-          <span>💬 Fil d'actualité</span>
-          <span>❓ Questions/Réponses</span>
-          <span>💭 Chat en direct</span>
-          <span>🔔 Notifications</span>
+          <span><i data-lucide="message-circle"></i> Fil d'actualité</span>
+          <span><i data-lucide="help-circle"></i> Questions</span>
+          <span><i data-lucide="zap"></i> Chat en direct</span>
+          <span><i data-lucide="bell"></i> Notifications</span>
         </div>
         <div class="hub__module-cta">
           <?= $acces ? 'Accéder' : "S'abonner" ?>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="12 5 19 12 12 19"/>
-          </svg>
+          <i data-lucide="arrow-right"></i>
         </div>
       </a>
 
-      <!-- Orientation — module gratuit, fichier statique -->
+      <!-- Orientation -->
       <a href="<?= BASE_URL ?>/public/orientation/orientation.html" class="hub__module-card hub__module-card--orientation">
         <div class="hub__module-card__header">
           <div class="hub__module-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="2" y1="12" x2="22" y2="12"/>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
+            <i data-lucide="compass"></i>
           </div>
           <span class="hub__module-badge hub__module-badge--free">Gratuit</span>
         </div>
         <h3 class="hub__module-title">Orientation</h3>
         <p class="hub__module-desc">Découvrez les universités et filières au Gabon. Guide d'orientation pour votre avenir.</p>
         <div class="hub__module-features">
-          <span>🏛️ Universités publiques</span>
-          <span>🎓 Instituts privés</span>
-          <span>📍 Localisations</span>
-          <span>📋 Filières</span>
+          <span><i data-lucide="building"></i> Universités</span>
+          <span><i data-lucide="graduation-cap"></i> Instituts privés</span>
+          <span><i data-lucide="map-pin"></i> Localisations</span>
+          <span><i data-lucide="list"></i> Filières</span>
         </div>
         <div class="hub__module-cta">
           Explorer
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="12 5 19 12 12 19"/>
-          </svg>
+          <i data-lucide="arrow-right"></i>
         </div>
       </a>
 

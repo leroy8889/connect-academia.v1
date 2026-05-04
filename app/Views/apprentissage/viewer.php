@@ -167,17 +167,35 @@ $typeLabels = [
 
   <!-- ══ PANEL IA ══════════════════════════════════════════════ -->
   <aside class="ia-panel ia-panel--hidden" id="ia-panel">
+
+    <!-- Handle barre (visible mobile uniquement) -->
+    <div class="ia-panel__handle" id="ia-panel-handle"></div>
+
     <div class="ia-panel__header">
-      <div class="ia-panel__badge">✦</div>
+      <div class="ia-panel__badge">
+        <svg width="20" height="20" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <path d="M8 28L20 10L32 28H8Z" fill="white" fill-opacity="0.92"/>
+          <circle cx="20" cy="20" r="5" fill="white"/>
+        </svg>
+      </div>
       <div>
         <div class="ia-panel__title">BACY — Assistant IA</div>
         <div class="ia-panel__sub">Posez vos questions sur ce cours</div>
       </div>
+      <!-- Bouton fermer (mobile) -->
+      <button id="ia-close-mobile" style="margin-left:auto;background:none;border:none;cursor:pointer;color:#6B7280;display:none;padding:4px" title="Fermer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
 
     <div class="ia-messages" id="ia-messages">
       <div class="ia-msg ia-msg--ia">
-        <div class="ia-msg__avatar">✦</div>
+        <div class="ia-msg__avatar">
+          <svg width="18" height="18" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+            <path d="M8 28L20 10L32 28H8Z" fill="white" fill-opacity="0.92"/>
+            <circle cx="20" cy="20" r="5" fill="white"/>
+          </svg>
+        </div>
         <div class="ia-msg__bubble">
           Bonjour ! Je suis BACY, votre assistant IA pour <strong><?= e($titre) ?></strong>.
           Posez-moi vos questions, je suis là pour vous aider à comprendre le cours.
@@ -194,6 +212,17 @@ $typeLabels = [
       </button>
     </div>
   </aside>
+
+  <!-- Mobile FAB chat -->
+  <button class="ia-mobile-fab" id="ia-mobile-fab" title="Ouvrir l'assistant BACY">
+    <svg width="22" height="22" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+      <path d="M8 28L20 10L32 28H8Z" fill="white" fill-opacity="0.92"/>
+      <circle cx="20" cy="20" r="5" fill="white"/>
+    </svg>
+  </button>
+
+  <!-- Mobile overlay -->
+  <div class="ia-mobile-overlay" id="ia-mobile-overlay"></div>
 
 </div>
 

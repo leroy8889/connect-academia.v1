@@ -93,6 +93,12 @@ $typeBg = [
       </div>
       <!-- Actions overlay -->
       <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transition:opacity 0.15s;" class="card-actions">
+        <button class="action-btn btn-view-ressource"
+                data-url="<?= e($r['file_url'] ?? '#') ?>"
+                data-titre="<?= e($r['titre']) ?>"
+                style="background:white;width:28px;height:28px;" title="Visualiser">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0369A1" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
         <button class="action-btn btn-edit-ressource"
                 data-id="<?= $r['id'] ?>"
                 data-titre="<?= e($r['titre']) ?>"
@@ -277,6 +283,30 @@ $typeBg = [
   </div>
 </div>
 
+<!-- ── MODAL VISUALISATION PDF ─────────────────────────────── -->
+<div class="admin-modal-overlay" id="modal-view-ressource" style="align-items:flex-start;padding:20px;">
+  <div class="admin-modal" style="max-width:860px;width:100%;max-height:calc(100vh - 40px);display:flex;flex-direction:column;">
+    <div class="admin-modal-header" style="flex-shrink:0;">
+      <h2 id="view-ressource-titre" style="font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:680px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ap)" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        Visualisation
+      </h2>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <a id="view-ressource-open-link" href="#" target="_blank" class="btn-ghost" style="font-size:11px;padding:5px 10px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Ouvrir dans onglet
+        </a>
+        <button class="modal-close" onclick="closeViewModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div style="flex:1;min-height:0;padding:0;">
+      <iframe id="view-ressource-iframe" src="" style="width:100%;height:72vh;border:none;display:block;"></iframe>
+    </div>
+  </div>
+</div>
+
 <style>
 .ressource-card:hover .card-actions { opacity: 1 !important; }
 </style>
@@ -284,4 +314,30 @@ $typeBg = [
 <script>
 // Matières pré-chargées par série (évite AJAX, fiable même si baseUrl cassée)
 window.CA_MATIERES_BY_SERIE = <?= json_encode($matieresBySerie) ?>;
+
+function openViewModal(url, titre) {
+  const modal = document.getElementById('modal-view-ressource');
+  document.getElementById('view-ressource-titre').childNodes[1].textContent = ' ' + titre;
+  document.getElementById('view-ressource-iframe').src = url;
+  document.getElementById('view-ressource-open-link').href = url;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeViewModal() {
+  const modal = document.getElementById('modal-view-ressource');
+  modal.classList.remove('open');
+  document.getElementById('view-ressource-iframe').src = '';
+  document.body.style.overflow = '';
+}
+document.getElementById('modal-view-ressource').addEventListener('click', function(e) {
+  if (e.target === this) closeViewModal();
+});
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.btn-view-ressource').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      openViewModal(this.dataset.url, this.dataset.titre);
+    });
+  });
+});
 </script>

@@ -118,7 +118,7 @@ function typeLabel(string $type): string {
       <?php foreach ($en_cours as $r): ?>
       <div class="resource-card">
         <div style="display:flex;align-items:flex-start;gap:12px">
-          <div class="resource-card__icon">
+          <div class="resource-card__icon resource-card__icon--<?= e($r['type'] ?? 'cours') ?>">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
               <polyline points="14 2 14 8 20 8"/>
@@ -161,7 +161,7 @@ function typeLabel(string $type): string {
       <?php foreach ($recentes as $r): ?>
       <a href="<?= url('/apprentissage/viewer/' . (int)$r['id']) ?>" class="resource-card">
         <div style="display:flex;align-items:flex-start;gap:12px">
-          <div class="resource-card__icon">
+          <div class="resource-card__icon resource-card__icon--<?= e($r['type'] ?? 'cours') ?>">
             <?php if ($r['type'] === 'cours'): ?>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
             <?php elseif ($r['type'] === 'td'): ?>
