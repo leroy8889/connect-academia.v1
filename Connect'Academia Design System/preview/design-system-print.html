@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Connect'Academia — Design System</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  @page { size: A4 portrait; margin: 12mm; }
+
+  html, body { background: #fff; }
+  body { padding: 0; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .page {
+    page-break-after: always;
+    break-after: page;
+    padding: 28px 32px;
+    min-height: calc(100vh - 0px);
+    display: flex; flex-direction: column;
+    background: #fff;
+  }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+
+  .page-head { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 18px; }
+  .page-head .ttl { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+  .page-head .eb  { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); }
+
+  /* Cover */
+  .cover {
+    background:
+      radial-gradient(circle at 80% 20%, rgba(255,255,255,0.20), transparent 50%),
+      linear-gradient(135deg, #8B52FA, #6B2FE6);
+    color: #fff;
+    border-radius: 0;
+    padding: 40px 36px 36px;
+    flex: 1;
+    display: flex; flex-direction: column; justify-content: space-between;
+    position: relative; overflow: hidden;
+  }
+  .cover img.logo { width: 96px; height: 96px; }
+  .cover .ring { position: absolute; right: -60px; bottom: -60px; width: 360px; opacity: 0.18; }
+  .cover h1 { font-size: 56px; font-weight: 800; letter-spacing: -0.025em; line-height: 1; }
+  .cover h1 em { font-style: normal; font-weight: 300; opacity: 0.85; }
+  .cover .tag { font-size: 12px; font-weight: 700; letter-spacing: 0.20em; text-transform: uppercase; opacity: 0.85; }
+  .cover .meta { display: flex; gap: 16px; font-size: 12px; opacity: 0.85; }
+  .cover .meta span { font-family: ui-monospace, monospace; }
+
+  .toc { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 24px; }
+  .toc .it { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted var(--border-subtle); font-size: 13px; }
+  .toc .it .nm { font-weight: 600; }
+  .toc .it .pg { color: var(--text-muted); font-family: ui-monospace, monospace; }
+  .toc .grp { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--purple-neon); margin-top: 14px; padding-bottom: 4px; }
+
+  /* Card frame around imported card content */
+  .card-stage { flex: 1; display: flex; flex-direction: column; gap: 16px; break-inside: avoid; }
+  .card-stage h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  .card-stage .sub { font-size: 12px; color: var(--text-secondary); }
+
+  /* === inlined card styles, scoped under .embed === */
+  .embed { width: 100%; }
+  .embed .stage { max-width: none !important; gap: 16px; }
+  .embed h1 { font-size: 18px; }
+
+  /* ===== Brand colors page ===== */
+  .pg-brand .grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+  .pg-brand .hero { border-radius: 24px; padding: 28px; background: var(--purple-neon); color: #fff; display: flex; flex-direction: column; justify-content: space-between; min-height: 220px; box-shadow: 0 16px 40px rgba(139,82,250,0.35); position: relative; overflow: hidden; }
+  .pg-brand .hero::before { content:""; position:absolute; inset:auto -40px -60px auto; width:240px; height:240px; background: radial-gradient(circle, rgba(255,255,255,0.25), transparent 60%); border-radius:50%; }
+  .pg-brand .num { font-size: 52px; font-weight: 800; letter-spacing: -0.04em; line-height:1; }
+  .pg-brand .name { font-size: 18px; font-weight: 700; }
+  .pg-brand .pill { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.30); color: #fff; padding: 5px 10px; border-radius: 999px; font-size: 11px; font-family: ui-monospace, monospace; display:inline-block; margin-right:6px; }
+  .pg-brand .side { display: flex; flex-direction: column; gap: 12px; }
+  .pg-brand .glow-card, .pg-brand .tint-card { border-radius: 18px; padding: 14px; border: 1px solid var(--border-subtle); background: var(--bg-surface); display: flex; flex-direction: column; gap: 10px; }
+  .pg-brand .tint-card { background: var(--purple-tint); }
+  .pg-brand .glow-demo { height: 50px; border-radius: 12px; background: var(--purple-neon); box-shadow: 0 8px 24px var(--purple-glow-30); }
+  .pg-brand .row-tag { display: flex; justify-content: space-between; }
+  .pg-brand .row-tag .nm { font-weight: 700; font-size: 12px; }
+  .pg-brand .row-tag .hex { font-family: ui-monospace, monospace; font-size: 10px; color: var(--text-secondary); }
+  .pg-brand .desc { font-size: 11px; color: var(--text-secondary); }
+  .pg-brand .usage { border-radius: 18px; background: var(--bg-surface); padding: 14px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; margin-top: 16px; }
+  .pg-brand .use { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-secondary); }
+  .pg-brand .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--purple-neon); }
+
+  /* ===== Surfaces page ===== */
+  .pg-surf .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .pg-surf .mode { border-radius: 20px; padding: 16px; border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 10px; }
+  .pg-surf .mode.light { background: #FFFFFF; color: #1A1A1A; }
+  .pg-surf .mode.dark  { background: #1A1A1A; color: #FFFFFF; border-color: rgba(255,255,255,0.10); }
+  .pg-surf .mhead { display: flex; justify-content: space-between; }
+  .pg-surf .mhead .t { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+  .pg-surf .mhead .b { font-size: 10px; padding: 3px 8px; border-radius: 999px; }
+  .pg-surf .mode.light .mhead .b { background: #F5F5F7; color: #4A4A4A; }
+  .pg-surf .mode.dark .mhead .b { background: #2D2D2D; color: #E0E0E0; }
+  .pg-surf .row { display: flex; align-items: center; gap: 10px; border-radius: 12px; padding: 10px; font-size: 11px; }
+  .pg-surf .chip { width: 36px; height: 36px; border-radius: 10px; flex: none; border: 1px solid rgba(0,0,0,0.06); }
+  .pg-surf .mode.dark .chip { border-color: rgba(255,255,255,0.10); }
+  .pg-surf .meta { display: flex; flex-direction: column; flex: 1; }
+  .pg-surf .lbl { font-size: 12px; font-weight: 700; }
+  .pg-surf .ds  { font-size: 10px; opacity: 0.75; }
+  .pg-surf .hex { font-family: ui-monospace, monospace; font-size: 10px; opacity: 0.85; }
+  .pg-surf .mode.light .row { background: #F5F5F7; }
+  .pg-surf .mode.light .row.input { background: #EEEEEE; }
+  .pg-surf .mode.light .chip.bgm { background: #FFFFFF; }
+  .pg-surf .mode.light .chip.bgs { background: #F5F5F7; border-color: rgba(0,0,0,0.10); }
+  .pg-surf .mode.light .chip.bgi { background: #EEEEEE; }
+  .pg-surf .mode.dark .row { background: #2D2D2D; }
+  .pg-surf .mode.dark .row.input { background: #121212; }
+  .pg-surf .mode.dark .chip.bgm { background: #1A1A1A; }
+  .pg-surf .mode.dark .chip.bgs { background: #2D2D2D; }
+  .pg-surf .mode.dark .chip.bgi { background: #121212; }
+
+  /* ===== Type Scale ===== */
+  .pg-type .scale { display: flex; flex-direction: column; gap: 8px; }
+  .pg-type .row { display: grid; grid-template-columns: 70px 1fr 180px; gap: 18px; align-items: baseline; padding: 12px 14px; border-radius: 14px; background: var(--bg-surface); border: 1px solid var(--border-subtle); }
+  .pg-type .tag { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+  .pg-type .specs { display: flex; flex-direction: column; text-align: right; gap: 1px; }
+  .pg-type .specs .a { font-size: 11px; font-weight: 600; }
+  .pg-type .specs .b { font-size: 10px; color: var(--text-muted); font-family: ui-monospace, monospace; }
+  .pg-type .h1d { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
+  .pg-type .h2d { font-size: 19px; font-weight: 600; }
+  .pg-type .body-lg { font-size: 16px; color: var(--text-secondary); }
+  .pg-type .body { font-size: 14px; color: var(--text-secondary); }
+  .pg-type .btn-text { font-size: 16px; font-weight: 500; }
+  .pg-type .caption { font-size: 12px; font-weight: 300; color: var(--text-muted); }
+
+  /* ===== Radii ===== */
+  .pg-radii .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .pg-radii .cell { border-radius: 16px; background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .pg-radii .sw { width: 100%; height: 70px; background: var(--purple-neon); box-shadow: 0 6px 16px rgba(139,82,250,0.20); }
+  .pg-radii .meta { text-align: center; }
+  .pg-radii .meta .nm { font-size: 11px; font-weight: 700; }
+  .pg-radii .meta .nu { font-size: 10px; color: var(--text-muted); font-family: ui-monospace, monospace; }
+  .pg-radii .feature { margin-top: 14px; border-radius: 20px; background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 18px; display: flex; align-items: center; gap: 18px; }
+  .pg-radii .feature .demo { width: 96px; height: 96px; border-radius: 24px; background: var(--purple-neon); box-shadow: 0 12px 28px rgba(139,82,250,0.30); flex: none; }
+  .pg-radii .feature h3 { font-size: 16px; font-weight: 700; }
+  .pg-radii .feature p { font-size: 12px; color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
+
+  /* ===== Buttons ===== */
+  .pg-btn .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 14px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 18px; }
+  .pg-btn .row.dark { background: #1A1A1A; border-color: rgba(255,255,255,0.10); }
+  .pg-btn .lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.10em; color: var(--text-muted); margin-bottom: 6px; display:block; }
+  .pg-btn .btn { font-family: var(--font-sans); font-weight: 500; font-size: 14px; border: 0; padding: 12px 20px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; }
+  .pg-btn .btn.primary { background: #8B52FA; color: #fff; box-shadow: 0 6px 18px rgba(139,82,250,0.30); }
+  .pg-btn .btn.hover  { background: #9D6EFB; }
+  .pg-btn .btn.press  { background: #7440D9; transform: scale(0.98); }
+  .pg-btn .btn.disabled { background: #C7B0F8; }
+  .pg-btn .btn.secondary { background: transparent; color: #8B52FA; border: 1.5px solid #8B52FA; padding: 10.5px 18.5px; }
+  .pg-btn .row.dark .btn.secondary { color: #B596FE; border-color: #B596FE; }
+  .pg-btn .btn.tertiary { background: transparent; color: #8B52FA; padding: 12px 6px; }
+  .pg-btn .state-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .pg-btn .state-cell { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .pg-btn .state-cell .nm { font-size: 11px; font-weight: 700; }
+  .pg-btn .state-cell .hx { font-size: 10px; color: var(--text-muted); font-family: ui-monospace, monospace; }
+  .pg-btn .section { margin-bottom: 14px; }
+
+  /* ===== Bento ===== */
+  .pg-bento .bento { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: minmax(96px, auto); gap: 12px; }
+  .pg-bento .card { border-radius: 20px; padding: 16px; background: #F5F5F7; box-shadow: 0 4px 12px rgba(26,26,26,0.08); display: flex; flex-direction: column; gap: 8px; color: #1A1A1A; }
+  .pg-bento .card .eb { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #9E9E9E; }
+  .pg-bento .card h3 { font-size: 15px; font-weight: 600; line-height: 1.3; }
+  .pg-bento .card p  { font-size: 11px; color: #4A4A4A; line-height: 1.5; }
+  .pg-bento .span-2 { grid-column: span 2; }
+  .pg-bento .row-2 { grid-row: span 2; }
+  .pg-bento .promoted { background: #8B52FA; color: #fff; box-shadow: 0 12px 30px rgba(139,82,250,0.35); position: relative; overflow: hidden; }
+  .pg-bento .promoted .eb { color: rgba(255,255,255,0.8); }
+  .pg-bento .promoted p { color: rgba(255,255,255,0.92); }
+  .pg-bento .stat .num { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; line-height: 1; }
+  .pg-bento .stat .lbl { font-size: 11px; color: #4A4A4A; }
+  .pg-bento .icon-cap { width: 32px; height: 32px; border-radius: 10px; background: #F3EFFF; display: grid; place-items: center; color: #8B52FA; }
+  .pg-bento .promoted .icon-cap { background: rgba(255,255,255,0.18); color: #fff; }
+  .pg-bento .progress { height: 5px; background: rgba(0,0,0,0.06); border-radius: 999px; overflow: hidden; margin-top: auto; }
+  .pg-bento .promoted .progress { background: rgba(255,255,255,0.25); }
+  .pg-bento .progress > i { display: block; height: 100%; background: #8B52FA; }
+  .pg-bento .promoted .progress > i { background: #fff; }
+  .pg-bento .chips { display: flex; gap: 5px; flex-wrap: wrap; margin-top: auto; }
+  .pg-bento .chips span { font-size: 10px; padding: 3px 7px; border-radius: 999px; background: #F3EFFF; color: #7440D9; font-weight: 600; }
+  .pg-bento .avatar-row { display: flex; margin-top: auto; }
+  .pg-bento .av { width: 24px; height: 24px; border-radius: 999px; border: 2px solid #F5F5F7; margin-left: -6px; background: linear-gradient(135deg, var(--c1), var(--c2)); display: grid; place-items: center; font-size: 9px; font-weight: 700; color: #fff; }
+  .pg-bento .av:first-child { margin-left: 0; }
+
+  /* ===== Logo / brand ===== */
+  .pg-logo .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; }
+  .pg-logo .card { border-radius: 20px; padding: 22px; border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 14px; }
+  .pg-logo .card.light { background: #FFFFFF; }
+  .pg-logo .card.dark  { background: #1A1A1A; color: #fff; border-color: rgba(255,255,255,0.08); }
+  .pg-logo .card.tint  { background: var(--purple-tint); }
+  .pg-logo .card.brand { background: var(--purple-neon); color: #fff; }
+  .pg-logo .lockup-h { display: flex; align-items: center; gap: 14px; }
+  .pg-logo .lockup-h img { width: 64px; height: 64px; object-fit: contain; }
+  .pg-logo .name { font-weight: 700; font-size: 20px; letter-spacing: -0.01em; line-height: 1; }
+  .pg-logo .name em { font-style: normal; font-weight: 300; }
+  .pg-logo .tag { font-size: 8px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.75; margin-top: 4px; display:block; }
+  .pg-logo .lockup-v { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+  .pg-logo .lockup-v img { width: 80px; height: 80px; object-fit: contain; }
+  .pg-logo .mark-only img { width: 110px; height: 110px; }
+  .pg-logo .label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+  .pg-logo .card.dark .label  { color: rgba(255,255,255,0.65); }
+  .pg-logo .card.brand .label { color: rgba(255,255,255,0.78); }
+  .pg-logo .card.tint  .label { color: var(--purple-press); }
+
+  /* ===== Voice ===== */
+  .pg-voice .hero { border-radius: 20px; padding: 28px; background: linear-gradient(135deg, #8B52FA, #6B2FE6); color: #fff; display: flex; flex-direction: column; gap: 12px; position: relative; overflow: hidden; }
+  .pg-voice .hero img { position: absolute; right: -30px; bottom: -30px; width: 200px; opacity: 0.18; }
+  .pg-voice .hero .eb { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.85; font-weight: 700; }
+  .pg-voice .hero h2 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
+  .pg-voice .hero h2 em { font-style: normal; font-weight: 300; opacity: 0.85; }
+  .pg-voice .hero p { font-size: 13px; max-width: 460px; line-height: 1.55; opacity: 0.95; }
+  .pg-voice .pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+  .pg-voice .pillar { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .pg-voice .pillar .num { font-family: ui-monospace, monospace; font-size: 11px; color: var(--purple-neon); font-weight: 700; }
+  .pg-voice .pillar h3 { font-size: 14px; font-weight: 700; }
+  .pg-voice .pillar p { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* ===== Footer ===== */
+  .pg-foot { display: flex; justify-content: space-between; padding-top: 12px; margin-top: auto; border-top: 1px solid var(--border-subtle); font-size: 10px; color: var(--text-muted); }
+  .pg-foot .l { font-weight: 700; }
+
+  /* Print rules */
+  @media print {
+    body { background: #fff; }
+    .page { padding: 16mm 14mm; min-height: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== COVER ==================== -->
+<section class="page" style="padding:0;">
+  <div class="cover">
+    <img class="ring" src="../assets/logo-mark.png" alt="" />
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <img class="logo" src="../assets/logo-mark.png" alt="" style="filter: brightness(0) invert(1);" />
+      <span class="tag">Design System · v1.0 · Mai 2026</span>
+    </div>
+    <div>
+      <h1>Connect<em>'</em>Academia</h1>
+      <p style="font-size:14px; opacity:0.92; margin-top:14px; max-width:420px;">Ta passerelle vers le Bac et au-delà. Guide de style et UI Kit pour les équipes design et développement.</p>
+    </div>
+    <div class="meta">
+      <span>Purple Neon · #8B52FA</span>
+      <span>Montserrat</span>
+      <span>fr-FR · Gabon</span>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== TOC ==================== -->
+<section class="page">
+  <div class="page-head">
+    <span class="ttl">Table des matières</span>
+    <span class="eb">01 / 09</span>
+  </div>
+  <div class="toc">
+    <div>
+      <div class="grp">Couleurs</div>
+      <div class="it"><span class="nm">Identité de marque · Purple Neon</span><span class="pg">03</span></div>
+      <div class="it"><span class="nm">Surfaces · Light & Dark</span><span class="pg">04</span></div>
+
+      <div class="grp">Typographie</div>
+      <div class="it"><span class="nm">Échelle Montserrat · H1 → Caption</span><span class="pg">05</span></div>
+
+      <div class="grp">Forme & Espacement</div>
+      <div class="it"><span class="nm">Corner Radii · 24px signature</span><span class="pg">06</span></div>
+    </div>
+    <div>
+      <div class="grp">Composants</div>
+      <div class="it"><span class="nm">Boutons · états & hiérarchie</span><span class="pg">07</span></div>
+      <div class="it"><span class="nm">Bento Cards · grille promue</span><span class="pg">08</span></div>
+
+      <div class="grp">Identité</div>
+      <div class="it"><span class="nm">Logo & lockups</span><span class="pg">09</span></div>
+      <div class="it"><span class="nm">Voix & 3 piliers produit</span><span class="pg">10</span></div>
+    </div>
+  </div>
+  <div class="pg-foot"><span class="l">Connect'Academia · Design System</span><span>v1.0</span></div>
+</section>
+
+<!-- ==================== BRAND COLOR ==================== -->
+<section class="page pg-brand">
+  <div class="page-head"><span class="ttl">Couleur de marque</span><span class="eb">Couleurs · 01</span></div>
+  <div class="card-stage">
+    <div>
+      <h2>Purple Neon</h2>
+      <p class="sub">Couleur unique de marque. Identique en Light Mode et Dark Mode.</p>
+    </div>
+    <div class="grid">
+      <div class="hero">
+        <div>
+          <div class="num">01</div>
+          <div class="name" style="margin-top:6px;">Purple Neon</div>
+        </div>
+        <div>
+          <span class="pill">HEX · #8B52FA</span>
+          <span class="pill">RGB · 139 82 250</span>
+        </div>
+      </div>
+      <div class="side">
+        <div class="glow-card">
+          <div class="row-tag"><span class="nm">Purple Glow</span><span class="hex">rgba(139,82,250,.30)</span></div>
+          <div class="glow-demo"></div>
+          <p class="desc">Lueur portée derrière les CTA actifs.</p>
+        </div>
+        <div class="tint-card">
+          <div class="row-tag"><span class="nm" style="color:var(--purple-press);">Purple Tint</span><span class="hex" style="color:var(--purple-press);">#F3EFFF</span></div>
+          <p class="desc" style="color:var(--purple-press);">Surface promue, fond de sélection.</p>
+        </div>
+      </div>
+    </div>
+    <div class="usage">
+      <div class="use"><span class="dot"></span>CTA principaux (Valider, S'inscrire)</div>
+      <div class="use"><span class="dot"></span>État actif (onglet, focus, sélection)</div>
+      <div class="use"><span class="dot"></span>Anneau de focus, bordure d'input</div>
+      <div class="use"><span class="dot"></span>Barres de graphique, accent unique</div>
+    </div>
+  </div>
+  <div class="pg-foot"><span class="l">Connect'Academia · Design System</span><span>03</span></div>
+</section>
+
+<!-- ==================== SURFACES ==================== -->
+<section class="page pg-surf">
+  <div class="page-head"><span class="ttl">Surfaces & arrière-plans</span><span class="eb">Couleurs · 02</span></div>
+  <div class="card-stage">
+    <div>
+      <h2>Backgrounds & Cards</h2>
+      <p class="sub">Trois niveaux de surface qui s'inversent entre Light et Dark Mode.</p>
+    </div>
+    <div class="modes">
+      <section class="mode light">
+        <div class="mhead"><span class="t">Light Mode</span><span class="b">Default</span></div>
+        <div class="row"><div class="chip bgm"></div><div class="meta"><span class="lbl">Main Background</span><span class="ds">Body, base de l'app</span></div><span class="hex">#FFFFFF</span></div>
+        <div class="row"><div class="chip bgs"></div><div class="meta"><span class="lbl">Surface / Card</span><span class="ds">Cartes Bento, modales</span></div><span class="hex">#F5F5F7</span></div>
+        <div class="row input"><div class="chip bgi"></div><div class="meta"><span class="lbl">Input Field</span><span class="ds">Champs de formulaire</span></div><span class="hex">#EEEEEE</span></div>
+      </section>
+      <section class="mode dark">
+        <div class="mhead"><span class="t">Dark Mode</span><span class="b">Opt-in</span></div>
+        <div class="row"><div class="chip bgm"></div><div class="meta"><span class="lbl">Main Background</span><span class="ds">Body, base de l'app</span></div><span class="hex">#1A1A1A</span></div>
+        <div class="row"><div class="chip bgs"></div><div class="meta"><span class="lbl">Surface / Card</span><span class="ds">Cartes Bento, modales</span></div><span class="hex">#2D2D2D</span></div>
+        <div class="row input"><div class="chip bgi"></div><div class="meta"><span class="lbl">Input Field</span><span class="ds">Champs de formulaire</span></div><span class="hex">#121212</span></div>
+      </section>
+    </div>
+  </div>
+  <div class="pg-foot"><span class="l">Connect'Academia · Design System</span><span>04</span></div>
+</section>
+
+<!-- ==================== TYPE ==================== -->
+<section class="page pg-type">
+  <div class="page-head"><span class="ttl">Typographie</span><span class="eb">Type · 01</span></div>
+  <div class="card-stage">
+    <div>
+      <h2>Type Scale — Montserrat</h2>
+      <p class="sub">Une seule famille, six tailles. Géométrique, moderne, très lisible sur mobile.</p>
+    </div>
+    <div class="scale">
+      <div class="row"><span class="tag">H1</span><span class="h1d">Orientation Post-Bac</span><span class="specs"><span class="a">Bold · 700</span><span class="b">28px / 1.2</span></span></div>
+      <div class="row"><span class="tag">H2</span><span class="h2d">Mes objectifs</span><span class="specs"><span class="a">SemiBold · 600</span><span class="b">20px / 1.4</span></span></div>
+      <div class="row"><span class="tag">Body L</span><span class="body-lg">Le Bac approche — restons concentrés.</span><span class="specs"><span class="a">Regular · 400</span><span class="b">16px / 1.55</span></span></div>
+      <div class="row"><span class="tag">Body</span><span class="body">Trouve l'école et la filière qui te correspondent grâce à un parcours guidé.</span><span class="specs"><span class="a">Regular · 400</span><span class="b">14px / 1.55</span></span></div>
+      <div class="row"><span class="tag">Button</span><span class="btn-text">Continuer mon parcours</span><span class="specs"><span class="a">Medium · 500</span><span class="b">16px</span></span></div>
+      <div class="row"><span class="tag">Caption</span><span class="caption">Vu à 14h30 · 4,5/20 au dernier quiz</span><span class="specs"><span class="a">Light · 300</span><span class="b">12px / 1.55</span></span></div>
+    </div>
+  </div>
+  <div class="pg-foot"><span class="l">Connect'Academia · Design System</span><span>05</span></div>
+</section>
+
+<!-- ==================== RADII ==================== -->
+<section class="page pg-radii">
+  <div class="page-head"><span class="ttl">Forme — corner radii</span><span class="eb">Spacing · 01</span></div>
+  <div class="card-stage">
+    <div>
+      <h2>Corner Radii</h2>
+      <p class="sub">Cinq pas. Le système gravite vers <strong>24px</strong> — c'est la signature.</p>
+    </div>
+    <div class="grid">
+      <div class="cell"><div class="sw" style="border-radius:8px"></div><div class="meta"><div class="nm">Small</div><div class="nu">8px</div></div></div>
+      <div class="cell"><div class="sw" style="border-radius:12px"></div><div class="meta"><div class="nm">Medium</div><div class="nu">12px</div></div></div>
+      <div class="cell"><div class="sw" style="border-radius:16px"></div><div class="meta"><div class="nm">Large</div><div class="nu">16px</div></div></div>
+      <div class="cell"><div class="sw" style="border-radius:24px"></div><div class="meta"><div class="nm">XL · Signature</div><div class="nu">24px</div></div></div>
+      <div class="cell"><div class="sw" style="border-radius:999px"></div><div class="meta"><div class="nm">Pill</div><div class="nu">999px</div></div></div>
+    </div>
+    <div class="feature">
+      <div class="demo"></div>
+      <div>
+        <h3>24px — la signature Connect'Academia</h3>
+        <p>Cartes Bento, modales, glass cards, boutons primaires. 999px réservé aux chips et petits boutons d'action.</p>
+      </div>
+    </div>
+  </div>
+  <div class="pg-foot"><span class="l">Connect'Academia · Design System</span><span>06</span></div>
+</section>
+
+<!-- ==================== BUTTONS ==================== -->
+<section class="page pg-btn">
+  <div class="page-head"><span class="ttl">Boutons</span><span class="eb">Components · 01</span></div>
+  <div class="card-stage">
+    <div>
+      <h2>Buttons</h2>
+      <p class="sub">Pilule (radius 999px). Primary plein, Secondary outline, Tertiary texte.</p>
+    </div>
+    <div class="section">
+      <span class="lbl">Hiérarchie — Light Mode</span>
+      <div class="row">
+        <button class="btn primary">Continuer →</button>
+        <button class="btn secondary">Plus tard</button>
+        <button class="btn tertiary">Tout afficher →</button>
+      </div>
+    </div>
+    <div class="section">
+      <span class="lbl">Hiérarchie — Dark Mode</span>
+      <div class="row dark">
+        <button class="btn primary">Continuer</button>
+        <button class="btn secondary">Plus tard</button>
+        <button class="btn tertiary" style="color:#B596FE;">Tout afficher →</button>
+      </div>
+    </div>
+    <div class="section">
+      <span class="lbl">États du bouton primaire</span>
+      <div class="state-grid">
+        <div class="state-cell"><button class="btn primary">Valider</button><span class="nm">Default</span><span class="hx">#8B52FA</span></div>
+        <div class="state-cell"><button class="btn primary hover">Valider</button><span class="nm">Hover</span><span class="hx">#9D6EFB</span></div>
+        <div class="state-cell"><button class="btn primary press">Valider</button><span class="nm">Press · 98%</span><span class="hx">#7440D9</span></div>
+        <div class="state-cell"><button class="btn primary disabled">Valider</button><span class="nm">Disabled</span><span class="hx">α 40%</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="pg-foot"><span class="l">Connect'Academia · Design System</span><span>07</span></div>
+</section>
+
+<!-- ==================== BENTO ==================== -->
+<section class="page pg-bento">
+  <div class="page-head"><span class="ttl">Bento Cards</span><span class="eb">Components · 02</span></div>
+  <div class="card-stage">
+    <div>
+      <h2>Bento Cards</h2>
+      <p class="sub">Radius 24px, padding 20px, gap 16px. Une carte "promue" en purple plein + glow par grille.</p>
+    </div>
+    <div class="bento">
+      <div class="card promoted span-2 row-2">
+        <span class="eb">QUIZ DU JOUR</span>
+        <div class="icon-cap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></div>
+        <h3 style="font-size:18px;">Maths — Terminale<br/>Limites & continuité</h3>
+        <p>10 questions · 12 minutes.</p>
+        <div class="progress" style="margin-top:auto;"><i style="width:35%"></i></div>
+        <p style="margin:0; font-size:10px; opacity:0.85;">3 sur 10 commencées</p>
+      </div>
+      <div class="card stat">
+        <div class="icon-cap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v6M12 22v-6M4.93 4.93l4.24 4.24M14.83 14.83l4.24 4.24"/></svg></div>
+        <span class="eb">SÉRIE</span>
+        <div class="num">14</div>
+        <span class="lbl">jours d'affilée</span>
+      </div>
+      <div class="card stat">
+        <span class="eb">MOYENNE</span>
+        <div class="num">14,2<span style="font-size:16px; color:#9E9E9E;">/20</span></div>
+        <span class="lbl">+0,8 ce mois-ci</span>
+        <div class="progress"><i style="width:71%"></i></div>
+      </div>
+      <div class="card span-2">
+        <span class="eb">COMMUNAUTÉ</span>
+        <h3 style="font-size:14px;">12 nouvelles questions sur le programme de SVT</h3>
+        <div class="avatar-row">
+          <div class="av" style="--c1:#8B52FA; --c2:#7440D9">M</div>
+          <div class="av" style="--c1:#FFAB00; --c2:#FF5252">A</div>
+          <div class="av" style="--c1:#00C853; --c2:#0EA5E9">L</div>
+          <div class="av" style="--c1:#9D6EFB; --c2:#8B52FA">K</div>
+        </div>
+      </div>
+      <div class="card span-2">
+        <span class="eb">ORIENTATION</span>
+        <h3 style="font-size:14px;">Métiers qui te correspondent</h3>
+        <div class="chips">
+          <span>Ingénierie</span><span>Médecine</span><span>Architecture</span><span>Data</span><span>Éco</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pg-foot"><span class="l">Connect'Academia · Design System</span><span>08</span></div>
+</section>
+
+<!-- ==================== LOGO ==================== -->
+<section class="page pg-logo">
+  <div class="page-head"><span class="ttl">Logo & lockups</span><span class="eb">Brand · 01</span></div>
+  <div class="card-stage">
+    <div>
+      <h2>Logo & Lockups</h2>
+      <p class="sub">Quatre anneaux entrelacés en Purple Neon. Trois usages : mark seul, lockup horizontal, lockup vertical.</p>
+    </div>
+    <div class="grid">
+      <div class="card light">
+        <span class="label">Lockup horizontal · Light</span>
+        <div class="lockup-h">
+          <img src="../assets/logo-mark.png" alt="" />
+          <div>
+            <div class="name">Connect<em>'</em>Academia</div>
+            <span class="tag">Votre passerelle vers l'avenir</span>
+          </div>
+        </div>
+      </div>
+      <div class="card tint">
+        <span class="label">Lockup vertical</span>
+        <div class="lockup-v">
+          <img src="../assets/logo-mark.png" alt="" />
+          <div>
+            <div class="name" style="color:#1A1A1A;">Connect<em>'</em>Academia</div>
+            <span class="tag" style="color:var(--purple-press);">Votre passerelle vers l'avenir</span>
+          </div>
+        </div>
+      </div>
+      <div class="card dark">
+        <span class="label">Sur fond sombre</span>
+        <div class="lockup-h">
+          <img src="../assets/logo-mark.png" alt="" />
+          <div>
+            <div class="name">Connect<em>'</em>Academia</div>
+            <span class="tag">Votre passerelle vers l'avenir</span>
+          </div>
+        </div>
+      </div>
+      <div class="card brand">
+        <span class="label">Mark seul · sur Purple</span>
+        <div class="mark-only" style="display:flex; justify-content:center; padding:8px 0;">
+          <img src="../assets/logo-mark.png" alt="" style="filter: brightness(0) invert(1);" />
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pg-foot"><span class="l">Connect'Academia · Design System</span><span>09</span></div>
+</section>
+
+<!-- ==================== VOICE ==================== -->
+<section class="page pg-voice">
+  <div class="page-head"><span class="ttl">Voix & 3 piliers</span><span class="eb">Brand · 02</span></div>
+  <div class="card-stage">
+    <div>
+      <h2>Vision & Tone of Voice</h2>
+      <p class="sub">Connect'Academia — la première plateforme tout-en-un pour les élèves et étudiants du Gabon.</p>
+    </div>
+    <div class="hero">
+      <img src="../assets/logo-mark.png" alt="" />
+      <span class="eb">Promesse de marque</span>
+      <h2>Ta passerelle vers <em>le Bac</em><br/>et au-delà.</h2>
+      <p>Un compagnon encourageant, jamais condescendant. On dit "tu". On célèbre les petites victoires.</p>
+    </div>
+    <div class="pillars">
+      <div class="pillar">
+        <span class="num">01 / Apprentissage</span>
+        <h3>Cours, révisions & IA</h3>
+        <p>Pour réviser le Bac avec un tuteur IA adapté au programme gabonais.</p>
+      </div>
+      <div class="pillar">
+        <span class="num">02 / Communauté</span>
+        <h3>Fil d'actualité académique</h3>
+        <p>Pose ta question, obtiens des réponses des autres élèves et des aînés.</p>
+      </div>
+      <div class="pillar">
+        <span class="num">03 / Orientation</span>
+        <h3>Trouve ta voie</h3>
+        <p>Découvre l'école et la filière qui te correspondent — au Gabon et au-delà.</p>
+      </div>
+    </div>
+  </div>
+  <div class="pg-foot"><span class="l">Connect'Academia · Design System</span><span>10</span></div>
+</section>
+
+<script>
+(async () => {
+  if (document.fonts && document.fonts.ready) {
+    try { await document.fonts.ready; } catch (e) {}
+  }
+  await new Promise(r => setTimeout(r, 500));
+  window.print();
+})();
+</script>
+</body>
+</html>

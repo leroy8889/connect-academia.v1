@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Brand — Logo</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  body { padding: 32px; }
+  .stage { max-width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  .header p  { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+  .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; }
+  .card { border-radius: 24px; padding: 28px; border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 18px; }
+  .card.light { background: #FFFFFF; }
+  .card.dark  { background: #1A1A1A; color: #fff; border-color: rgba(255,255,255,0.08); }
+  .card.tint  { background: var(--purple-tint); }
+  .card.brand { background: var(--purple-neon); color: #fff; }
+
+  .label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+  .card.dark  .label { color: rgba(255,255,255,0.65); }
+  .card.brand .label { color: rgba(255,255,255,0.78); }
+  .card.tint  .label { color: var(--purple-press); }
+
+  /* Lockups */
+  .lockup-h { display: flex; align-items: center; gap: 16px; }
+  .lockup-h img { width: 80px; height: 80px; object-fit: contain; }
+  .lockup-h .word { display: flex; flex-direction: column; gap: 2px; }
+  .lockup-h .name { font-weight: 700; font-size: 24px; letter-spacing: -0.01em; line-height: 1; }
+  .lockup-h .name em { font-style: normal; font-weight: 300; }
+  .lockup-h .tag { font-size: 9px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.75; }
+
+  .lockup-v { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+  .lockup-v img { width: 110px; height: 110px; object-fit: contain; }
+  .lockup-v .name { font-weight: 700; font-size: 22px; letter-spacing: -0.01em; }
+  .lockup-v .name em { font-style: normal; font-weight: 300; }
+  .lockup-v .tag { font-size: 9px; font-weight: 700; letter-spacing: 0.20em; text-transform: uppercase; opacity: 0.75; }
+
+  .mark-only { display: flex; align-items: center; justify-content: center; padding: 24px 0; }
+  .mark-only img { width: 140px; height: 140px; object-fit: contain; }
+
+  .row-feat {
+    background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 18px;
+    padding: 16px; display: flex; align-items: center; gap: 16px;
+  }
+  .row-feat img { width: 56px; height: 56px; }
+  .row-feat .copy { display: flex; flex-direction: column; gap: 4px; }
+  .row-feat h3 { font-size: 14px; font-weight: 700; }
+  .row-feat p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+  .pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill { font-size: 11px; padding: 4px 10px; border-radius: 999px; background: rgba(0,0,0,0.06); color: var(--text-secondary); font-family: ui-monospace, monospace; }
+  .card.brand .pill { background: rgba(255,255,255,0.20); color: #fff; }
+  .card.dark  .pill { background: rgba(255,255,255,0.10); color: #E0E0E0; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="header">
+      <span class="eyebrow">Identité</span>
+      <h1>Logo & Lockups</h1>
+      <p>La marque tressée — quatre anneaux entrelacés en Purple Neon. Trois usages : mark seul, lockup horizontal, lockup vertical.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card light">
+        <span class="label">Lockup horizontal · Light</span>
+        <div class="lockup-h">
+          <img src="../assets/logo-mark.png" alt="Connect'Academia mark" />
+          <div class="word">
+            <span class="name">Connect<em>'</em>Academia</span>
+            <span class="tag">Votre passerelle vers l'avenir</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card tint">
+        <span class="label">Lockup vertical</span>
+        <div class="lockup-v">
+          <img src="../assets/logo-mark.png" alt="" />
+          <div>
+            <div class="name" style="color:#1A1A1A;">Connect<em>'</em>Academia</div>
+            <div class="tag" style="color:var(--purple-press);">Votre passerelle vers l'avenir</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card dark">
+        <span class="label">Sur fond sombre</span>
+        <div class="lockup-h">
+          <img src="../assets/logo-mark.png" alt="" />
+          <div class="word">
+            <span class="name">Connect<em>'</em>Academia</span>
+            <span class="tag">Votre passerelle vers l'avenir</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card brand">
+        <span class="label">Mark seul · sur Purple</span>
+        <div class="mark-only">
+          <img src="../assets/logo-mark.png" alt="" style="filter: brightness(0) invert(1) drop-shadow(0 8px 16px rgba(0,0,0,0.20));" />
+        </div>
+      </div>
+    </div>
+
+    <div class="row-feat">
+      <img src="../assets/logo-mark.png" alt="" />
+      <div class="copy">
+        <h3>Le mark — quatre anneaux entrelacés</h3>
+        <p>Symbolise la passerelle : apprentissage, communauté, orientation, étudiant — quatre dimensions tissées ensemble. Le seul asset SVG-class du système. À ne jamais redessiner ; demander la version vectorielle si besoin de scaling crisp en dessous de 64px.</p>
+        <div class="pill-row" style="margin-top: 6px;">
+          <span class="pill">PNG transparent · 6400²</span>
+          <span class="pill">Min 32px</span>
+          <span class="pill">Clearspace = ½ hauteur</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

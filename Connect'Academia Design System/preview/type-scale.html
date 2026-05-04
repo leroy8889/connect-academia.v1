@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Type — Scale</title>
+<link rel="stylesheet" href="_base.css" />
+<style>
+  body { padding: 32px; }
+  .stage { max-width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  .header p  { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+  .scale { display: flex; flex-direction: column; gap: 12px; }
+  .row {
+    display: grid;
+    grid-template-columns: 84px 1fr 220px;
+    gap: 24px; align-items: baseline;
+    padding: 16px 18px;
+    border-radius: 18px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+  }
+  .tag { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+  .sample { font-family: var(--font-sans); color: var(--text-primary); }
+  .specs { display: flex; flex-direction: column; gap: 2px; text-align: right; }
+  .specs .a { font-size: 11px; font-weight: 600; color: var(--text-primary); }
+  .specs .b { font-size: 11px; color: var(--text-muted); font-family: ui-monospace, monospace; }
+
+  .h1d { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
+  .h2d { font-size: 20px; font-weight: 600; line-height: 1.4; }
+  .body-lg { font-size: 16px; font-weight: 400; line-height: 1.55; color: var(--text-secondary); }
+  .body { font-size: 14px; font-weight: 400; line-height: 1.55; color: var(--text-secondary); }
+  .btn-text { font-size: 16px; font-weight: 500; }
+  .caption { font-size: 12px; font-weight: 300; color: var(--text-muted); }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="header">
+      <span class="eyebrow">Typographie</span>
+      <h1>Type Scale — Montserrat</h1>
+      <p>Une seule famille, six tailles. Géométrique, moderne, très lisible sur mobile.</p>
+    </div>
+
+    <div class="scale">
+      <div class="row">
+        <span class="tag">H1</span>
+        <span class="sample h1d">Orientation Post-Bac</span>
+        <span class="specs"><span class="a">Bold · 700</span><span class="b">28px / 1.2</span></span>
+      </div>
+      <div class="row">
+        <span class="tag">H2</span>
+        <span class="sample h2d">Mes objectifs</span>
+        <span class="specs"><span class="a">SemiBold · 600</span><span class="b">20px / 1.4</span></span>
+      </div>
+      <div class="row">
+        <span class="tag">Body L</span>
+        <span class="sample body-lg">Le Bac approche — restons concentrés.</span>
+        <span class="specs"><span class="a">Regular · 400</span><span class="b">16px / 1.55</span></span>
+      </div>
+      <div class="row">
+        <span class="tag">Body</span>
+        <span class="sample body">Trouve l'école et la filière qui te correspondent grâce à un parcours guidé.</span>
+        <span class="specs"><span class="a">Regular · 400</span><span class="b">14px / 1.55</span></span>
+      </div>
+      <div class="row">
+        <span class="tag">Button</span>
+        <span class="sample btn-text">Continuer mon parcours</span>
+        <span class="specs"><span class="a">Medium · 500</span><span class="b">16px</span></span>
+      </div>
+      <div class="row">
+        <span class="tag">Caption</span>
+        <span class="sample caption">Vu à 14h30 · 4,5/20 au dernier quiz</span>
+        <span class="specs"><span class="a">Light · 300</span><span class="b">12px / 1.55</span></span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
