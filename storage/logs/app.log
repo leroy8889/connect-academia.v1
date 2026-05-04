@@ -9210,3 +9210,120 @@ Stack trace:
 [04-May-2026 10:51:40 UTC] Erreur BDD forgot: SQLSTATE[HY000]: General error: 1364 Field 'expires_at' doesn't have a default value
 [04-May-2026 11:01:22 UTC] Erreur BDD forgot: SQLSTATE[HY000]: General error: 1364 Field 'expires_at' doesn't have a default value
 >>>>>>> origin/ferdy
+[04-May-2026 14:38:37 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:38:38 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:38:38 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:38:38 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:38:38 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:38:38 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:39:17 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:39:17 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:39:17 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:39:17 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:39:18 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:39:46 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:39:46 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:39:46 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:39:46 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:39:47 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:39:47 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:39:49 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:39:49 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:39:49 UTC] [Redis] Erreur de connexion : Connection refused
+[04-May-2026 14:39:56 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:39:56 UTC] [Redis] Erreur de connexion : Connection refused
+[04-May-2026 14:40:00 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:00 UTC] [Redis] Erreur de connexion : Connection refused
+[04-May-2026 14:40:02 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:02 UTC] [Redis] Erreur de connexion : Connection refused
+[04-May-2026 14:40:07 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:07 UTC] [Redis] Erreur de connexion : Connection refused
+[04-May-2026 14:40:12 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:12 UTC] [Redis] Erreur de connexion : Connection refused
+[04-May-2026 14:40:12 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:20 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:20 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:20 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:20 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:20 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:20 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:25 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:26 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:26 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:26 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:26 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:29 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:39 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:39 UTC] [Redis] Erreur de connexion : Connection refused
+[04-May-2026 14:40:42 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:58 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:40:58 UTC] [Redis] Erreur de connexion : Connection refused
+[04-May-2026 14:40:58 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:41:45 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:41:45 UTC] [Redis] Erreur de connexion : Connection refused
+[04-May-2026 14:41:48 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:41:52 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:41:52 UTC] [Redis] Erreur de connexion : Connection refused
+[04-May-2026 14:41:52 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:41:59 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:03 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:03 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:03 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:03 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:04 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:06 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:21 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:21 UTC] [Redis] Erreur de connexion : Connection refused
+[04-May-2026 14:42:22 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:22 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:27 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:27 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:27 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:27 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:27 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:40 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:40 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:41 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:48 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:48 UTC] PHP Fatal error:  Allowed memory size of 268435456 bytes exhausted (tried to allocate 163840000 bytes) in /Applications/MAMP/htdocs/connect'academia.v1/app/Core/Uploader.php on line 59
+[04-May-2026 14:42:51 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:51 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:51 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:55 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:55 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:55 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:59 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:59 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:42:59 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:01 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:01 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:01 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:11 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:13 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:13 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:13 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:14 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:14 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:14 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:16 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:16 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:17 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:18 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:18 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:18 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:18 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:26 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:26 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:30 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:30 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:32 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:32 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:35 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:35 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:39 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:52 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:58 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:58 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:58 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:58 UTC] [Session] Fallback fichiers : Connection refused
+[04-May-2026 14:43:58 UTC] [Session] Fallback fichiers : Connection refused
