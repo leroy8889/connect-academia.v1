@@ -1,9 +1,14 @@
 <?php
-$is2fa   = !empty($_SESSION['admin_2fa_pending']);
-$error   = \Core\Session::getFlash('error', '');
-$success = \Core\Session::getFlash('success');
+$is2fa             = !empty($_SESSION['admin_2fa_pending']);
+$error             = \Core\Session::getFlash('error', '');
+$success           = \Core\Session::getFlash('success');
+$loginLocked       = (bool) \Core\Session::getFlash('login_locked', false);
+$waitMin           = (int)  \Core\Session::getFlash('wait_min', 0);
+$waitSecs          = (int)  \Core\Session::getFlash('wait_secs', 0);
+$attemptsUsed      = (int)  \Core\Session::getFlash('login_attempts_used', 0);
+$attemptsRemaining = (int)  \Core\Session::getFlash('login_attempts_remaining', 0);
 
-// Logique pour le QR Code si on est en mode 2FA
+// QR Code en mode 2FA
 $qr_url = "";
 if ($is2fa) {
     $otp_code = $_SESSION['admin_2fa_pending']['otp'] ?? '000000';
@@ -19,6 +24,36 @@ if ($is2fa) {
     /* label champs formulaire */
     .field-label { display: block; font-family: var(--font-mid); font-size: 12px; font-weight: 600; color: var(--txt-m); margin-bottom: 7px; letter-spacing: 0.02em; }
     .hidden { display: none; }
+
+    /* ── Attempt dots & lockout card ─────────────────────────── */
+    .admin-alert { align-items: flex-start; }
+    .admin-alert-body { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .admin-alert-body strong { font-size: 13px; font-weight: 700; display: block; }
+    .admin-alert-body span  { font-size: 12px; line-height: 1.4; }
+
+    .attempt-dots-wrap { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
+    .attempt-dots      { display: flex; align-items: center; gap: 5px; }
+    .attempt-dot {
+        width: 11px; height: 11px; border-radius: 50%;
+        background: #FECACA; border: 1.5px solid #FCA5A5;
+        transition: background .2s, border-color .2s;
+        flex-shrink: 0;
+    }
+    .attempt-dot.used  { background: #DC2626; border-color: #B91C1C; }
+    .attempt-dot.last  { background: #991B1B; border-color: #7F1D1D; box-shadow: 0 0 0 2px rgba(220,38,38,.25); }
+    .attempt-meta { font-size: 11px; font-weight: 600; color: #B91C1C; }
+    .attempt-warn { font-size: 11px; font-weight: 500; color: #991B1B; }
+
+    /* Lockout countdown block */
+    .lockout-countdown-wrap {
+        display: flex; align-items: center; gap: 6px;
+        background: rgba(239,68,68,.08); border: 1px solid #FECACA;
+        border-radius: 8px; padding: 7px 12px;
+        font-size: 12px; font-weight: 700; color: #991B1B;
+        margin-top: 6px; width: 100%; box-sizing: border-box;
+    }
+    .lockout-countdown-wrap svg { flex-shrink: 0; }
+    #lockout-countdown { font-variant-numeric: tabular-nums; letter-spacing: .03em; }
 </style>
 
 <div class="admin-auth-card">
@@ -77,12 +112,59 @@ if ($is2fa) {
     <h1>Connexion administrateur</h1>
     <p class="auth-desc">Accédez au tableau de bord pour gérer la plateforme, les utilisateurs et la communauté.</p>
 
-    <?php if ($error): ?>
-      <div class="admin-alert admin-alert-error">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <?= e($error) ?>
+    <?php if ($loginLocked): ?>
+      <!-- ── Carte lockout — Design System: status colors (error) ── -->
+      <div class="admin-alert admin-alert-error" role="alert">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B91C1C" stroke-width="2" style="flex-shrink:0;margin-top:1px;">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        <div class="admin-alert-body">
+          <strong>Accès temporairement bloqué</strong>
+          <span>Trop de tentatives échouées. Votre accès est suspendu pendant :</span>
+          <div class="lockout-countdown-wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span id="lockout-countdown" data-secs="<?= $waitSecs ?>">
+              <?= $waitMin ?>m 00s
+            </span>
+            restantes avant réactivation
+          </div>
+          <div class="attempt-dots-wrap">
+            <div class="attempt-dots">
+              <?php for ($i = 0; $i < 5; $i++): ?>
+                <span class="attempt-dot used<?= $i === 4 ? ' last' : '' ?>"></span>
+              <?php endfor; ?>
+            </div>
+            <span class="attempt-meta">5 / 5 tentatives épuisées</span>
+          </div>
+        </div>
+      </div>
+    <?php elseif ($error): ?>
+      <!-- ── Carte erreur avec compteur — Design System: status colors (error) ── -->
+      <div class="admin-alert admin-alert-error" role="alert">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B91C1C" stroke-width="2" style="flex-shrink:0;margin-top:2px;">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <div class="admin-alert-body">
+          <span><?= e($error) ?></span>
+          <?php if ($attemptsUsed > 0): ?>
+          <div class="attempt-dots-wrap">
+            <div class="attempt-dots">
+              <?php for ($i = 0; $i < 5; $i++): ?>
+                <span class="attempt-dot <?= $i < $attemptsUsed ? 'used' . ($i === $attemptsUsed - 1 ? ' last' : '') : '' ?>"></span>
+              <?php endfor; ?>
+            </div>
+            <span class="attempt-meta"><?= $attemptsUsed ?> / 5 tentatives utilisées</span>
+            <?php if ($attemptsRemaining > 0): ?>
+              <span class="attempt-warn">
+                ⚠ <?= $attemptsRemaining ?> tentative<?= $attemptsRemaining > 1 ? 's' : '' ?> restante<?= $attemptsRemaining > 1 ? 's' : '' ?> avant blocage de 15 min
+              </span>
+            <?php endif; ?>
+          </div>
+          <?php endif; ?>
+        </div>
       </div>
     <?php endif; ?>
+
     <?php if ($success): ?>
       <div class="admin-alert admin-alert-success">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
@@ -129,7 +211,8 @@ if ($is2fa) {
         <a href="<?= url('/admin/forgot-password') ?>" class="admin-forgot">Mot de passe oublié ?</a>
       </div>
 
-      <button type="submit" class="btn-admin-primary">
+      <button type="submit" class="btn-admin-primary" id="btn-login-submit"
+              <?= $loginLocked ? 'disabled style="opacity:.5;cursor:not-allowed;"' : '' ?>>
         CONNEXION
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
@@ -196,6 +279,25 @@ if ($is2fa) {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+
+    // ── Countdown lockout ─────────────────────────────────────────────
+    const countdownEl = document.getElementById('lockout-countdown');
+    if (countdownEl) {
+        let secs = parseInt(countdownEl.dataset.secs || '900', 10);
+        const btnSubmit = document.getElementById('btn-login-submit');
+        const fmt = (n) => String(n).padStart(2, '0');
+        const tick = () => {
+            if (secs <= 0) { window.location.reload(); return; }
+            const m = Math.floor(secs / 60);
+            const s = secs % 60;
+            countdownEl.textContent = `${m}m ${fmt(s)}s`;
+            secs--;
+            setTimeout(tick, 1000);
+        };
+        tick();
+        if (btnSubmit) btnSubmit.disabled = true;
+    }
+
     // Logique du Toggle Password (Oeil)
     const toggleBtn = document.querySelector('.password-toggle');
     const pwdInput = document.getElementById('admin-pwd');

@@ -3,6 +3,17 @@
    Tokens : colors_and_type.css (chargé avant ce fichier)
    ============================================================ */
 
+/* ── Background établissements ────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: url('../images/Backgroud_etablissements.PNG') center top / cover no-repeat;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
 .hub {
   max-width: 1100px;
   margin: 0 auto;
@@ -243,10 +254,10 @@
   flex-shrink: 0;
 }
 
-.hub__stat-icon--purple { background: #F3EFFF; color: #8B52FA; }
-.hub__stat-icon--green  { background: rgba(0,200,83,0.12); color: #00A847; }
-.hub__stat-icon--blue   { background: rgba(59,130,246,0.12); color: #2563EB; }
-.hub__stat-icon--orange { background: rgba(255,171,0,0.14); color: #D97706; }
+.hub__stat-icon--purple { background: #EFEFEF; color: #555555; }
+.hub__stat-icon--green  { background: #EFEFEF; color: #555555; }
+.hub__stat-icon--blue   { background: #EFEFEF; color: #555555; }
+.hub__stat-icon--orange { background: #EFEFEF; color: #555555; }
 
 .hub__stat-info {
   display: flex;
@@ -416,16 +427,16 @@
 }
 
 .hub__module-card--apprentissage .hub__module-icon {
-  background: rgba(255,255,255,0.18);
+  background: rgba(200,200,200,0.22);
   color: #FFFFFF;
 }
 .hub__module-card--communaute .hub__module-icon {
-  background: rgba(20,184,166,0.18);
-  color: #2DD4BF;
+  background: rgba(200,200,200,0.22);
+  color: #FFFFFF;
 }
 .hub__module-card--orientation .hub__module-icon {
-  background: rgba(59,130,246,0.18);
-  color: #60A5FA;
+  background: rgba(200,200,200,0.22);
+  color: #FFFFFF;
 }
 
 /* Lock icon */

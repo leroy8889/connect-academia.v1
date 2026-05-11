@@ -54,11 +54,11 @@ class Report extends BaseModel
 
     public function getByStatus(string $status, int $limit = 30): array
     {
-        return $this->query(
+        $rows = $this->query(
             "SELECT r.*,
                     u_reporter.nom  AS reporter_nom,  u_reporter.prenom AS reporter_prenom,
                     u_cible.nom     AS cible_nom,     u_cible.prenom    AS cible_prenom,
-                    p.contenu       AS post_content
+                    p.contenu       AS post_content,  p.image           AS post_image
              FROM reports r
              LEFT JOIN users u_reporter ON u_reporter.id = r.reporter_id
              LEFT JOIN posts p          ON p.id = r.post_id
@@ -68,6 +68,12 @@ class Report extends BaseModel
              LIMIT ?",
             [$status, $limit]
         )->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($rows as &$row) {
+            $row['post_image'] = Post::normalizeImagePath($row['post_image'] ?? null);
+        }
+        unset($row);
+        return $rows;
     }
 
     public function getCommunauteStats(): array

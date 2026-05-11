@@ -122,13 +122,15 @@ function relativeDate(string $date): string {
               style="padding:10px 22px;background:<?= $isFollowing ? '#F3EFFF' : 'var(--color-primary)' ?>;color:<?= $isFollowing ? 'var(--color-primary)' : '#fff' ?>;border:<?= $isFollowing ? '1.5px solid var(--color-primary)' : 'none' ?>;border-radius:var(--radius-full);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s">
               <?= $isFollowing ? 'Abonné' : 'Suivre' ?>
             </button>
+
+             <!--
             <a href="<?= url('/communaute/chat') ?>"
                style="padding:10px 20px;background:#F3F4F6;color:#374151;border:none;border-radius:var(--radius-full);font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:6px">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
               Chat
-            </a>
+            </a>  -->
           <?php endif; ?>
         </div>
       </div>
@@ -265,6 +267,13 @@ function relativeDate(string $date): string {
 
             <div class="post-card__content">
               <div class="post-card__text"><?= nl2br(htmlspecialchars($p['contenu'] ?? '', ENT_QUOTES)) ?></div>
+              <?php if (!empty($p['image'])): ?>
+                <div class="post-card__media" style="margin-top:10px">
+                  <img src="<?= e($p['image']) ?>" alt="Image du post" loading="lazy"
+                       style="max-width:100%;height:auto;border-radius:8px;display:block;object-fit:contain"
+                       onerror="this.style.display='none'">
+                </div>
+              <?php endif; ?>
             </div>
 
             <div class="post-card__actions">
@@ -280,6 +289,17 @@ function relativeDate(string $date): string {
                 </svg>
                 <?= $pComm ?>
               </button>
+              <?php if ($isOwner): ?>
+                <button class="post-card__action profile-post-delete-btn"
+                        data-post-id="<?= (int)$p['id'] ?>"
+                        style="color:#EF4444;margin-left:auto"
+                        title="Supprimer cette publication">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                  </svg>
+                  Supprimer
+                </button>
+              <?php endif; ?>
             </div>
           </div>
         <?php endforeach; ?>
@@ -340,6 +360,13 @@ function relativeDate(string $date): string {
               </div>
               <div class="post-card__content">
                 <div class="post-card__text"><?= nl2br(htmlspecialchars($b['contenu'] ?? '', ENT_QUOTES)) ?></div>
+                <?php if (!empty($b['image'])): ?>
+                  <div class="post-card__media" style="margin-top:10px">
+                    <img src="<?= e($b['image']) ?>" alt="Image du post" loading="lazy"
+                         style="max-width:100%;height:auto;border-radius:8px;display:block;object-fit:contain"
+                         onerror="this.style.display='none'">
+                  </div>
+                <?php endif; ?>
               </div>
             </div>
           <?php endforeach; ?>
@@ -363,6 +390,43 @@ function switchTab(name) {
 document.addEventListener('DOMContentLoaded', function () {
     if (typeof Follow !== 'undefined') Follow.init();
     if (typeof Notifications !== 'undefined') Notifications.init(<?= $unreadNotifs ?>);
+
+    // ── Suppression de post (owner only) ─────────────────────────
+    document.querySelectorAll('.profile-post-delete-btn').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+            const postId = btn.dataset.postId;
+            if (!confirm('Supprimer cette publication définitivement ?')) return;
+
+            btn.disabled = true;
+            try {
+                await API.delete('/api/communaute/posts/' + postId);
+                const card = btn.closest('.post-card');
+                if (card) {
+                    card.style.transition = 'opacity .25s, transform .25s';
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(.97)';
+                    setTimeout(function () { card.remove(); }, 260);
+                }
+                if (typeof App !== 'undefined') App.toast.success('Publication supprimée');
+                // Mettre à jour le compteur dans les stats
+                const postsCountEl = document.querySelector('.profile-stat__value');
+                if (postsCountEl) {
+                    const current = parseInt(postsCountEl.textContent, 10) || 0;
+                    postsCountEl.textContent = Math.max(0, current - 1);
+                }
+                // Mettre à jour le compteur de l'onglet Posts
+                const tabCount = document.querySelector('[data-tab="posts"] .profile-tabs__tab-count');
+                if (tabCount) {
+                    const c = parseInt(tabCount.textContent, 10) || 0;
+                    tabCount.textContent = Math.max(0, c - 1);
+                }
+            } catch (err) {
+                btn.disabled = false;
+                if (typeof App !== 'undefined') App.toast.error(err.message || 'Erreur lors de la suppression');
+                else alert(err.message || 'Erreur lors de la suppression');
+            }
+        });
+    });
 
     // ── Upload photo avatar (clic sur bouton caméra) ──────────
     const avatarInput      = document.getElementById('photo-profil-input');

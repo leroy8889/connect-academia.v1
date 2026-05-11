@@ -43,14 +43,14 @@
     <div class="container">
 
       <a href="<?= url('') ?>" class="logo">
-        <img src="<?= BASE_URL ?>/assets/images/Logo 1 CA COMPLET.svg" width="80" height="10" alt="Connect'Academia logo">
+        <img src="<?= BASE_URL ?>/assets/images/logo-officiel.png" width="80" height="10" alt="Connect'Academia logo">
       </a>
 
       <nav class="navbar" data-navbar>
 
         <div class="wrapper">
           <a href="<?= url('') ?>" class="logo">
-            <img src="<?= BASE_URL ?>/assets/images/Logo 1 CA COMPLET.svg" width="162" height="50" alt="Connect'Academia logo">
+            <img src="<?= BASE_URL ?>/assets/images/logo-officiel.png" width="162" height="50" alt="Connect'Academia logo">
           </a>
 
           <button class="nav-close-btn" aria-label="close menu" data-nav-toggler>
@@ -120,7 +120,7 @@
               Apprentissage, Orientation et Entraide : la première plateforme tout-en-un conçue pour les élèves et étudiants du Gabon.
             </p>
 
-            <a href="<?= url('auth/inscription') ?>" class="btn has-before">
+            <a href="<?= url('auth/connexion') ?>" class="btn has-before">
               <span class="span"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
                 <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
@@ -584,8 +584,8 @@
 
             <li>
               <div class="stats-card" style="--color: 170, 75%, 41%">
-                <h3 class="card-title">29.3k</h3>
-                <p class="card-text">Student Enrolled</p>
+                <h3 class="card-title">+1000</h3>
+                <p class="card-text">Utilisateurs</p>
               </div>
             </li>
 
@@ -599,14 +599,14 @@
             <li>
               <div class="stats-card" style="--color: 260, 100%, 67%">
                 <h3 class="card-title">100%</h3>
-                <p class="card-text">Satisfaction Rate</p>
+                <p class="card-text">Satisfaction </p>
               </div>
             </li>
 
             <li>
               <div class="stats-card" style="--color: 42, 94%, 55%">
-                <h3 class="card-title">354+</h3>
-                <p class="card-text">Top</p>
+                <h3 class="card-title">1</h3>
+                <p class="card-text">Numero</p>
               </div>
             </li>
 
@@ -1209,8 +1209,8 @@
     }
     .cookie-title { font-weight: bold; font-size: 18px; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; color: #333; }
     .cookie-text { font-size: 14px; color: #666; line-height: 1.4; margin-bottom: 15px; }
-    .btn-accept-pro { background: #ffbb00; color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; }
-    .btn-accept-pro:hover { background: #e5a900; }
+    .btn-accept-pro { background: #8B52FA; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; }
+    .btn-accept-pro:hover { background: #9D6EFB; }
 
     /* WhatsApp Float */
     .whatsapp-pro {
@@ -1241,7 +1241,7 @@
   </style>
 
   <div id="cookie-card">
-    <div class="cookie-title"><ion-icon name="cookie-outline" style="color: #ffbb00;"></ion-icon> Cookies</div>
+    <div class="cookie-title"><ion-icon name="cookie-outline" style="color: #8B52FA;"></ion-icon> Cookies</div>
     <p class="cookie-text">Nous utilisons des cookies pour améliorer votre expérience sur Connect'Academia.</p>
     <button class="btn-accept-pro" onclick="acceptCookies()">Accepter & Fermer</button>
   </div>
@@ -1288,9 +1288,7 @@
     });
 
     // --- Logique Cookies ---
-    if (!localStorage.getItem('cookies_accepted')) {
-      document.getElementById('cookie-card').style.display = 'block';
-    }
+    document.getElementById('cookie-card').style.display = 'block';
   });
 
   function acceptCookies() {

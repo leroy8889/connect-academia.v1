@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Controllers\Admin;
 
 use Core\Response;
-use Models\Report;
+use Models\{Report, Post};
 
 class SignalementsController
 {
@@ -19,7 +19,7 @@ class SignalementsController
     {
         $pending  = $this->report->getByStatus('pending',  50);
         $reviewed = $this->report->getByStatus('reviewed', 30);
-        $rejected = $this->report->getByStatus('rejected', 30);
+        $rejected = $this->report->getByStatus('dismissed', 30);
 
         Response::view('admin/signalements/index', [
             'pageTitle'         => 'Signalements — Admin',
@@ -36,15 +36,28 @@ class SignalementsController
         $id     = (int) ($params['id'] ?? 0);
         $action = $_POST['action'] ?? $this->jsonInput('action');
 
-        if (!in_array($action, ['reviewed', 'rejected'])) {
+        if (!in_array($action, ['reviewed', 'dismissed', 'delete_post'])) {
             Response::json(['success' => false, 'message' => 'Action invalide.'], 422);
+        }
+
+        if ($action === 'delete_post') {
+            $report = $this->report->findById($id);
+            if ($report && !empty($report['post_id'])) {
+                (new Post())->delete((int) $report['post_id']);
+            }
+            $this->report->updateStatus($id, 'reviewed');
+            Response::json([
+                'success' => true,
+                'message' => 'Post supprimé et signalement traité.',
+                'status'  => 'reviewed',
+            ]);
         }
 
         $this->report->updateStatus($id, $action);
 
         Response::json([
             'success' => true,
-            'message' => $action === 'reviewed' ? 'Signalement examiné.' : 'Signalement rejeté.',
+            'message' => $action === 'reviewed' ? 'Signalement examiné.' : 'Signalement rejeté (post conservé).',
             'status'  => $action,
         ]);
     }

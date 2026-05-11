@@ -17,7 +17,8 @@ class AuthMiddleware
             Response::redirect('/auth/connexion');
         }
 
-        $user = (new User())->findById(Session::userId());
+        $userModel = new User();
+        $user = $userModel->findById(Session::userId());
         if (!$user || !$user['is_active'] || $user['is_deleted']) {
             Session::destroy();
             if ($this->isAjax()) {
@@ -25,6 +26,8 @@ class AuthMiddleware
             }
             Response::redirect('/auth/connexion?reason=suspended');
         }
+
+        $userModel->updateLastActivity((int) Session::userId());
     }
 
     private function isAjax(): bool

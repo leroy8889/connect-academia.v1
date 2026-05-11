@@ -467,18 +467,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Traiter signalement (SignalementsController) ────────── */
   document.querySelectorAll('.btn-traiter-report').forEach(btn => {
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', async (e) => {
+      if (btn.dataset.action === 'delete_post') {
+        if (!confirm('Supprimer définitivement ce post ?')) return;
+      }
+      e.preventDefault();
       const id     = btn.dataset.id;
       const action = btn.dataset.action;
+      btn.disabled = true;
       try {
         const data = await apiJson(`${base()}/admin/api/signalements/${id}`, 'PATCH', { action });
         if (data.success) {
           btn.closest('.kanban-card')?.remove();
-          showToast('Signalement traité', 'success');
+          showToast(data.message || 'Signalement traité', 'success');
         } else {
           showToast(data.message ?? data.error?.message ?? 'Erreur', 'error');
+          btn.disabled = false;
         }
-      } catch { showToast('Erreur réseau', 'error'); }
+      } catch { showToast('Erreur réseau', 'error'); btn.disabled = false; }
     });
   });
 

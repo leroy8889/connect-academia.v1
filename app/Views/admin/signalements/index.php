@@ -5,36 +5,44 @@ $reviewed = $reviewed ?? [];
 $rejected = $rejected ?? [];
 
 $tagClass = [
-    'harcelement'   => 'tag-harassment',
-    'spam'          => 'tag-spam',
-    'inapproprie'   => 'tag-inappropriate',
-    'autre'         => 'tag-other',
+    'spam'           => 'tag-spam',
+    'inappropriate'  => 'tag-inappropriate',
+    'harassment'     => 'tag-harassment',
+    'misinformation' => 'tag-other',
+    'other'          => 'tag-other',
 ];
 $tagLabel = [
-    'harcelement'  => 'Harcèlement',
-    'spam'         => 'Spam',
-    'inapproprie'  => 'Inapproprié',
-    'autre'        => 'Autre',
+    'spam'           => 'Spam',
+    'inappropriate'  => 'Inapproprié',
+    'harassment'     => 'Harcèlement',
+    'misinformation' => 'Désinformation',
+    'other'          => 'Autre',
 ];
 
 function signalCard(array $r, string $col, array $tagClass, array $tagLabel): void {
-    $tag   = $r['reason'] ?? 'autre';
+    $tag   = $r['reason'] ?? 'other';
     $cls   = $tagClass[$tag] ?? 'tag-other';
     $lbl   = $tagLabel[$tag] ?? ucfirst($tag);
     $rapporteur = trim(($r['reporter_prenom'] ?? '') . ' ' . ($r['reporter_nom'] ?? ''));
     $cible      = trim(($r['cible_prenom'] ?? '') . ' ' . ($r['cible_nom'] ?? ''));
     $initR = strtoupper(mb_substr($rapporteur, 0, 1) ?: 'A');
     $initC = strtoupper(mb_substr($cible, 0, 1) ?: 'A');
-    $contenu = mb_substr($r['post_content'] ?? $r['description'] ?? '', 0, 80);
+    $contenu   = mb_substr($r['post_content'] ?? $r['description'] ?? '', 0, 120);
+    $postImage = $r['post_image'] ?? null;
+    $hasPost   = !empty($r['post_id']);
     $diff = $r['created_at'] ? (time() - strtotime($r['created_at'])) : 0;
     $timeStr = $diff < 3600 ? floor($diff/60).'min' : ($diff < 86400 ? floor($diff/3600).'h' : floor($diff/86400).'j');
     ?>
 <div class="kanban-card">
   <span class="kanban-card-tag <?= $cls ?>"><?= e($lbl) ?></span>
   <?php if ($contenu): ?>
-  <p class="kanban-card-text">"<?= e($contenu) ?>…"</p>
+  <p class="kanban-card-text">"<?= e($contenu) ?><?= mb_strlen($r['post_content'] ?? $r['description'] ?? '') > 120 ? '…' : '' ?>"</p>
   <?php else: ?>
   <p class="kanban-card-text" style="color:var(--txt-l);font-style:italic;">Signalement sans contenu</p>
+  <?php endif; ?>
+  <?php if ($postImage): ?>
+  <img src="<?= e($postImage) ?>" alt="Image du post signalé"
+       style="width:100%;max-height:130px;object-fit:cover;border-radius:8px;margin:6px 0;display:block">
   <?php endif; ?>
   <div class="kanban-card-meta">
     <div class="kanban-card-avatars">
@@ -45,14 +53,22 @@ function signalCard(array $r, string $col, array $tagClass, array $tagLabel): vo
     <span>il y a <?= $timeStr ?></span>
   </div>
   <?php if ($col === 'pending'): ?>
-  <div class="kanban-card-actions">
-    <button class="btn-ghost btn-sm btn-traiter-report" data-id="<?= $r['id'] ?>" data-action="reviewed" style="flex:1;">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      Examiner
+  <div class="kanban-card-actions" style="flex-direction:column;gap:6px">
+    <?php if ($hasPost): ?>
+    <button class="btn-ghost btn-sm btn-traiter-report" data-id="<?= $r['id'] ?>" data-action="delete_post"
+            style="width:100%;color:var(--red);border-color:var(--red-bg);justify-content:center">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      </svg>
+      Supprimer le post
     </button>
-    <button class="btn-ghost btn-sm btn-traiter-report" data-id="<?= $r['id'] ?>" data-action="rejected"
-            style="flex:1;color:var(--red);border-color:var(--red-bg);">
-      Rejeter
+    <?php endif; ?>
+    <button class="btn-ghost btn-sm btn-traiter-report" data-id="<?= $r['id'] ?>" data-action="dismissed"
+            style="width:100%;justify-content:center">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+      </svg>
+      Rejeter le signalement
     </button>
   </div>
   <?php endif; ?>

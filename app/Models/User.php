@@ -61,6 +61,16 @@ class User extends BaseModel
         $this->query("UPDATE users SET last_login = NOW() WHERE id = ?", [$id]);
     }
 
+    public function updateLastActivity(int $id): void
+    {
+        // Throttle: only write if last_activity is null or older than 60 seconds
+        $this->query(
+            "UPDATE users SET last_activity = NOW()
+             WHERE id = ? AND (last_activity IS NULL OR last_activity < DATE_SUB(NOW(), INTERVAL 60 SECOND))",
+            [$id]
+        );
+    }
+
     public static function normalizePhotoPath(?string $path): ?string
     {
         if (empty($path)) return null;

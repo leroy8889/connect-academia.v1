@@ -18,13 +18,7 @@ $userId    = \Core\Session::userId();
 
     <!-- Carte utilisateur -->
     <div class="sidebar__user-card">
-      <a href="<?= url('/communaute/profil/' . $userId) ?>">
-        <img
-          src="<?= e($userPhoto ? url($userPhoto) : asset('images/default-avatar.svg')) ?>"
-          alt="<?= $userName ?>"
-          class="sidebar__user-avatar"
-          onerror="this.onerror=null;this.src=<?= htmlspecialchars(json_encode(asset('images/default-avatar.svg')), ENT_QUOTES) ?>">
-      </a>
+      
       <div class="sidebar__user-name"><?= $userName ?></div>
       <div class="sidebar__user-role"><?= e(ucfirst($userRole)) ?></div>
       <div class="sidebar__user-stats">
@@ -63,13 +57,14 @@ $userId    = \Core\Session::userId();
         </svg>
         Mon profil
       </a>
+      <!--
       <a href="<?= url('/communaute/chat') ?>" class="sidebar__nav-item">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
         </svg>
         Chat
       </a>
-    </nav>
+    </nav>-->
 
   </aside>
 
@@ -331,7 +326,7 @@ $userId    = \Core\Session::userId();
     <div style="padding:20px 24px">
       <p style="font-size:13px;color:var(--color-gray-600);margin-bottom:16px">Pourquoi signalez-vous cette publication ?</p>
       <div style="display:flex;flex-direction:column;gap:8px" id="report-reasons">
-        <?php foreach(['spam' => 'Spam ou publicité', 'inappropriate' => 'Contenu inapproprié', 'harassment' => 'Harcèlement', 'misinformation' => 'Désinformation', 'other' => 'Autre'] as $val => $label): ?>
+        <?php foreach(['spam' => 'Spam ou publicité', 'inappropriate' => 'Contenu inapproprié', 'harassment' => 'Harcèlement', 'other' => 'Autre'] as $val => $label): ?>
           <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--color-gray-200);border-radius:10px;cursor:pointer;transition:border-color .15s"
                  onmouseover="this.style.borderColor='var(--color-primary)'" onmouseout="if(!this.querySelector('input').checked)this.style.borderColor='var(--color-gray-200)'">
             <input type="radio" name="report_reason" value="<?= $val ?>" style="accent-color:var(--color-primary)">

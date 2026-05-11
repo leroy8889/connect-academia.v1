@@ -167,10 +167,13 @@ class PostController
         $userId = Session::userId();
         $input  = json_decode(file_get_contents('php://input'), true) ?? [];
 
+        $validReasons = ['inappropriate', 'spam', 'harassment', 'other'];
+        $reason = in_array($input['reason'] ?? '', $validReasons, true) ? $input['reason'] : 'other';
+
         (new Report())->create([
             'reporter_id' => $userId,
             'post_id'     => $postId,
-            'reason'      => $input['reason'] ?? 'other',
+            'reason'      => $reason,
             'description' => $input['description'] ?? null,
         ]);
 

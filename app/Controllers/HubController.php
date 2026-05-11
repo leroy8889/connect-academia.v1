@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Controllers;
 
 use Core\{Response, Session};
-use Models\{User, Abonnement};
+use Models\{User, Abonnement, Announcement};
 
 class HubController
 {
@@ -37,8 +37,9 @@ class HubController
         $acces = $resteGratuit > 0 || $abonnement !== false;
 
         // Stats rapides + cours en cours (uniquement si accès)
-        $stats   = $this->getStats($userId);
-        $enCours = $acces ? $this->getEnCours($userId) : [];
+        $stats      = $this->getStats($userId);
+        $enCours    = $acces ? $this->getEnCours($userId) : [];
+        $annonce    = $this->getActiveAnnonce();
 
         Response::view('hub/index', [
             'pageTitle'     => "Hub — Connect'Academia",
@@ -48,6 +49,7 @@ class HubController
             'resteGratuit'  => $resteGratuit,
             'stats'         => $stats,
             'enCours'       => $enCours,
+            'annonce'       => $annonce,
             'extraCss'      => ['hub.css'],
         ]);
     }
@@ -93,6 +95,15 @@ class HubController
                 'posts'               => 0,
                 'abonnes'             => 0,
             ];
+        }
+    }
+
+    private function getActiveAnnonce(): array|false
+    {
+        try {
+            return (new Announcement())->getActiveForHub();
+        } catch (\Exception $e) {
+            return false;
         }
     }
 
