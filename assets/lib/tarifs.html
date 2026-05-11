@@ -16,7 +16,7 @@
   <!-- 
     - favicon
   -->
-  <link rel="shortcut icon" href="../../assets/images/Logo 1 CA COMPLET.svg" type="image/svg+xml">
+  <link rel="shortcut icon" href="../../assets/images/logo-officiel.png" type="image/svg+xml">
 
   <!-- 
     - custom css link
@@ -275,14 +275,14 @@ input:checked + .slider:before { transform: translateX(24px); }
     <div class="container">
 
       <a href="../../index.html" class="logo">
-        <img src="../../assets/images/Logo 1 CA COMPLET.svg" width="80" height="15" alt="Connect'Academia logo">
+        <img src="../../assets/images/logo-officiel.png" width="80" height="15" alt="Connect'Academia logo">
       </a>
 
       <nav class="navbar" data-navbar>
 
         <div class="wrapper">
           <a href="../../index.html" class="logo">
-            <img src="../../assets/images/Logo 1 CA COMPLET.svg" width="162" height="50" alt="Connect'Academia logo">
+            <img src="../../assets/images/logo-officiel.png" width="162" height="50" alt="Connect'Academia logo">
           </a>
 
           <button class="nav-close-btn" aria-label="close menu" data-nav-toggler>
@@ -366,15 +366,7 @@ input:checked + .slider:before { transform: translateX(24px); }
     <div class="pricing-header">
         
 
-        <div class="toggle-container">
-            <span>Sans engagement</span>
-            <label class="switch">
-                <input type="checkbox" id="engagement-toggle" checked>
-                <span class="slider round"></span>
-            </label>
-            <span class="bold-text">Engagement 12 mois</span>
-        </div>
-    </div>
+        
 
     <!-- Grille des prix (2 colonnes) -->
     <div class="pricing-grid">
@@ -383,8 +375,8 @@ input:checked + .slider:before { transform: translateX(24px); }
         <div class="pricing-card card-light-pink">
             <h3 class="plan-name">Plan Découverte</h3>
             <div class="plan-price">
-                <span class="price-big">0FCFA</span>
-                <span class="price-details">/ pendant 10jrs <sup>HT</sup></span>
+                <span class="price-big">2000FCFA</span>
+                <span class="price-details">/ mois <sup>HT</sup></span>
             </div>
             
             <ul class="plan-features">
@@ -405,8 +397,8 @@ input:checked + .slider:before { transform: translateX(24px); }
             <div class="popular-badge">LA PLUS POPULAIRE ✨</div>
             <h3 class="plan-name">CONNECT+</h3>
             <div class="plan-price">
-                <span class="price-big" data-price-monthly="2000" data-price-yearly="18000">2000 FCFA</span>
-                <span class="price-details">/ mois <sup>HT</sup></span>
+                <span class="price-big" data-price-monthly="15000 fcfa">15000 FCFA</span>
+                <span class="price-details">/ année <sup>HT</sup></span>
             </div>
             
             <ul class="plan-features">
@@ -417,7 +409,7 @@ input:checked + .slider:before { transform: translateX(24px); }
                 <li><span class="check-purple"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Priorité fonctionnalités</li>
                 
 
-            <p class="engagement-note" id="engagement-note">Sans engagement</p>
+            
             <div class="divider"></div>
             <button class="btn-pricing">Démarrer gratuitement</button>
         </div>
@@ -700,39 +692,7 @@ input:checked + .slider:before { transform: translateX(24px); }
   <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
   <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
 
-  <!-- 
-    - Pricing Toggle Script
-  -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const toggle = document.getElementById('engagement-toggle');
-      const priceElement = document.querySelector('.card-popular .price-big');
-      const engagementNote = document.getElementById('engagement-note');
-      
-      // Prix par défaut (engagement 12 mois activé)
-      const monthlyPrice = priceElement.getAttribute('data-price-monthly');
-      const yearlyPrice = priceElement.getAttribute('data-price-yearly');
-      
-      // Initialiser le prix à 24 000 FCFA (engagement activé par défaut)
-      if (toggle.checked) {
-        priceElement.textContent = yearlyPrice + ' FCFA';
-        engagementNote.textContent = 'Engagement 12 mois';
-      }
-      
-      // Gérer le changement de prix
-      toggle.addEventListener('change', function() {
-        if (this.checked) {
-          // Engagement 12 mois activé
-          priceElement.textContent = yearlyPrice + ' FCFA';
-          engagementNote.textContent = 'Engagement 12 mois';
-        } else {
-          // Sans engagement
-          priceElement.textContent = monthlyPrice + ' FCFA';
-          engagementNote.textContent = 'Sans engagement';
-        }
-      });
-    });
-  </script>
+  
 
   <script>
     document.querySelectorAll('.faq-question').forEach(button => {

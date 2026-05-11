@@ -33,13 +33,7 @@
 
       <!-- Logo -->
       <a href="<?= url('/hub') ?>" class="navbar__logo">
-        <div class="navbar__logo-icon">
-          <svg width="22" height="22" viewBox="0 0 40 40" fill="none">
-            <path d="M8 28L20 10L32 28H8Z" fill="#8B52FA" fill-opacity="0.9"/>
-            <circle cx="20" cy="20" r="5" fill="#8B52FA"/>
-          </svg>
-        </div>
-        <span class="navbar__logo-text">Connect<span class="navbar__logo-accent">'</span>Academia</span>
+        <img src="<?= asset('images/logo-officiel.png') ?>" alt="Connect'Academia" class="navbar__logo-img">
       </a>
 
       <!-- Navigation centrale -->

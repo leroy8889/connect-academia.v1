@@ -4,18 +4,65 @@ $users      = $users ?? [];
 $counts     = $counts ?? ['total'=>0,'eleve'=>0,'enseignant'=>0,'admin'=>0,'actifs'=>0,'suspendus'=>0];
 $page       = (int)($page ?? 1);
 $totalPages = (int)($totalPages ?? 1);
+$total      = (int)($total ?? 0);
 $filters    = $filters ?? [];
 $series     = $series ?? [];
-$activeTab  = $filters['role'] ?? 'all';
+
+// Active tab: si un filtre status=* est présent → onglet "suspended"
+if (!empty($filters['status'])) {
+    $activeTab = 'suspended';
+} else {
+    $activeTab = !empty($filters['role']) ? $filters['role'] : 'all';
+}
 
 if (!function_exists('humanTimeDiff')) {
-    function humanTimeDiff(string $datetime): string {
-        $diff = time() - strtotime($datetime);
+    // Accepts Unix timestamp (int) — no timezone ambiguity
+    function humanTimeDiff(int $ts): string {
+        $diff = time() - $ts;
+        if ($diff < 0)      return 'à l\'instant';
         if ($diff < 60)     return $diff . 's';
         if ($diff < 3600)   return floor($diff/60) . 'min';
         if ($diff < 86400)  return floor($diff/3600) . 'h';
         if ($diff < 604800) return floor($diff/86400) . 'j';
         return floor($diff/604800) . 'sem';
+    }
+}
+
+if (!function_exists('isOnline')) {
+    function isOnline(?int $lastActivityTs, int $threshold = 300): bool {
+        return $lastActivityTs !== null && $lastActivityTs > 0 && (time() - $lastActivityTs) < $threshold;
+    }
+}
+
+/**
+ * Construit une URL pour la pagination/tabs en préservant tous les filtres actifs.
+ * $tabKey = null   → préserve role/status courant
+ * $tabKey = 'all'  → supprime role et status
+ * $tabKey = string → applique le filtre correspondant
+ */
+if (!function_exists('pgUrl')) {
+    function pgUrl(array $filters, int $page, ?string $tabKey = null): string {
+        $params = [];
+        // Paramètre de recherche
+        if (!empty($filters['q'])) $params['q'] = $filters['q'];
+
+        if ($tabKey !== null) {
+            // On construit l'URL pour un onglet → reset page à 1
+            if ($tabKey === 'suspended') {
+                $params['status'] = 'suspended';
+            } elseif ($tabKey !== '' && $tabKey !== 'all') {
+                $params['role'] = $tabKey;
+            }
+            // tabKey='all' → pas de role/status
+        } else {
+            // Préserver role/status courant
+            if (!empty($filters['role'])) $params['role'] = $filters['role'];
+            if (!empty($filters['status'])) $params['status'] = $filters['status'];
+            if ($page > 1) $params['page'] = $page;
+        }
+
+        $qs = $params ? '?' . http_build_query($params) : '';
+        return url('/admin/utilisateurs') . $qs;
     }
 }
 ?>
@@ -52,7 +99,7 @@ if (!function_exists('humanTimeDiff')) {
     'suspended'  => ['label' => 'Suspendus',   'count' => $counts['suspendus']],
   ];
   foreach ($tabs as $key => $tab):
-    $href = url('/admin/utilisateurs') . ($key !== 'all' ? '?role=' . $key : '');
+    $href     = pgUrl($filters, 1, $key);
     $isActive = ($activeTab === $key || ($key === 'all' && $activeTab === ''));
   ?>
   <a href="<?= $href ?>" class="admin-tab <?= $isActive ? 'active' : '' ?>">
@@ -65,9 +112,11 @@ if (!function_exists('humanTimeDiff')) {
 <!-- Table -->
 <div class="admin-table-wrap" style="border-radius:0 0 var(--r) var(--r);">
   <div class="admin-table-filters">
-    <input type="text" placeholder="Rechercher par nom, email…"
+    <input type="text" id="users-search-input"
+           placeholder="Rechercher par nom, email… (Entrée pour chercher)"
            data-search-table="users-table"
-           value="<?= e($filters['q'] ?? '') ?>">
+           value="<?= e($filters['q'] ?? '') ?>"
+           data-base-url="<?= e(pgUrl(array_merge($filters, ['q' => '']), 1)) ?>">
   </div>
 
   <table class="admin-table" id="users-table">
@@ -77,6 +126,7 @@ if (!function_exists('humanTimeDiff')) {
         <th>Rôle</th>
         <th>Série</th>
         <th>Statut</th>
+        <th>Présence</th>
         <th>Inscrit le</th>
         <th>Dernier login</th>
         <th></th>
@@ -84,7 +134,7 @@ if (!function_exists('humanTimeDiff')) {
     </thead>
     <tbody>
       <?php if (empty($users)): ?>
-      <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--txt-m);">Aucun utilisateur trouvé</td></tr>
+      <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--txt-m);">Aucun utilisateur trouvé</td></tr>
       <?php endif; ?>
       <?php foreach ($users as $u): ?>
       <tr data-user-id="<?= $u['id'] ?>">
@@ -110,9 +160,23 @@ if (!function_exists('humanTimeDiff')) {
             <?= $u['is_active'] ? 'Actif' : 'Suspendu' ?>
           </span>
         </td>
+        <td>
+          <?php
+            $online = isOnline(!empty($u['last_activity_ts']) ? (int)$u['last_activity_ts'] : null);
+          ?>
+          <span class="presence-badge <?= $online ? 'presence-online' : 'presence-offline' ?>"
+                data-uid="<?= $u['id'] ?>">
+            <span class="presence-dot"></span>
+            <?= $online ? 'En ligne' : 'Déconnecté' ?>
+          </span>
+        </td>
         <td style="font-size:12px;color:var(--txt-m);"><?= date('d M Y', strtotime($u['created_at'])) ?></td>
         <td style="font-size:12px;color:var(--txt-m);">
-          <?= $u['last_login'] ? 'il y a ' . humanTimeDiff($u['last_login']) : '—' ?>
+          <?php if (!empty($u['last_login_ts']) && (int)$u['last_login_ts'] > 0): ?>
+            <span title="<?= date('d/m/Y à H:i:s', (int)$u['last_login_ts']) ?>">
+              il y a <?= humanTimeDiff((int)$u['last_login_ts']) ?>
+            </span>
+          <?php else: ?>—<?php endif; ?>
         </td>
         <td>
           <div class="table-actions" style="opacity:1;gap:4px;">
@@ -144,25 +208,181 @@ if (!function_exists('humanTimeDiff')) {
     </tbody>
   </table>
 
-  <!-- Pagination -->
-  <?php if ($totalPages > 1): ?>
+  <!-- Pagination — toujours affichée, boutons de page uniquement si > 1 page -->
+  <?php
+    $perPage  = 20;
+    $firstRow = $total > 0 ? ($page - 1) * $perPage + 1 : 0;
+    $lastRow  = min($page * $perPage, $total);
+  ?>
   <div class="admin-pagination">
-    <p>Affichage <?= (($page-1)*20)+1 ?>–<?= min($page*20, $counts['total']) ?> sur <?= number_format($counts['total']) ?></p>
+    <p>
+      <?php if ($total === 0): ?>
+        Aucun utilisateur trouvé
+      <?php elseif ($totalPages === 1): ?>
+        <strong><?= number_format($total) ?></strong> utilisateur<?= $total > 1 ? 's' : '' ?>
+      <?php else: ?>
+        Affichage <strong><?= number_format($firstRow) ?>–<?= number_format($lastRow) ?></strong>
+        sur <strong><?= number_format($total) ?></strong> utilisateur<?= $total > 1 ? 's' : '' ?>
+        &nbsp;·&nbsp; Page <?= $page ?> / <?= $totalPages ?>
+      <?php endif; ?>
+    </p>
+
+    <?php if ($totalPages > 1): ?>
     <div class="pagination-btns">
+
       <?php if ($page > 1): ?>
-        <a href="<?= url('/admin/utilisateurs?page='.($page-1)) ?>" class="pagination-btn">← Précédent</a>
+        <a href="<?= pgUrl($filters, $page - 1) ?>"
+           class="pagination-btn pagination-prev" title="Page précédente">← Préc.</a>
+      <?php else: ?>
+        <span class="pagination-btn pagination-prev" style="opacity:.35;cursor:default;">← Préc.</span>
       <?php endif; ?>
-      <?php for ($p = max(1, $page-2); $p <= min($totalPages, $page+2); $p++): ?>
-        <a href="<?= url('/admin/utilisateurs?page='.$p) ?>"
-           class="pagination-btn <?= $p === $page ? 'active' : '' ?>"><?= $p ?></a>
-      <?php endfor; ?>
+
+      <?php
+        $window  = 2;
+        $pages   = [1];
+        for ($p = max(2, $page - $window); $p <= min($totalPages - 1, $page + $window); $p++) {
+            $pages[] = $p;
+        }
+        $pages[] = $totalPages;
+        $pages = array_unique($pages);
+        sort($pages);
+
+        $prev = null;
+        foreach ($pages as $p):
+          if ($prev !== null && $p - $prev > 1): ?>
+            <span class="pagination-btn" style="border:none;cursor:default;color:var(--txt-l);">…</span>
+          <?php endif; ?>
+          <a href="<?= pgUrl($filters, $p) ?>"
+             class="pagination-btn <?= $p === $page ? 'active' : '' ?>"><?= $p ?></a>
+        <?php $prev = $p; endforeach; ?>
+
       <?php if ($page < $totalPages): ?>
-        <a href="<?= url('/admin/utilisateurs?page='.($page+1)) ?>" class="pagination-btn">Suivant →</a>
+        <a href="<?= pgUrl($filters, $page + 1) ?>"
+           class="pagination-btn pagination-next" title="Page suivante">Suiv. →</a>
+      <?php else: ?>
+        <span class="pagination-btn pagination-next" style="opacity:.35;cursor:default;">Suiv. →</span>
       <?php endif; ?>
+
     </div>
+    <?php endif; ?>
   </div>
-  <?php endif; ?>
 </div>
+
+<style>
+.presence-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.presence-badge .presence-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.presence-online {
+  background: rgba(34,197,94,.12);
+  color: #22c55e;
+  border: 1px solid rgba(34,197,94,.25);
+}
+.presence-online .presence-dot {
+  background: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34,197,94,.25);
+  animation: pulse-green 2s infinite;
+}
+.presence-offline {
+  background: rgba(148,163,184,.08);
+  color: var(--txt-l, #94a3b8);
+  border: 1px solid rgba(148,163,184,.18);
+}
+.presence-offline .presence-dot {
+  background: #94a3b8;
+}
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(34,197,94,.25); }
+  50%       { box-shadow: 0 0 0 4px rgba(34,197,94,.08); }
+}
+</style>
+
+<script>
+(function () {
+  // ── Polling statuts présence (toutes les 30s) ──────────────────────
+  const POLL_MS = 30000;
+  const STATUTS_URL = '<?= e(url('/admin/api/utilisateurs/statuts')) ?>';
+
+  function refreshPresence() {
+    fetch(STATUTS_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data || !data.success) return;
+        Object.entries(data.statuts).forEach(([uid, s]) => {
+          const badge = document.querySelector(`.presence-badge[data-uid="${uid}"]`);
+          if (!badge) return;
+          const online = s.is_online;
+          badge.className = 'presence-badge ' + (online ? 'presence-online' : 'presence-offline');
+          // Update text node (last child after the dot span)
+          const dot = badge.querySelector('.presence-dot');
+          badge.innerHTML = '';
+          badge.appendChild(dot);
+          badge.appendChild(document.createTextNode(online ? ' En ligne' : ' Déconnecté'));
+        });
+      })
+      .catch(() => {});
+  }
+
+  setInterval(refreshPresence, POLL_MS);
+
+  // ── Recherche serveur depuis le champ de recherche ─────────────────
+  const input = document.getElementById('users-search-input');
+  if (!input) return;
+
+  let debounce;
+  const baseUrl = input.dataset.baseUrl || '<?= e(url('/admin/utilisateurs')) ?>';
+
+  function serverSearch(q) {
+    const url = new URL(baseUrl, window.location.origin);
+    const params = new URLSearchParams(url.search);
+    params.delete('page'); // reset page
+    if (q.trim()) {
+      params.set('q', q.trim());
+    } else {
+      params.delete('q');
+    }
+    window.location.href = url.pathname + (params.toString() ? '?' + params.toString() : '');
+  }
+
+  // Entrée → recherche immédiate côté serveur
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      clearTimeout(debounce);
+      serverSearch(input.value);
+    }
+  });
+
+  // Debounce 700ms → recherche serveur automatique (seulement si ≥2 chars ou vide)
+  input.addEventListener('input', (e) => {
+    clearTimeout(debounce);
+    const q = e.target.value;
+    // Filtre client-side immédiat (current page)
+    const tableBody = document.querySelector('#users-table tbody');
+    if (tableBody) {
+      tableBody.querySelectorAll('tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+      });
+    }
+    // Déclenchement serveur en différé
+    if (q.length === 0 || q.length >= 2) {
+      debounce = setTimeout(() => serverSearch(q), 700);
+    }
+  });
+})();
+</script>
 
 <!-- ── Modal Créer utilisateur ─────────────────────────────── -->
 <div class="admin-modal-overlay" id="modal-create-user">

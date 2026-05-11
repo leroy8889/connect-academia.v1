@@ -160,6 +160,56 @@ body.auth-page html {
     border: 1px solid #bbf7d0;
 }
 
+.auth-alert--warning {
+    background: rgba(255, 171, 0, 0.10);
+    color: #7A5200;
+    border: 1px solid rgba(255, 171, 0, 0.28);
+    border-left: 3px solid #FFAB00;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    animation: alert-slide-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.auth-alert--warning .alert-icon {
+    color: #FFAB00;
+    flex-shrink: 0;
+}
+
+.auth-alert--warning .alert-message {
+    flex: 1;
+    font-weight: 500;
+}
+
+.auth-alert--warning .alert-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    color: #FFAB00;
+    font-weight: 700;
+    font-size: 12px;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    transition: opacity 0.2s ease;
+}
+
+.auth-alert--warning .alert-link:hover {
+    opacity: 0.75;
+    text-decoration: underline;
+}
+
+@keyframes alert-slide-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Input highlight on email duplicate */
+.input-field--warning {
+    border: 1.5px solid #FFAB00 !important;
+    box-shadow: 0 0 0 3px rgba(255, 171, 0, 0.15) !important;
+    background: rgba(255, 171, 0, 0.04) !important;
+}
+
 /* ── Champs de saisie ─────────────────────────────────────── */
 .form-group {
     text-align: left;

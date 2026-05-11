@@ -29,23 +29,24 @@ $typeLabels = [
 ];
 ?>
 
+<!-- KaTeX — rendu des formules mathématiques dans le chatbot BACY -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+
 <div class="viewer-layout" id="viewer-root">
 
-  <!-- ══ SIDEBAR GAUCHE ═══════════════════════════════════════ -->
+  <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
   <aside class="viewer-sidebar">
 
     <div class="viewer-sidebar__header">
-      <div style="margin-bottom:10px">
-        <a href="javascript:history.back()" style="font-size:12px;color:#6B7280;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:color .15s" onmouseover="this.style.color='#8B52FA'" onmouseout="this.style.color='#6B7280'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          Retour aux ressources
-        </a>
-      </div>
+      <a href="javascript:history.back()" class="viewer-back-link">
+        <i data-lucide="arrow-left" style="width:14px;height:14px;flex-shrink:0"></i>
+        Retour aux ressources
+      </a>
       <div class="viewer-sidebar__title"><?= e($titre) ?></div>
       <div class="viewer-sidebar__meta">
         <span class="badge badge-<?= e($type) ?>"><?= e($typeLabels[$type] ?? ucfirst(str_replace('_', ' ', $type))) ?></span>
         <?php if (!empty($ressource['matiere'])): ?>
-          <span><?= e($ressource['matiere']) ?></span>
+          <span class="viewer-meta-text"><?= e($ressource['matiere']) ?></span>
         <?php endif; ?>
         <?php if (!empty($ressource['serie'])): ?>
           <span class="badge badge-serie-<?= e($ressource['serie']) ?>">Tle <?= e($ressource['serie']) ?></span>
@@ -57,9 +58,8 @@ $typeLabels = [
       <button
         id="btn-favori"
         onclick="toggleFavori(<?= (int)($ressource['id'] ?? 0) ?>, this)"
-        class="viewer-toolbar__btn viewer-toolbar__btn--star <?= $estFavori ? 'active' : '' ?>"
-        title="<?= $estFavori ? 'Retirer des favoris' : 'Ajouter aux favoris' ?>"
-        style="flex:1;padding:8px 12px;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:10px">
+        class="viewer-fav-btn <?= $estFavori ? 'active' : '' ?>"
+        title="<?= $estFavori ? 'Retirer des favoris' : 'Ajouter aux favoris' ?>">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="<?= $estFavori ? '#F59E0B' : 'none' ?>" stroke="<?= $estFavori ? '#F59E0B' : 'currentColor' ?>" stroke-width="2">
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
         </svg>
@@ -67,25 +67,25 @@ $typeLabels = [
       </button>
     </div>
 
-    <!-- Autres ressources de la même matière -->
     <?php if (!empty($autres)): ?>
       <div class="viewer-sidebar__section">
-        <h4>Du même cours</h4>
+        <p class="viewer-section-label">Du même cours</p>
         <?php foreach ($autres as $a): ?>
           <a href="<?= url('/apprentissage/viewer/' . (int)$a['id']) ?>" class="viewer-sidebar__list-item">
-            <div style="width:32px;height:32px;background:#F3EFFF;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#8B52FA;flex-shrink:0">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <div class="viewer-item-icon">
+              <i data-lucide="file-text" style="width:15px;height:15px;"></i>
             </div>
-            <div style="min-width:0">
+            <div class="viewer-item-info">
               <div class="viewer-sidebar__list-title"><?= e($a['titre']) ?></div>
-              <span class="badge badge-<?= e($a['type'] ?? 'cours') ?>" style="margin-top:3px"><?= e($typeLabels[$a['type'] ?? ''] ?? ucfirst(str_replace('_', ' ', $a['type'] ?? ''))) ?></span>
+              <span class="badge badge-<?= e($a['type'] ?? 'cours') ?>" style="margin-top:4px;display:inline-block"><?= e($typeLabels[$a['type'] ?? ''] ?? ucfirst(str_replace('_', ' ', $a['type'] ?? ''))) ?></span>
             </div>
           </a>
         <?php endforeach; ?>
       </div>
     <?php else: ?>
-      <div style="padding:20px;color:#9CA3AF;font-size:13px;text-align:center">
-        Aucune autre ressource
+      <div class="viewer-empty-resources">
+        <i data-lucide="inbox" style="width:28px;height:28px;"></i>
+        <span>Aucune autre ressource</span>
       </div>
     <?php endif; ?>
 
@@ -94,43 +94,40 @@ $typeLabels = [
   <!-- ══ ZONE PRINCIPALE ══════════════════════════════════════ -->
   <div class="viewer-main">
 
-    <!-- Toolbar progression -->
     <div class="viewer-toolbar">
       <div class="viewer-toolbar__progress">
-        <div class="progress-bar-container" style="flex:1;min-width:60px">
-          <div class="progress-bar-fill" id="progressBar" style="width:<?= $pct ?>%"></div>
+        <div class="ca-progress" style="flex:1;min-width:60px">
+          <div class="ca-progress-fill" id="progressBar" style="width:<?= $pct ?>%"></div>
         </div>
         <span class="viewer-toolbar__pct" id="progressText"><?= $pct ?>%</span>
       </div>
 
       <?php if ($pct < 100): ?>
         <button onclick="markComplete()" class="viewer-toolbar__btn viewer-toolbar__btn--primary">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <i data-lucide="check" style="width:14px;height:14px;"></i>
           Terminé
         </button>
       <?php else: ?>
-        <span style="font-size:13px;font-weight:600;color:#059669;display:flex;align-items:center;gap:5px;white-space:nowrap">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          Terminé ✓
+        <span class="viewer-complete-badge">
+          <i data-lucide="check-circle-2" style="width:15px;height:15px;"></i>
+          Terminé
         </span>
       <?php endif; ?>
 
       <button onclick="toggleFullscreen()" class="viewer-toolbar__btn viewer-toolbar__btn--ghost" title="Plein écran">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-        </svg>
+        <i data-lucide="maximize-2" style="width:15px;height:15px;"></i>
       </button>
 
-      <!-- Toggle IA panel -->
       <button id="ia-toggle" class="viewer-toolbar__btn viewer-toolbar__btn--ghost" title="Assistant IA BACY">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-        </svg>
-        IA
+        <i data-lucide="message-square" style="width:15px;height:15px;"></i>
+        BACY
+      </button>
+
+      <button id="btn-minimize-resource" onclick="toggleResourceMinimize()" class="viewer-toolbar__btn viewer-toolbar__btn--ghost" title="Agrandir le chat">
+        <i data-lucide="panel-right-close" style="width:15px;height:15px;"></i>
       </button>
     </div>
 
-    <!-- Zone de lecture -->
     <div class="viewer-frame" id="viewer-frame">
       <?php if (!empty($fileUrl)): ?>
         <?php if ($isVideo): ?>
@@ -149,16 +146,25 @@ $typeLabels = [
             </video>
           <?php endif; ?>
         <?php else: ?>
-          <!-- PDF viewer -->
-          <iframe src="<?= e($fileUrl) ?>#toolbar=1&view=FitH" id="pdf-iframe"></iframe>
+          <div id="pdf-container" class="pdf-js-container">
+            <div id="pdf-loading" class="pdf-loading-state">
+              <div class="pdf-spinner"></div>
+              <span>Chargement du document…</span>
+            </div>
+            <div id="pdf-error" class="pdf-error-state" style="display:none">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              <span id="pdf-error-msg">Erreur de chargement du PDF.</span>
+            </div>
+            <div id="pdf-pages"></div>
+          </div>
         <?php endif; ?>
       <?php else: ?>
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#9CA3AF;gap:16px;padding:24px;text-align:center">
-          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-          </svg>
-          <p style="font-size:16px;font-weight:500;color:#374151">Fichier non disponible</p>
-          <p style="font-size:13px">Ce contenu n'a pas encore été mis en ligne par l'administrateur.</p>
+        <div class="viewer-no-content">
+          <div class="viewer-no-content__icon">
+            <i data-lucide="file-x" style="width:32px;height:32px;"></i>
+          </div>
+          <p class="viewer-no-content__title">Fichier non disponible</p>
+          <p class="viewer-no-content__sub">Ce contenu n'a pas encore été mis en ligne par l'administrateur.</p>
         </div>
       <?php endif; ?>
     </div>
@@ -168,69 +174,134 @@ $typeLabels = [
   <!-- ══ PANEL IA ══════════════════════════════════════════════ -->
   <aside class="ia-panel ia-panel--hidden" id="ia-panel">
 
-    <!-- Handle barre (visible mobile uniquement) -->
     <div class="ia-panel__handle" id="ia-panel-handle"></div>
 
     <div class="ia-panel__header">
       <div class="ia-panel__badge">
-        <svg width="20" height="20" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-          <path d="M8 28L20 10L32 28H8Z" fill="white" fill-opacity="0.92"/>
-          <circle cx="20" cy="20" r="5" fill="white"/>
-        </svg>
+        <img src="<?= asset('images/logo-officiel.png') ?>" alt="Connect'Academia" style="width:28px;height:28px;object-fit:contain;">
       </div>
       <div>
-        <div class="ia-panel__title">BACY — Assistant IA</div>
-        <div class="ia-panel__sub">Posez vos questions sur ce cours</div>
+        <div class="ia-panel__title">Assistant Connect'Academia</div>
+        <div class="ia-panel__sub">Posez vos questions sur cette ressource</div>
       </div>
-      <!-- Bouton fermer (mobile) -->
-      <button id="ia-close-mobile" style="margin-left:auto;background:none;border:none;cursor:pointer;color:#6B7280;display:none;padding:4px" title="Fermer">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+      <div class="ia-panel__header-actions">
+        <button id="ia-new-chat" class="ia-new-chat-btn" title="Nouvelle conversation">
+          <i data-lucide="plus-circle" style="width:16px;height:16px;"></i>
+        </button>
+        <button id="ia-close-mobile" style="display:none;background:none;border:none;cursor:pointer;color:var(--text-muted);padding:6px;border-radius:var(--radius-sm);transition:all 150ms ease" title="Fermer">
+          <i data-lucide="x" style="width:16px;height:16px;"></i>
+        </button>
+        <button id="btn-restore-resource" style="display:none;background:none;border:none;cursor:pointer;color:var(--text-muted);padding:6px;border-radius:var(--radius-sm);transition:all 150ms ease" title="Restaurer la ressource" onclick="toggleResourceMinimize()">
+          <i data-lucide="panel-left-open" style="width:16px;height:16px;"></i>
+        </button>
+      </div>
     </div>
 
     <div class="ia-messages" id="ia-messages">
       <div class="ia-msg ia-msg--ia">
         <div class="ia-msg__avatar">
-          <svg width="18" height="18" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-            <path d="M8 28L20 10L32 28H8Z" fill="white" fill-opacity="0.92"/>
-            <circle cx="20" cy="20" r="5" fill="white"/>
-          </svg>
+          <img src="<?= asset('images/logo-officiel.png') ?>" alt="BACY" style="width:22px;height:22px;object-fit:contain;">
         </div>
         <div class="ia-msg__bubble">
-          Bonjour ! Je suis BACY, votre assistant IA pour <strong><?= e($titre) ?></strong>.
+          Bonjour ! Je suis l'assistant Connect'Academia, votre assistant IA pour <strong><?= e($titre) ?></strong>.
           Posez-moi vos questions, je suis là pour vous aider à comprendre le cours.
         </div>
       </div>
     </div>
 
     <div class="ia-input">
-      <textarea id="ia-textarea" placeholder="Posez votre question…" rows="1"></textarea>
-      <button id="ia-send" disabled title="Envoyer (Entrée)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-        </svg>
-      </button>
+      <div class="ia-image-preview" id="ia-image-preview">
+        <img id="ia-image-thumb" src="" alt="Image jointe">
+        <button type="button" id="ia-image-remove" class="ia-image-remove" title="Supprimer l'image" aria-label="Supprimer l'image">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="ia-input__row">
+        <input type="file" id="ia-image-input" accept="image/*" style="display:none" aria-label="Choisir une image">
+        <button type="button" id="ia-image-btn" class="ia-image-btn" title="Joindre une image (JPG, PNG, GIF, WEBP…)">
+          <i data-lucide="image" style="width:16px;height:16px;"></i>
+        </button>
+        <textarea id="ia-textarea" placeholder="Posez votre question…" rows="1"></textarea>
+        <button id="ia-send" disabled title="Envoyer (Entrée)">
+          <i data-lucide="send" style="width:15px;height:15px;"></i>
+        </button>
+      </div>
     </div>
   </aside>
 
-  <!-- Mobile FAB chat -->
   <button class="ia-mobile-fab" id="ia-mobile-fab" title="Ouvrir l'assistant BACY">
-    <svg width="22" height="22" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-      <path d="M8 28L20 10L32 28H8Z" fill="white" fill-opacity="0.92"/>
-      <circle cx="20" cy="20" r="5" fill="white"/>
-    </svg>
+    <img src="<?= asset('images/logo-officiel.png') ?>" alt="BACY" style="width:28px;height:28px;object-fit:contain;">
   </button>
 
-  <!-- Mobile overlay -->
   <div class="ia-mobile-overlay" id="ia-mobile-overlay"></div>
 
 </div>
 
 <style>
-/* Le viewer occupe tout l'espace disponible sous la navbar */
 #main-content { padding-bottom: 0 !important; overflow: hidden; }
+
+/* ── PDF.js renderer ─────────────────────────────────────── */
+.pdf-js-container {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #525659;
+  padding: 8px;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.pdf-loading-state,
+.pdf-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  gap: 12px;
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  text-align: center;
+  padding: 20px;
+}
+
+.pdf-error-state { color: #fca5a5; }
+
+.pdf-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: pdf-spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pdf-spin { to { transform: rotate(360deg); } }
+
+.pdf-page-wrapper {
+  margin-bottom: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  background: #fff;
+  line-height: 0;
+  width: 100%;
+}
+
+.pdf-page-wrapper canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
 </style>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     initViewer(
@@ -240,15 +311,74 @@ document.addEventListener('DOMContentLoaded', function () {
         <?= $pct ?>
     );
 
-    // Activer le bouton IA send quand textarea a du contenu
-    const textarea = document.getElementById('ia-textarea');
-    const sendBtn  = document.getElementById('ia-send');
-    if (textarea && sendBtn) {
-        textarea.addEventListener('input', function() {
-            sendBtn.disabled = this.value.trim().length === 0;
-        });
-    }
+    <?php if ($isPdf && !empty($fileUrl)): ?>
+    renderPdfJs(<?= json_encode($fileUrl) ?>);
+    <?php endif; ?>
 });
+
+/* ── PDF.js: render all pages as canvas elements ──────────── */
+async function renderPdfJs(pdfUrl) {
+    const container   = document.getElementById('pdf-container');
+    const loadingEl   = document.getElementById('pdf-loading');
+    const errorEl     = document.getElementById('pdf-error');
+    const errorMsgEl  = document.getElementById('pdf-error-msg');
+    const pagesEl     = document.getElementById('pdf-pages');
+
+    function showError(msg) {
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (errorEl)   { errorEl.style.display = 'flex'; }
+        if (errorMsgEl) errorMsgEl.textContent = msg;
+    }
+
+    if (typeof pdfjsLib === 'undefined') {
+        showError('Lecteur PDF non disponible. Veuillez recharger la page.');
+        return;
+    }
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    try {
+        const pdf = await pdfjsLib.getDocument({ url: pdfUrl, withCredentials: true }).promise;
+
+        if (loadingEl) loadingEl.style.display = 'none';
+
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+            const page = await pdf.getPage(pageNum);
+
+            /* Scale to fill container width */
+            const containerWidth = (container ? container.clientWidth : window.innerWidth) - 16;
+            const baseVp  = page.getViewport({ scale: 1 });
+            const scale   = Math.max(containerWidth / baseVp.width, 0.5);
+            const viewport = page.getViewport({ scale });
+
+            /* Retina/HiDPI — cap at 2× for memory safety */
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'pdf-page-wrapper';
+
+            const canvas = document.createElement('canvas');
+            canvas.width  = Math.floor(viewport.width  * dpr);
+            canvas.height = Math.floor(viewport.height * dpr);
+            canvas.style.width  = viewport.width  + 'px';
+            canvas.style.height = viewport.height + 'px';
+
+            wrapper.appendChild(canvas);
+            pagesEl.appendChild(wrapper);
+
+            const ctx = canvas.getContext('2d');
+            await page.render({
+                canvasContext: ctx,
+                transform:    dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null,
+                viewport,
+            }).promise;
+        }
+    } catch (err) {
+        showError('Impossible de charger ce document. Vérifiez votre connexion et rechargez.');
+        console.error('[PDF.js]', err);
+    }
+}
 
 function markComplete() {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -269,8 +399,9 @@ function markComplete() {
             updateProgressBar(100);
             const btn = document.querySelector('.viewer-toolbar__btn--primary');
             if (btn) {
-                btn.outerHTML = '<span style="font-size:13px;font-weight:600;color:#059669;display:flex;align-items:center;gap:5px;white-space:nowrap">'
-                    + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Terminé ✓</span>';
+                btn.outerHTML = '<span class="viewer-complete-badge">'
+                    + '<i data-lucide="check-circle-2" style="width:15px;height:15px;"></i>Terminé</span>';
+                if (window.lucide) lucide.createIcons();
             }
             showToast('Cours marqué comme terminé ✓');
         }

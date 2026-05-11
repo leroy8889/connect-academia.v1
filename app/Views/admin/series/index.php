@@ -5,12 +5,11 @@ $matieres    = $matieres ?? [];
 $activeSerie = $activeSerie ?? null;
 
 $serieColors = [
-    'A'   => '#8B52FA',
-    'C'   => '#F59E0B',
-    'D'   => '#3B82F6',
-    'SES' => '#10B981',
-    'STI' => '#EF4444',
-    'B'   => '#EC4899',
+    'A1'  => '#FF6B6B',
+    'A2'  => '#FF8E53',
+    'B'   => '#4ECDC4',
+    'C'   => '#8B52FA',
+    'D'   => '#45B7D1',
 ];
 ?>
 

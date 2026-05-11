@@ -115,7 +115,7 @@ class CommunauteController
         $id     = (int) ($params['id'] ?? 0);
         $action = $_POST['action'] ?? $this->jsonInput('action');
 
-        if (!in_array($action, ['reviewed', 'rejected'])) {
+        if (!in_array($action, ['reviewed', 'dismissed'])) {
             Response::json(['success' => false, 'message' => 'Action invalide.'], 422);
         }
 

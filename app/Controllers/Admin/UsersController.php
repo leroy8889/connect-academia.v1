@@ -63,6 +63,27 @@ class UsersController
         ], 'admin');
     }
 
+    // ── GET /admin/api/utilisateurs/statuts ──────────────────────────────
+    public function statuts(): void
+    {
+        $threshold = 300; // 5 minutes
+        $now       = time();
+
+        $rows = $this->db->query(
+            "SELECT id, UNIX_TIMESTAMP(last_activity) AS last_activity_ts FROM users WHERE is_deleted = 0"
+        )->fetchAll(PDO::FETCH_ASSOC);
+
+        $statuts = [];
+        foreach ($rows as $row) {
+            $ts = (int) $row['last_activity_ts'];
+            $statuts[(int) $row['id']] = [
+                'is_online' => $ts > 0 && ($now - $ts) < $threshold,
+            ];
+        }
+
+        Response::json(['success' => true, 'statuts' => $statuts, 'ts' => $now]);
+    }
+
     // ── GET /admin/api/utilisateurs/{id} ─────────────────────────────────
     public function show(array $params): void
     {

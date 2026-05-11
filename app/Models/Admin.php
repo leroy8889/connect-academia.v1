@@ -261,7 +261,10 @@ class Admin extends BaseModel
 
         $sql = "
             SELECT u.id, u.nom, u.prenom, u.email, u.role, u.photo_profil,
-                   u.is_active, u.last_login, u.created_at, u.posts_count,
+                   u.is_active, u.serie_id,
+                   u.last_login, UNIX_TIMESTAMP(u.last_login) AS last_login_ts,
+                   u.last_activity, UNIX_TIMESTAMP(u.last_activity) AS last_activity_ts,
+                   u.created_at, u.posts_count,
                    s.nom AS serie, m.nom AS matiere
             FROM users u
             LEFT JOIN series s ON s.id = u.serie_id
@@ -276,7 +279,7 @@ class Admin extends BaseModel
             ORDER BY u.created_at DESC
             LIMIT ? OFFSET ?";
 
-        return $db->prepare($sql) ? $this->query($sql, $params)->fetchAll(PDO::FETCH_ASSOC) : [];
+        return $this->query($sql, $params)->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function countUsers(array $filters = []): int

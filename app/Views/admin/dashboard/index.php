@@ -11,7 +11,21 @@ $activiteMatieres = $activiteMatieres ?? [];
 $totalVues = array_sum(array_column($parSerie, 'nb'));
 
 $croissanceLabels = json_encode(array_column($croissance, 'mois'));
-$croissanceData   = json_encode(array_map('intval', array_column($croissance, 'nb')));
+$croissanceMonths = array_map('intval', array_column($croissance, 'nb'));
+$croissanceData   = json_encode($croissanceMonths);
+
+// Cumul total pour stats strip
+$cumul = array_sum($croissanceMonths);
+
+// Stats strip
+$croissanceTotalPeriode = $cumul;
+$croissanceBestIdx      = !empty($croissanceMonths) ? array_search(max($croissanceMonths), $croissanceMonths) : null;
+$croissanceBestMois     = $croissanceBestIdx !== null ? ($croissance[$croissanceBestIdx]['mois'] ?? '—') : '—';
+$croissanceBestVal      = !empty($croissanceMonths) ? max($croissanceMonths) : 0;
+$croissanceMoyenne      = !empty($croissanceMonths) ? round(array_sum($croissanceMonths) / count($croissanceMonths), 1) : 0;
+$croissanceTaux         = (count($croissanceMonths) >= 2 && $croissanceMonths[0] > 0)
+    ? round((($croissanceMonths[count($croissanceMonths)-1] - $croissanceMonths[0]) / $croissanceMonths[0]) * 100, 1)
+    : null;
 $serieLabels      = json_encode(array_column($parSerie, 'serie'));
 $serieData        = json_encode(array_map('intval', array_column($parSerie, 'nb')));
 $serieCouleurs    = json_encode(array_column($parSerie, 'couleur'));
@@ -120,20 +134,58 @@ $kpiCards = [
 <div class="charts-grid mb-24">
 
   <!-- Croissance inscriptions -->
-  <div class="chart-wrap">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:12px;flex-wrap:wrap;">
+  <div class="chart-wrap" style="grid-column: 1 / -1;">
+    <!-- En-tête -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:12px;flex-wrap:wrap;">
       <div>
-        <h3>Croissance des inscriptions</h3>
-        <p>Évolution du nombre d'élèves inscrits — 6 derniers mois</p>
+        <h3 style="margin-bottom:2px;">Croissance des inscriptions</h3>
+        <p style="margin-bottom:0;">Variation mensuelle des inscriptions — 6 derniers mois</p>
       </div>
-      <div style="display:flex;gap:6px;">
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
         <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--txt-m);">
-          <span style="width:8px;height:8px;border-radius:50%;background:var(--ap);display:inline-block;"></span>
-          Élèves
+          <span style="width:20px;height:2.5px;border-radius:2px;background:#8B52FA;display:inline-block;"></span>
+          Inscriptions / mois
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--txt-m);">
+          <span style="width:20px;height:2px;border-radius:2px;background:rgba(139,82,250,0.35);display:inline-block;border-top:2px dashed #8B52FA;"></span>
+          Moyenne
         </span>
       </div>
     </div>
-    <canvas id="chartCroissance" height="160"></canvas>
+
+    <!-- Strip de statistiques rapides -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">
+      <div style="background:rgba(139,82,250,0.06);border:1px solid rgba(139,82,250,0.15);border-radius:8px;padding:10px 14px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-m);margin-bottom:4px;">Total période</div>
+        <div style="font-size:20px;font-weight:800;font-family:var(--font-head);color:var(--txt);"><?= number_format($croissanceTotalPeriode) ?></div>
+        <div style="font-size:10px;color:var(--txt-l);">inscriptions</div>
+      </div>
+      <div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:8px;padding:10px 14px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-m);margin-bottom:4px;">Meilleur mois</div>
+        <div style="font-size:20px;font-weight:800;font-family:var(--font-head);color:var(--txt);"><?= number_format($croissanceBestVal) ?></div>
+        <div style="font-size:10px;color:var(--txt-l);"><?= htmlspecialchars($croissanceBestMois) ?></div>
+      </div>
+      <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;padding:10px 14px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-m);margin-bottom:4px;">Moyenne / mois</div>
+        <div style="font-size:20px;font-weight:800;font-family:var(--font-head);color:var(--txt);"><?= number_format($croissanceMoyenne, 1) ?></div>
+        <div style="font-size:10px;color:var(--txt-l);">inscriptions</div>
+      </div>
+      <div style="background:<?= $croissanceTaux === null ? 'rgba(152,152,176,0.06)' : ($croissanceTaux >= 0 ? 'rgba(34,197,94,0.06)' : 'rgba(239,68,68,0.06)') ?>;border:1px solid <?= $croissanceTaux === null ? 'rgba(152,152,176,0.15)' : ($croissanceTaux >= 0 ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)') ?>;border-radius:8px;padding:10px 14px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-m);margin-bottom:4px;">Évolution</div>
+        <?php if ($croissanceTaux !== null): ?>
+        <div style="font-size:20px;font-weight:800;font-family:var(--font-head);color:<?= $croissanceTaux >= 0 ? '#22C55E' : '#EF4444' ?>;">
+          <?= $croissanceTaux >= 0 ? '+' : '' ?><?= number_format($croissanceTaux, 1) ?>%
+        </div>
+        <div style="font-size:10px;color:var(--txt-l);">1er → dernier mois</div>
+        <?php else: ?>
+        <div style="font-size:20px;font-weight:800;font-family:var(--font-head);color:var(--txt-l);">—</div>
+        <div style="font-size:10px;color:var(--txt-l);">données insuffisantes</div>
+        <?php endif; ?>
+      </div>
+    </div>
+
+    <!-- Canvas -->
+    <canvas id="chartCroissance" height="100"></canvas>
   </div>
 
   <!-- Activité par matière -->
@@ -264,41 +316,131 @@ $kpiCards = [
   const gridColor = '#EBEBF5';
   const tickColor = '#9898B0';
 
-  // Croissance
+  // Croissance — courbe de variation
   const ctx1 = document.getElementById('chartCroissance');
   if (ctx1) {
+    const c2d    = ctx1.getContext('2d');
+    const h      = ctx1.clientHeight || 220;
+
+    const gradFill = c2d.createLinearGradient(0, 0, 0, h);
+    gradFill.addColorStop(0,   'rgba(139,82,250,0.28)');
+    gradFill.addColorStop(0.6, 'rgba(139,82,250,0.06)');
+    gradFill.addColorStop(1,   'rgba(139,82,250,0)');
+
+    const monthlyData = <?= $croissanceData ?>;
+    const labels      = <?= $croissanceLabels ?>;
+    const avg         = monthlyData.length ? monthlyData.reduce((a,b) => a+b, 0) / monthlyData.length : 0;
+    const avgLine     = monthlyData.map(() => Math.round(avg * 10) / 10);
+
+    // delta mois/mois
+    const deltas = monthlyData.map((v, i) => {
+      if (i === 0 || monthlyData[i-1] === 0) return null;
+      return ((v - monthlyData[i-1]) / monthlyData[i-1] * 100).toFixed(1);
+    });
+
     new Chart(ctx1, {
       type: 'line',
       data: {
-        labels: <?= $croissanceLabels ?>,
-        datasets: [{
-          label: 'Inscriptions',
-          data: <?= $croissanceData ?>,
-          borderColor: primary,
-          backgroundColor: (ctx) => {
-            const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, 200);
-            gradient.addColorStop(0, 'rgba(139,82,250,0.18)');
-            gradient.addColorStop(1, 'rgba(139,82,250,0)');
-            return gradient;
+        labels,
+        datasets: [
+          {
+            label: 'Inscriptions',
+            data: monthlyData,
+            borderColor: '#8B52FA',
+            backgroundColor: gradFill,
+            borderWidth: 3,
+            pointRadius: 6,
+            pointBackgroundColor: '#8B52FA',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2.5,
+            pointHoverRadius: 9,
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: '#8B52FA',
+            pointHoverBorderWidth: 3,
+            fill: true,
+            tension: 0.45,
           },
-          borderWidth: 2.5,
-          pointRadius: 4,
-          pointBackgroundColor: primary,
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          fill: true,
-          tension: 0.4,
-        }]
+          {
+            label: 'Moyenne',
+            data: avgLine,
+            borderColor: 'rgba(139,82,250,0.35)',
+            borderWidth: 1.5,
+            borderDash: [5, 4],
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            fill: false,
+            tension: 0,
+          }
+        ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: true,
-        plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+        interaction: { mode: 'index', intersect: false },
+        animation: { duration: 1000, easing: 'easeInOutQuart' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#13112A',
+            titleColor: '#fff',
+            bodyColor: 'rgba(255,255,255,0.7)',
+            padding: 14,
+            cornerRadius: 10,
+            borderColor: 'rgba(139,82,250,0.3)',
+            borderWidth: 1,
+            displayColors: false,
+            callbacks: {
+              title: (items) => items[0].label,
+              label: (item) => {
+                if (item.datasetIndex === 1) return null;
+                return `  ${item.parsed.y} inscription${item.parsed.y > 1 ? 's' : ''}`;
+              },
+              afterLabel: (item) => {
+                if (item.datasetIndex === 1) return null;
+                const d = deltas[item.dataIndex];
+                if (d === null) return `  Moyenne : ${Math.round(avg)}`;
+                const arrow = parseFloat(d) >= 0 ? '↑' : '↓';
+                const color = parseFloat(d) >= 0 ? '+' : '';
+                return [`  ${arrow} ${color}${d}% vs mois préc.`, `  Moyenne : ${Math.round(avg)}`];
+              }
+            }
+          }
+        },
         scales: {
-          y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } } },
-          x: { grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } } }
+          y: {
+            beginAtZero: true,
+            grid: { color: gridColor },
+            ticks: {
+              color: tickColor,
+              font: { size: 11 },
+              stepSize: 1,
+              callback: (v) => Number.isInteger(v) ? v : null,
+            },
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: tickColor, font: { size: 11 } },
+          }
         }
-      }
+      },
+      plugins: [{
+        id: 'pointLabels',
+        afterDatasetsDraw(chart) {
+          const { ctx: c, data } = chart;
+          const meta = chart.getDatasetMeta(0);
+          meta.data.forEach((pt, i) => {
+            const val = data.datasets[0].data[i];
+            if (val == null) return;
+            c.save();
+            c.fillStyle = '#8B52FA';
+            c.font = 'bold 11px system-ui';
+            c.textAlign = 'center';
+            c.textBaseline = 'bottom';
+            c.fillText(val, pt.x, pt.y - 10);
+            c.restore();
+          });
+        }
+      }]
     });
   }
 

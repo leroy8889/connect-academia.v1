@@ -26,6 +26,39 @@ const Feed = (() => {
         elements.newPostsBanner = document.getElementById('new-posts-banner');
     }
 
+    // ── Dropdown 3-points (délégation document) ─────
+    function initDropdowns() {
+        document.addEventListener('click', function (e) {
+            const toggleBtn = e.target.closest('[data-dropdown-toggle]');
+
+            if (toggleBtn) {
+                e.stopPropagation();
+                const wrapper = toggleBtn.closest('[data-dropdown]');
+                const menu    = wrapper?.querySelector('[data-dropdown-menu]');
+                if (!menu) return;
+
+                const wasHidden = menu.classList.contains('hidden');
+                // Ferme tous les dropdowns ouverts
+                document.querySelectorAll('[data-dropdown-menu]').forEach(m => m.classList.add('hidden'));
+                // Ouvre celui-ci s'il était fermé
+                if (wasHidden) menu.classList.remove('hidden');
+                return;
+            }
+
+            // Clic en dehors de tout dropdown → ferme tout
+            if (!e.target.closest('[data-dropdown]')) {
+                document.querySelectorAll('[data-dropdown-menu]').forEach(m => m.classList.add('hidden'));
+            }
+        });
+
+        // Escape ferme tous les dropdowns
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('[data-dropdown-menu]').forEach(m => m.classList.add('hidden'));
+            }
+        });
+    }
+
     // ── Init ────────────────────────────────────────
     function init() {
         cacheDOM();
@@ -33,6 +66,7 @@ const Feed = (() => {
 
         initFilters();
         initInfiniteScroll();
+        initDropdowns();
         startPolling();
         initDevelopmentModalHandlers();
 
@@ -336,7 +370,7 @@ const Feed = (() => {
                 <img class="post-card__avatar" src="${App.escapeHtml(avatarUrl)}" alt="${App.escapeHtml(userName)}" loading="lazy">
                 <div class="post-card__info">
                     <div class="post-card__author">
-                        <a href="${baseUrl}/profile/${post.user_id}" class="post-card__name">${App.escapeHtml(userName)}</a>
+                        <a href="${baseUrl}/communaute/profil/${post.user_id}" class="post-card__name">${App.escapeHtml(userName)}</a>
                         ${badgeHtml}
                         ${typeBadge}
                     </div>

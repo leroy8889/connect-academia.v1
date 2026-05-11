@@ -3,33 +3,64 @@ $matieres   = $matieres   ?? [];
 $serie      = $serie      ?? null;
 $allSeries  = $all_series ?? [];
 $currentUri = $_SERVER['REQUEST_URI'] ?? '';
+
+function matiereIcon(string $nom): string {
+    $n = mb_strtolower($nom, 'UTF-8');
+    if (str_contains($n, 'math'))                                                                        return 'calculator';
+    if (str_contains($n, 'physique') || str_contains($n, 'chimie'))                                     return 'flask-conical';
+    if (str_contains($n, 'svt') || str_contains($n, 'biolog') || (str_contains($n, 'vie') && str_contains($n, 'terre'))) return 'leaf';
+    if (str_contains($n, 'philo'))                                                                       return 'lightbulb';
+    if (str_contains($n, 'histoire') || str_contains($n, 'géographie') || str_contains($n, 'geographie')) return 'globe';
+    if (str_contains($n, 'français') || str_contains($n, 'francais') || str_contains($n, 'litt'))       return 'pen-line';
+    if (str_contains($n, 'anglais') || str_contains($n, 'espagnol') || str_contains($n, 'allemand') || str_contains($n, 'langues vivantes')) return 'languages';
+    if (str_contains($n, 'économie') || str_contains($n, 'economie'))                                   return 'trending-up';
+    if (str_contains($n, 'comptab'))                                                                     return 'receipt';
+    if (str_contains($n, 'informatique') || str_contains($n, 'numérique') || str_contains($n, 'numerique')) return 'monitor';
+    if (str_contains($n, 'musique') || str_contains($n, 'plastique') || str_contains($n, 'arts'))       return 'palette';
+    if (str_contains($n, 'eps') || str_contains($n, 'sport'))                                           return 'trophy';
+    if (str_contains($n, 'technolog') || str_contains($n, 'industri'))                                  return 'settings-2';
+    if (str_contains($n, 'commerce') || str_contains($n, 'gestion'))                                    return 'landmark';
+    if (str_contains($n, 'droit') || str_contains($n, 'juridique'))                                     return 'scale';
+    return 'book-open';
+}
+
+function serieIcon(string $nom): string {
+    $n = strtolower(trim($nom));
+    if (in_array($n, ['a', 'a1', 'a2'])) return 'book-text';
+    if ($n === 'b')  return 'trending-up';
+    if ($n === 'c')  return 'calculator';
+    if ($n === 'd')  return 'leaf';
+    if (in_array($n, ['f3', 'f4'])) return 'settings-2';
+    if ($n === 'g')  return 'briefcase';
+    return 'graduation-cap';
+}
 ?>
 
 <div class="appr-page">
 
-  <!-- ── Sous-navigation ───────────────────────────────── -->
+  <!-- ── Sous-navigation ──────────────────────────────────── -->
   <nav class="appr-subnav">
     <a href="<?= url('/apprentissage') ?>" class="appr-subnav__link">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <i data-lucide="layout-dashboard" style="width:15px;height:15px;flex-shrink:0"></i>
       Tableau de bord
     </a>
     <a href="<?= url('/apprentissage/matieres') ?>" class="appr-subnav__link active">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <i data-lucide="book-copy" style="width:15px;height:15px;flex-shrink:0"></i>
       Mes matières
     </a>
     <a href="<?= url('/apprentissage/progression') ?>" class="appr-subnav__link">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <i data-lucide="bar-chart-3" style="width:15px;height:15px;flex-shrink:0"></i>
       Progression
     </a>
     <a href="<?= url('/apprentissage/favoris') ?>" class="appr-subnav__link">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <i data-lucide="star" style="width:15px;height:15px;flex-shrink:0"></i>
       Favoris
     </a>
   </nav>
 
-  <!-- ── Hero ──────────────────────────────────────────── -->
+  <!-- ── Hero ─────────────────────────────────────────────── -->
   <div class="appr-hero">
-    <p style="color:#6B7280;font-size:14px;margin-bottom:4px">Module d'apprentissage</p>
+    <p class="appr-eyebrow">Module d'apprentissage</p>
     <h1>
       <?php if ($serie): ?>
         Terminale <?= e($serie['nom']) ?> — Mes matières
@@ -49,25 +80,23 @@ $currentUri = $_SERVER['REQUEST_URI'] ?? '';
     <div class="series-grid">
       <?php foreach ($allSeries as $s): ?>
         <a href="<?= url('/apprentissage/matieres?serie=' . (int)$s['id']) ?>" class="serie-card">
-          <div class="serie-card__name">Tle <?= e($s['nom']) ?></div>
-          <div class="serie-card__label">
-            <?= e($s['description'] ?? 'Terminale série ' . $s['nom']) ?>
+          <div class="serie-card__icon-wrap">
+            <i data-lucide="<?= serieIcon($s['nom']) ?>"></i>
           </div>
+          <div class="serie-card__name">Tle <?= e($s['nom']) ?></div>
+          <div class="serie-card__label"><?= e($s['description'] ?? 'Terminale série ' . $s['nom']) ?></div>
           <div style="margin-top:12px;display:flex;justify-content:center">
-            <span class="badge badge-serie-<?= e($s['nom']) ?>">Série <?= e($s['nom']) ?></span>
+            <span class="ca-badge ca-badge-brand-soft">Série <?= e($s['nom']) ?></span>
           </div>
         </a>
       <?php endforeach; ?>
     </div>
 
-  <!-- ── Cas 2 : série choisie mais sans matières ─────── -->
+  <!-- ── Cas 2 : série choisie mais sans matières ─────────── -->
   <?php elseif ($serie && empty($matieres)): ?>
     <div class="empty-state">
       <div class="empty-state__icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-        </svg>
+        <i data-lucide="book-open" style="width:32px;height:32px"></i>
       </div>
       <h3>Aucune matière disponible</h3>
       <p>Les matières de la série <?= e($serie['nom']) ?> seront bientôt disponibles.</p>
@@ -76,43 +105,61 @@ $currentUri = $_SERVER['REQUEST_URI'] ?? '';
       </a>
     </div>
 
-  <!-- ── Cas 3 : affichage des matières ───────────────── -->
+  <!-- ── Cas 3 : affichage des matières ────────────────────── -->
   <?php elseif (!empty($matieres)): ?>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:20px">
+    <div class="matieres-grid">
       <?php foreach ($matieres as $m): ?>
         <?php
-          $pct = (int) round((float)($m['progression_moyenne'] ?? 0));
-          $nb  = (int) ($m['nb_ressources'] ?? 0);
+          $pct    = (int) round((float)($m['progression_moyenne'] ?? 0));
+          $nb     = (int) ($m['nb_ressources'] ?? 0);
+          $icon   = matiereIcon($m['nom'] ?? '');
+          $status = $pct >= 100 ? 'termine' : ($pct > 0 ? 'en-cours' : 'nouveau');
         ?>
         <a href="<?= url('/apprentissage/ressources?matiere=' . (int)$m['id']) ?>" class="matiere-card">
 
-          <div style="display:flex;align-items:center;gap:14px">
-            <div style="width:48px;height:48px;background:#F3EFFF;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">
-              <?= !empty($m['icone']) ? e($m['icone']) : '📚' ?>
+          <div class="matiere-card__header">
+            <div class="matiere-card__icon-cap">
+              <i data-lucide="<?= $icon ?>" style="width:20px;height:20px"></i>
             </div>
-            <div style="min-width:0">
-              <div style="font-family:'Poppins','Inter',sans-serif;font-weight:700;font-size:16px;color:#1F1C2C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><?= e($m['nom']) ?></div>
-              <div style="font-size:12px;color:#6B7280;margin-top:2px"><?= $nb ?> ressource<?= $nb > 1 ? 's' : '' ?></div>
-            </div>
-          </div>
-
-          <div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <span style="font-size:12px;color:#6B7280">Progression</span>
-              <span style="font-size:13px;font-weight:700;color:#8B52FA"><?= $pct ?>%</span>
-            </div>
-            <div class="progress-bar-container">
-              <div class="progress-bar-fill" style="width:<?= $pct ?>%"></div>
+            <div class="matiere-card__info">
+              <div class="matiere-card__name"><?= e($m['nom']) ?></div>
+              <div class="matiere-card__count">
+                <i data-lucide="files" style="width:12px;height:12px"></i>
+                <?= $nb ?> ressource<?= $nb > 1 ? 's' : '' ?>
+              </div>
             </div>
           </div>
 
-          <div class="resource-card__footer" style="padding-top:10px">
-            <span style="font-size:12px;color:#6B7280">
-              <?= $pct >= 100 ? '✅ Terminé' : ($pct > 0 ? 'En cours' : 'Non commencé') ?>
-            </span>
-            <span style="display:flex;align-items:center;gap:4px;color:#8B52FA;font-size:13px;font-weight:600">
+          <div class="matiere-card__progress-section">
+            <div class="matiere-card__progress-header">
+              <span class="ca-eyebrow">Progression</span>
+              <span class="matiere-card__pct"><?= $pct ?>%</span>
+            </div>
+            <div class="ca-progress">
+              <div class="ca-progress-fill" style="width:<?= $pct ?>%"></div>
+            </div>
+          </div>
+
+          <div class="matiere-card__footer">
+            <?php if ($status === 'termine'): ?>
+              <span class="ca-badge ca-badge-success">
+                <i data-lucide="check-circle-2" style="width:11px;height:11px"></i>
+                Terminé
+              </span>
+            <?php elseif ($status === 'en-cours'): ?>
+              <span class="ca-badge ca-badge-warning">
+                <i data-lucide="clock" style="width:11px;height:11px"></i>
+                En cours
+              </span>
+            <?php else: ?>
+              <span class="ca-badge ca-badge-muted">
+                <i data-lucide="circle-dashed" style="width:11px;height:11px"></i>
+                Nouveau
+              </span>
+            <?php endif; ?>
+            <span class="matiere-card__cta">
               Accéder
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              <i data-lucide="arrow-right" style="width:14px;height:14px"></i>
             </span>
           </div>
 
@@ -123,10 +170,7 @@ $currentUri = $_SERVER['REQUEST_URI'] ?? '';
   <?php else: ?>
     <div class="empty-state">
       <div class="empty-state__icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-        </svg>
+        <i data-lucide="book-open" style="width:32px;height:32px"></i>
       </div>
       <h3>Aucune matière disponible</h3>
       <p>Les matières seront bientôt disponibles.</p>

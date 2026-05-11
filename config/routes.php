@@ -42,6 +42,7 @@ $router->get('/api/apprentissage/ressources',               'Apprentissage\Resso
 $router->get('/api/apprentissage/series',                   'Apprentissage\RessourceController@series',      ['auth']);
 $router->post('/api/apprentissage/ia/question',             'Apprentissage\IaController@question',           ['auth', 'csrf']);
 $router->get('/api/apprentissage/ia/historique/{id}',       'Apprentissage\IaController@historique',         ['auth']);
+$router->post('/api/apprentissage/ia/nouvelle-conversation','Apprentissage\IaController@nouvelleConversation',['auth', 'csrf']);
 $router->post('/api/apprentissage/progression',             'Apprentissage\ProgressionController@update',    ['auth']);
 $router->post('/api/apprentissage/favoris/{id}',            'Apprentissage\FavorisController@toggle',        ['auth']);
 
@@ -96,6 +97,7 @@ $router->get('/admin',                                      'Admin\DashboardCont
 $router->get('/admin/api/stats',                            'Admin\DashboardController@stats',               ['admin']);
 
 $router->get('/admin/utilisateurs',                         'Admin\UsersController@index',                   ['admin']);
+$router->get('/admin/api/utilisateurs/statuts',             'Admin\UsersController@statuts',                 ['admin']);
 $router->get('/admin/api/utilisateurs/{id}',                'Admin\UsersController@show',                    ['admin']);
 $router->post('/admin/api/utilisateurs',                    'Admin\UsersController@store',                   ['admin', 'csrf']);
 $router->patch('/admin/api/utilisateurs/{id}',              'Admin\UsersController@update',                  ['admin', 'csrf']);
@@ -121,6 +123,15 @@ $router->patch('/admin/api/communaute/reports/{id}',        'Admin\CommunauteCon
 
 $router->get('/admin/signalements',                         'Admin\SignalementsController@index',             ['admin']);
 $router->patch('/admin/api/signalements/{id}',              'Admin\SignalementsController@traiter',           ['admin', 'csrf']);
+
+// ── ANNONCES ───────────────────────────────────────────────────────────────
+$router->get('/admin/annonces',                             'Admin\AnnoncesController@index',                ['admin']);
+$router->get('/admin/api/annonces/{id}',                    'Admin\AnnoncesController@show',                 ['admin']);
+$router->post('/admin/api/annonces',                        'Admin\AnnoncesController@store',                ['admin', 'csrf']);
+$router->patch('/admin/api/annonces/{id}',                  'Admin\AnnoncesController@update',               ['admin', 'csrf']);
+$router->patch('/admin/api/annonces/{id}/toggle',           'Admin\AnnoncesController@toggle',               ['admin', 'csrf']);
+$router->delete('/admin/api/annonces/{id}',                 'Admin\AnnoncesController@delete',               ['admin', 'csrf']);
+$router->get('/api/annonces/active',                        'Admin\AnnoncesController@activeForHub',         ['auth']);
 
 $router->get('/admin/analytics',                            'Admin\AnalyticsController@index',               ['admin']);
 

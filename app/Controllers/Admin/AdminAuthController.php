@@ -12,6 +12,8 @@ use PHPMailer\PHPMailer\Exception;
 class AdminAuthController
 {
     private Admin $model;
+    private const MAX_ATTEMPTS    = 5;
+    private const LOCKOUT_SECONDS = 900; // 15 min
 
     public function __construct()
     {
@@ -24,8 +26,6 @@ class AdminAuthController
             Response::redirect('/admin');
         }
 
-        // On ne purge plus systématiquement si on est en attente de 2FA
-        // pour permettre à la vue d'afficher le formulaire OTP
         Response::view('admin/auth/login', [
             'pageTitle' => "Connexion Admin — Connect'Academia",
         ], 'admin-auth');
@@ -43,22 +43,58 @@ class AdminAuthController
             Response::redirect('/admin/login');
         }
 
+        // ── Couche 1 : lockout session (fiable, sans Redis) ───────────────
+        $lockUntil = (int) Session::get('admin_lock_until', 0);
+        if ($lockUntil > 0 && time() < $lockUntil) {
+            $waitSecs = $lockUntil - time();
+            $waitMin  = max(1, (int) ceil($waitSecs / 60));
+            Session::flash('login_locked', true);
+            Session::flash('wait_min', $waitMin);
+            Session::flash('wait_secs', $waitSecs);
+            Response::redirect('/admin/login');
+        }
+
+        // ── Couche 2 : Redis rate limiter (IP-based) ──────────────────────
         $rlKey = RateLimiter::ipKey('admin_login');
-        if (RateLimiter::tooManyAttempts($rlKey, 5)) {
-            $waitMin = max(1, (int) ceil(RateLimiter::availableIn($rlKey) / 60));
-            Session::flash('error', "Trop de tentatives. Réessayez dans {$waitMin} minute(s).");
+        if (RateLimiter::tooManyAttempts($rlKey, self::MAX_ATTEMPTS)) {
+            $waitSecs = RateLimiter::availableIn($rlKey);
+            $waitMin  = max(1, (int) ceil($waitSecs / 60));
+            Session::flash('login_locked', true);
+            Session::flash('wait_min', $waitMin);
+            Session::flash('wait_secs', $waitSecs);
             Response::redirect('/admin/login');
         }
 
         $admin = $this->model->findByEmail($email);
 
         if (!$admin || !$this->model->verifyPassword($password, $admin['password_hash'])) {
-            RateLimiter::hit($rlKey, 900);
+            RateLimiter::hit($rlKey, self::LOCKOUT_SECONDS);
             $this->model->logConnection($admin['id'] ?? null, $email, $ip, $agent, 'echec');
-            Session::flash('error', 'Email ou mot de passe incorrect.');
+
+            // Compteur session : incrémente et vérifie le seuil
+            $attempts  = (int) Session::get('admin_login_attempts', 0) + 1;
+            $remaining = max(0, self::MAX_ATTEMPTS - $attempts);
+
+            if ($remaining === 0) {
+                // Seuil atteint → verrou session
+                Session::set('admin_lock_until', time() + self::LOCKOUT_SECONDS);
+                Session::remove('admin_login_attempts');
+                Session::flash('login_locked', true);
+                Session::flash('wait_min', (int) ceil(self::LOCKOUT_SECONDS / 60));
+                Session::flash('wait_secs', self::LOCKOUT_SECONDS);
+            } else {
+                Session::set('admin_login_attempts', $attempts);
+                Session::flash('login_attempts_used', $attempts);
+                Session::flash('login_attempts_remaining', $remaining);
+                Session::flash('error', 'Email ou mot de passe incorrect.');
+            }
+
             Response::redirect('/admin/login');
         }
 
+        // ── Succès : on efface tous les compteurs ─────────────────────────
+        Session::remove('admin_login_attempts');
+        Session::remove('admin_lock_until');
         RateLimiter::clear($rlKey);
 
         // --- LOGIQUE 2FA EMAIL AJOUTÉE ---
