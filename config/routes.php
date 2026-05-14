@@ -29,6 +29,8 @@ $router->get('/abonnement/confirmation',        'AbonnementController@confirmati
 $router->get('/abonnement/renouveler',          'AbonnementController@renouveler',   ['auth']);
 $router->post('/api/paiement/initier',          'PaiementController@initier',        ['auth', 'csrf']);
 $router->post('/api/paiement/callback',         'PaiementController@callback');
+$router->get('/api/paiement/statut',           'PaiementController@statut',           ['auth']);
+$router->get('/paiement/retour',               'PaiementController@retour');
 
 // ── APPRENTISSAGE ─────────────────────────────────────────────────────────
 $router->get('/apprentissage',                              'Apprentissage\DashboardController@index',       ['auth', 'abonne']);
@@ -132,6 +134,11 @@ $router->patch('/admin/api/annonces/{id}',                  'Admin\AnnoncesContr
 $router->patch('/admin/api/annonces/{id}/toggle',           'Admin\AnnoncesController@toggle',               ['admin', 'csrf']);
 $router->delete('/admin/api/annonces/{id}',                 'Admin\AnnoncesController@delete',               ['admin', 'csrf']);
 $router->get('/api/annonces/active',                        'Admin\AnnoncesController@activeForHub',         ['auth']);
+
+$router->get('/admin/paiement',                                      'Admin\PaiementController@index',               ['admin']);
+$router->get('/admin/api/paiement/transactions',                     'Admin\PaiementController@transactions',         ['admin']);
+$router->post('/admin/api/paiement/transactions/{id}/confirmer',     'Admin\PaiementController@confirmer',            ['admin', 'csrf']);
+$router->post('/admin/api/paiement/sync',                            'Admin\PaiementController@sync',                  ['admin', 'csrf']);
 
 $router->get('/admin/analytics',                            'Admin\AnalyticsController@index',               ['admin']);
 

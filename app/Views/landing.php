@@ -107,9 +107,10 @@
     <article>
 
       <section class="section hero has-bg-image" id="home" aria-label="home"
-        style="background-image: url('<?= BASE_URL ?>/assets/images/hero-bg.svg')">
+        style="background-image: url(&quot;<?= BASE_URL ?>/assets/images/hero-bg.svg&quot;)">
         <div class="container">
 
+        
           <div class="hero-content">
 
             <h1 class="h1 section-title">
@@ -182,7 +183,7 @@
       </section>
 
       <section class="video has-bg-image" aria-label="video"
-        style="background-image: url('<?= BASE_URL ?>/assets/images/video-bg.png')">
+        style="background-image: url(&quot;<?= BASE_URL ?>/assets/images/video-bg.png&quot;)">
         <div class="container">
 
           <div class="video-card">
@@ -1029,7 +1030,7 @@
   </main>
 
 
-  <footer class="footer" style="background-image: url('<?= BASE_URL ?>/assets/images/footer-bg.png')">
+  <footer class="footer" style="background-image: url(&quot;<?= BASE_URL ?>/assets/images/footer-bg.png&quot;)">
 
     <div class="footer-top section">
       <div class="container grid-list">

@@ -126,6 +126,7 @@ if (!function_exists('pgUrl')) {
         <th>Rôle</th>
         <th>Série</th>
         <th>Statut</th>
+        <th>Abonnement</th>
         <th>Présence</th>
         <th>Inscrit le</th>
         <th>Dernier login</th>
@@ -134,7 +135,7 @@ if (!function_exists('pgUrl')) {
     </thead>
     <tbody>
       <?php if (empty($users)): ?>
-      <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--txt-m);">Aucun utilisateur trouvé</td></tr>
+      <tr><td colspan="9" style="text-align:center;padding:40px;color:var(--txt-m);">Aucun utilisateur trouvé</td></tr>
       <?php endif; ?>
       <?php foreach ($users as $u): ?>
       <tr data-user-id="<?= $u['id'] ?>">
@@ -159,6 +160,24 @@ if (!function_exists('pgUrl')) {
           <span class="badge <?= $u['is_active'] ? 'badge-actif' : 'badge-suspendu' ?> status-badge">
             <?= $u['is_active'] ? 'Actif' : 'Suspendu' ?>
           </span>
+        </td>
+        <td>
+          <?php
+            $abStatut = $u['ab_statut'] ?? null;
+            $abFin    = $u['ab_fin']    ?? null;
+            $abPlan   = $u['ab_plan']   ?? null;
+            if ($abStatut === 'actif' && $abFin):
+              $joursAb = max(0, (int) ceil((strtotime($abFin) - time()) / 86400));
+          ?>
+            <span style="display:inline-flex;flex-direction:column;gap:2px;">
+              <span style="display:inline-block;background:rgba(16,185,129,0.12);color:#059669;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;">
+                Actif · <?= ucfirst($abPlan) ?>
+              </span>
+              <span style="font-size:10px;color:var(--txt-m);">exp. <?= date('d/m/Y', strtotime($abFin)) ?></span>
+            </span>
+          <?php else: ?>
+            <span style="background:#f3f4f6;color:#9ca3af;font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px;display:inline-block;">Aucun</span>
+          <?php endif; ?>
         </td>
         <td>
           <?php

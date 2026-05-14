@@ -96,6 +96,9 @@
 
       <form action="<?= url('/auth/connexion') ?>" method="POST" novalidate>
         <input type="hidden" name="_csrf_token" value="<?= \Core\Session::getCsrfToken() ?>">
+        <?php if (!empty($redirectAfter)): ?>
+        <input type="hidden" name="redirect_after" value="<?= htmlspecialchars($redirectAfter, ENT_QUOTES) ?>">
+        <?php endif; ?>
 
         <div class="form-group">
           <label for="email">Email <span class="required">*</span></label>

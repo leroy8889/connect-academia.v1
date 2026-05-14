@@ -265,7 +265,8 @@ class Admin extends BaseModel
                    u.last_login, UNIX_TIMESTAMP(u.last_login) AS last_login_ts,
                    u.last_activity, UNIX_TIMESTAMP(u.last_activity) AS last_activity_ts,
                    u.created_at, u.posts_count,
-                   s.nom AS serie, m.nom AS matiere
+                   s.nom AS serie, m.nom AS matiere,
+                   ab.plan AS ab_plan, ab.statut AS ab_statut, ab.fin AS ab_fin
             FROM users u
             LEFT JOIN series s ON s.id = u.serie_id
             LEFT JOIN ressources top_r ON top_r.id = (
@@ -275,6 +276,12 @@ class Admin extends BaseModel
                 ORDER BY COUNT(*) DESC LIMIT 1
             )
             LEFT JOIN matieres m ON m.id = top_r.matiere_id
+            LEFT JOIN (
+                SELECT user_id, plan, statut, fin
+                FROM abonnements
+                WHERE statut = 'actif' AND fin > NOW()
+                ORDER BY fin DESC
+            ) AS ab ON ab.user_id = u.id
             WHERE " . implode(' AND ', $where) . "
             ORDER BY u.created_at DESC
             LIMIT ? OFFSET ?";
