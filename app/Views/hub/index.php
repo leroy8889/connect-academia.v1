@@ -26,15 +26,15 @@ $annonce     = $annonce ?? false;
         <?php endif; ?>
 
         <?php if ($acces): ?>
-          <?php if ($resteGratuit > 0): ?>
-          <p class="hub__hero-sub">
-            <i data-lucide="clock"></i>
-            Période gratuite — il te reste <?= ceil($resteGratuit / 3600) ?>h d'accès
-          </p>
-          <?php else: ?>
+          <?php if ($abonnement): ?>
           <p class="hub__hero-sub hub__hero-sub--premium">
             <i data-lucide="star"></i>
             Abonnement actif — accès complet
+          </p>
+          <?php elseif ($resteGratuit > 0): ?>
+          <p class="hub__hero-sub">
+            <i data-lucide="clock"></i>
+            Période gratuite — il te reste <?= ceil($resteGratuit / 3600) ?>h d'accès
           </p>
           <?php endif; ?>
 

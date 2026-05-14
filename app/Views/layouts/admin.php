@@ -133,6 +133,18 @@ function adminNavActive(string $path, string $current, string $base): string {
         </a>
       </div>
 
+      <!-- PAIEMENTS -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Finance</div>
+        <a href="<?= url('/admin/paiement') ?>" class="sidebar-link<?= str_contains($currentUri, '/admin/paiement') ? ' active' : '' ?>">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <rect x="2" y="5" width="20" height="14" rx="2"/>
+            <line x1="2" y1="10" x2="22" y2="10"/>
+          </svg>
+          <span>Paiements</span>
+        </a>
+      </div>
+
       <!-- SYSTÈME -->
       <div class="sidebar-section">
         <div class="sidebar-section-label">Système</div>

@@ -17,23 +17,30 @@ class AuthController
             Response::redirect('/hub');
         }
 
+        $redirect  = $_GET['redirect']    ?? '';
+        $paymentOk = isset($_GET['payment_ok']);
+
         Response::view('auth/connexion', [
-            'pageTitle' => "Connexion — Connect'Academia",
-            'errors'    => Session::getFlash('errors', []),
-            'old'       => Session::getFlash('old', []),
-            'success'   => Session::getFlash('success'),
+            'pageTitle'  => "Connexion — Connect'Academia",
+            'errors'     => Session::getFlash('errors', []),
+            'old'        => Session::getFlash('old', []),
+            'success'    => $paymentOk
+                ? '✅ Paiement confirmé ! Connectez-vous pour accéder à votre abonnement.'
+                : Session::getFlash('success'),
+            'redirectAfter' => $redirect,
         ], 'auth');
     }
 
     public function connexion(): void
     {
-        $email    = trim($_POST['email'] ?? '');
-        $password = $_POST['password'] ?? '';
+        $email        = trim($_POST['email'] ?? '');
+        $password     = $_POST['password']  ?? '';
+        $redirectAfter = $_POST['redirect_after'] ?? '';
 
         if (!$email || !$password) {
             Session::flash('errors', ['general' => 'Veuillez remplir tous les champs.']);
             Session::flash('old', ['email' => $email]);
-            Response::redirect('/auth/connexion');
+            Response::redirect('/auth/connexion' . ($redirectAfter ? '?redirect=' . urlencode($redirectAfter) : ''));
         }
 
         $rlKey = RateLimiter::ipKey('user_login');
@@ -50,7 +57,7 @@ class AuthController
             RateLimiter::hit($rlKey, 900);
             Session::flash('errors', ['general' => 'Email ou mot de passe incorrect.']);
             Session::flash('old', ['email' => $email]);
-            Response::redirect('/auth/connexion');
+            Response::redirect('/auth/connexion' . ($redirectAfter ? '?redirect=' . urlencode($redirectAfter) : ''));
         }
 
         if (!$user['is_active'] || $user['is_deleted']) {
@@ -63,7 +70,19 @@ class AuthController
         $this->setUserSession($user);
         $userModel->updateLastLogin((int) $user['id']);
 
-        Response::redirect('/hub');
+        // Redirect vers la page demandée (paiement confirmé, etc.)
+        $allowed = ['/abonnement/confirmation', '/abonnement/choisir', '/hub'];
+        $dest    = '/hub';
+        if ($redirectAfter) {
+            foreach ($allowed as $prefix) {
+                if (str_starts_with($redirectAfter, $prefix)) {
+                    $dest = $redirectAfter;
+                    break;
+                }
+            }
+        }
+
+        Response::redirect($dest);
     }
 
     public function showInscription(): void

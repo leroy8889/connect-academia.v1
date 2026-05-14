@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Middleware;
 
-use Core\{Session, Response};
+use Core\{Session, Response, Cache};
 use Models\User;
 
 class AbonneMiddleware
@@ -20,19 +20,26 @@ class AbonneMiddleware
             Response::redirect('/auth/connexion');
         }
 
-        // Période gratuite : 1 jour à partir de created_at
-        $createdAt    = strtotime($user['created_at']);
-        $periodeJours = (int) ($_ENV['PERIODE_GRATUITE_JOURS'] ?? 1);
-        $expireAt     = $createdAt + ($periodeJours * 86400);
+        // Période gratuite : 15 heures à partir de created_at
+        $createdAt     = strtotime($user['created_at']);
+        $periodeHeures = (int) ($_ENV['PERIODE_GRATUITE_HEURES'] ?? 15);
+        $expireAt      = $createdAt + ($periodeHeures * 3600);
 
         if (time() <= $expireAt) {
             return; // Encore dans la période gratuite
         }
 
-        // Vérifier abonnement actif
+        // Vérifier cache Redis avant la BDD
+        $cached = Cache::get("abonnement:{$userId}");
+        if ($cached !== null) {
+            return; // Abonnement actif en cache
+        }
+
+        // Vérifier abonnement actif en BDD
         $abonnement = (new \Models\Abonnement())->getActif($userId);
         if ($abonnement) {
-            return; // Abonnement actif
+            Cache::set("abonnement:{$userId}", $abonnement, 3600);
+            return;
         }
 
         // Vérifier si abonnement expiré (pour rediriger vers renouveler)
