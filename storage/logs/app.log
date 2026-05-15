@@ -22327,3 +22327,35 @@ Stack trace:
 [14-May-2026 13:28:55 UTC] [Redis] Erreur de connexion : Connection refused
 [14-May-2026 13:28:57 UTC] [Session] Fallback fichiers : Connection refused
 [14-May-2026 13:28:57 UTC] [Redis] Erreur de connexion : Connection refused
+[15-May-2026 03:33:57 Europe/Berlin] [Redis] Extension PHP redis non chargée.
+[15-May-2026 03:34:32 Europe/Berlin] [Redis] Extension PHP redis non chargée.
+[15-May-2026 03:37:21 Europe/Berlin] [Redis] Extension PHP redis non chargée.
+[15-May-2026 03:37:54 Europe/Berlin] [Redis] Extension PHP redis non chargée.
+[15-May-2026 03:37:55 Europe/Berlin] [Paiement] Échec initiation MoneyFusion: {"statut":false,"message":"Application non approuv\u00e9e."}
+[15-May-2026 03:52:07 Europe/Berlin] [Redis] Extension PHP redis non chargée.
+[15-May-2026 03:52:10 Europe/Berlin] [MF Webhook] Payload reçu: {"event":"payin.session.pending","personal_Info":[{"userId":10,"reference":"CA-10-1778809927-EDD2","plan":"mensuel","email":"xluminaauto@gmail.com","phoneNumber":"000000000"}],"tokenPay":"6a067c4a3b08e1ab78e9ce37","numeroSend":"000000000","nomclient":"GytX Agence","numeroTransaction":"","Montant":0,"statut":"pending","frais":0,"return_url":"https://ecb7-190-2-151-162.ngrok-free.app/connect-academia.v1/paiement/retour","webhook_url":"https://ecb7-190-2-151-162.ngrok-free.app/connect-academia.v1/api/paiement/callback","createdAt":"2026-05-15T01:52:10.186Z"}
+[15-May-2026 03:52:10 Europe/Berlin] [MF Webhook] Paiement initié (pending) — token: 6a067c4a3b08e1ab78e9ce37
+[15-May-2026 03:52:12 Europe/Berlin] [Paiement] Initié — user:10 ref:CA-10-1778809927-EDD2 tx:10 mf_token:6a067c4a3b08e1ab78e9ce37 url:https://payin.moneyfusion.net/payment/6a067c4a3b08e1ab78e9ce37/1852/ERP-CRM
+[15-May-2026 03:58:16 Europe/Berlin] [Redis] Extension PHP redis non chargée.
+[15-May-2026 03:58:19 Europe/Berlin] [MF Webhook] Payload reçu: {"event":"payin.session.pending","personal_Info":[{"userId":10,"reference":"CA-10-1778810296-906A","plan":"mensuel","email":"xluminaauto@gmail.com","phoneNumber":"000000000"}],"tokenPay":"6a067dba3b08e1ab78e9d427","numeroSend":"000000000","nomclient":"GytX Agence","numeroTransaction":"","Montant":0,"statut":"pending","frais":0,"return_url":"https://ecb7-190-2-151-162.ngrok-free.app/connect-academia.v1/paiement/retour","webhook_url":"https://ecb7-190-2-151-162.ngrok-free.app/connect-academia.v1/api/paiement/callback","createdAt":"2026-05-15T01:58:18.621Z"}
+[15-May-2026 03:58:19 Europe/Berlin] [MF Webhook] Paiement initié (pending) — token: 6a067dba3b08e1ab78e9d427
+[15-May-2026 03:58:20 Europe/Berlin] [Paiement] Initié — user:10 ref:CA-10-1778810296-906A tx:11 mf_token:6a067dba3b08e1ab78e9d427 url:https://payin.moneyfusion.net/payment/6a067dba3b08e1ab78e9d427/1852/ERP-CRM
+[15-May-2026 04:00:44 Europe/Berlin] [Redis] Extension PHP redis non chargée.
+[15-May-2026 04:00:46 Europe/Berlin] [Paiement] Échec initiation MoneyFusion: {"statut":false,"message":"Montant doit etre sup\u00e9rieur a 200 F"}
+[15-May-2026 04:01:18 Europe/Berlin] [Redis] Extension PHP redis non chargée.
+[15-May-2026 04:01:21 Europe/Berlin] [MF Webhook] Payload reçu: {"event":"payin.session.pending","personal_Info":[{"userId":10,"reference":"CA-10-1778810478-786B","plan":"mensuel","email":"xluminaauto@gmail.com","phoneNumber":"000000000"}],"tokenPay":"6a067e703b08e1ab78e9d707","numeroSend":"000000000","nomclient":"GytX Agence","numeroTransaction":"","Montant":0,"statut":"pending","frais":0,"return_url":"https://ecb7-190-2-151-162.ngrok-free.app/connect-academia.v1/paiement/retour","webhook_url":"https://ecb7-190-2-151-162.ngrok-free.app/connect-academia.v1/api/paiement/callback","createdAt":"2026-05-15T02:01:20.719Z"}
+[15-May-2026 04:01:21 Europe/Berlin] [MF Webhook] Paiement initié (pending) — token: 6a067e703b08e1ab78e9d707
+[15-May-2026 04:01:22 Europe/Berlin] [Paiement] Initié — user:10 ref:CA-10-1778810478-786B tx:12 mf_token:6a067e703b08e1ab78e9d707 url:https://payin.moneyfusion.net/payment/6a067e703b08e1ab78e9d707/278/ERP-CRM
+[15-May-2026 04:03:01 Europe/Berlin] [MF Webhook] Payload reçu: {"event":"payin.session.completed","personal_Info":[{"userId":10,"reference":"CA-10-1778810478-786B","plan":"mensuel","email":"xluminaauto@gmail.com","phoneNumber":"000000000"}],"tokenPay":"6a067e703b08e1ab78e9d707","numeroSend":"000000000","nomclient":"GytX Agence","numeroTransaction":"24174001209","Montant":269.66,"statut":"paid","frais":8.34,"moyen":"airtel-ga","return_url":"https://ecb7-190-2-151-162.ngrok-free.app/connect-academia.v1/paiement/retour","webhook_url":"https://ecb7-190-2-151-162.ngrok-free.app/connect-academia.v1/api/paiement/callback","createdAt":"2026-05-15T02:01:20.719Z"}
+[15-May-2026 04:03:01 Europe/Berlin] [Redis] Extension PHP redis non chargée.
+[15-May-2026 04:03:01 Europe/Berlin] [MF Webhook] Abonnement activé pour user 10 — tx:12
+[15-May-2026 04:04:17 Europe/Berlin] [Retour] Redirect reçu — token:6a067e703b08e1ab78e9d707 ref:
+[15-May-2026 04:04:17 Europe/Berlin] [Retour] Transaction introuvable ou user non identifié
+[15-May-2026 04:04:33 Europe/Berlin] [Redis] Extension PHP redis non chargée.
+[15-May-2026 04:12:54 Europe/Berlin] [Redis] Extension PHP redis non chargée.
+[15-May-2026 04:12:58 Europe/Berlin] [MF Webhook] Payload reçu: {"event":"payin.session.pending","personal_Info":[{"userId":10,"reference":"CA-10-1778811174-C7DA","plan":"mensuel","email":"xluminaauto@gmail.com","phoneNumber":"000000000"}],"tokenPay":"6a0681293b08e1ab78e9e155","numeroSend":"000000000","nomclient":"GytX Agence","numeroTransaction":"","Montant":0,"statut":"pending","frais":0,"return_url":"https://b614-190-2-151-162.ngrok-free.app/connect-academia.v1/paiement/retour","webhook_url":"https://b614-190-2-151-162.ngrok-free.app/connect-academia.v1/api/paiement/callback","createdAt":"2026-05-15T02:12:57.680Z"}
+[15-May-2026 04:12:58 Europe/Berlin] [MF Webhook] Paiement initié (pending) — token: 6a0681293b08e1ab78e9e155
+[15-May-2026 04:12:59 Europe/Berlin] [Paiement] Initié — user:10 ref:CA-10-1778811174-C7DA tx:13 mf_token:6a0681293b08e1ab78e9e155 url:https://payin.moneyfusion.net/payment/6a0681293b08e1ab78e9e155/278/ERP-CRM
+[15-May-2026 04:14:01 Europe/Berlin] [MF Webhook] Payload reçu: {"event":"payin.session.completed","personal_Info":[{"userId":10,"reference":"CA-10-1778811174-C7DA","plan":"mensuel","email":"xluminaauto@gmail.com","phoneNumber":"000000000"}],"tokenPay":"6a0681293b08e1ab78e9e155","numeroSend":"000000000","nomclient":"GytX Agence","numeroTransaction":"24174001209","Montant":269.66,"statut":"paid","frais":8.34,"moyen":"airtel-ga","return_url":"https://b614-190-2-151-162.ngrok-free.app/connect-academia.v1/paiement/retour","webhook_url":"https://b614-190-2-151-162.ngrok-free.app/connect-academia.v1/api/paiement/callback","createdAt":"2026-05-15T02:12:57.680Z"}
+[15-May-2026 04:14:01 Europe/Berlin] [Redis] Extension PHP redis non chargée.
+[15-May-2026 04:14:01 Europe/Berlin] [MF Webhook] Abonnement activé pour user 10 — tx:13

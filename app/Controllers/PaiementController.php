@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Controllers;
 
-use Core\{Response, Session, RateLimiter, Cache};
+use Core\{Response, Session, RateLimiter, Cache, MoneyFusion};
 use Models\{User, Transaction, Abonnement};
 
 class PaiementController
@@ -31,23 +31,59 @@ class PaiementController
         // Anti-doublon : si payment_pending actif → retourner le même lien
         if ($redis->isAvailable() && $redis->exists("payment_pending:{$userId}")) {
             $cached = json_decode($redis->get("payment_pending:{$userId}"), true);
-            $cachedUrl  = $cached['payment_url'] ?? $_ENV['MONEYFUSION_PAYMENT_LINK'];
+            $cachedUrl  = $cached['payment_url'] ?? null;
             $cachedMfTk = $cached['mf_token']    ?? null;
-            if (!empty($cached['tx_id'])) {
-                $this->setTxCookie((int) $cached['tx_id']);
+            if ($cachedUrl) {
+                if (!empty($cached['tx_id'])) {
+                    $this->setTxCookie((int) $cached['tx_id']);
+                }
+                Response::json(['success' => true, 'payment_url' => $cachedUrl, 'mf_token' => $cachedMfTk]);
             }
-            Response::json(['success' => true, 'payment_url' => $cachedUrl, 'mf_token' => $cachedMfTk]);
         }
 
         $reference = sprintf('CA-%d-%d-%s', $userId, time(), strtoupper(bin2hex(random_bytes(2))));
+        
+        // Préparation des données pour MoneyFusion
+        $appUrl     = rtrim($_ENV['APP_URL'] ?? '', '/');
+        $webhookUrl = $appUrl . '/api/paiement/callback';
+        $returnUrl  = $appUrl . '/paiement/retour';
+        $nom        = trim(($user['prenom'] ?? '') . ' ' . ($user['nom'] ?? '')) ?: 'Étudiant Connect Academia';
+        $plan           = $_GET['plan'] ?? 'mensuel';
+        $montantAffiche = $plan === 'annuel' ? (float)($_ENV['PRIX_ANNUEL_XAF'] ?? 15000) : (float)($_ENV['PRIX_MENSUEL_XAF'] ?? 2000);
+        $montantAEnvoyer = MoneyFusion::calculateAmountToSend($montantAffiche);
 
-        // Lien statique MoneyFusion (le token de session est créé par MF au moment de la visite,
-        // puis passé dans ?token= lors du redirect vers /paiement/retour)
-        $paymentUrl = $_ENV['MONEYFUSION_PAYMENT_LINK'];
-        $mfToken    = null;
+        $paymentData = [
+            'totalPrice'    => $montantAEnvoyer,
+            'article'       => [
+                ['Abonnement Connect\'Academia' => $montantAEnvoyer]
+            ],
+            'personal_Info' => [
+                [
+                    'userId'      => $userId,
+                    'reference'   => $reference,
+                    'plan'        => $plan,
+                    'email'       => $user['email'] ?? '',
+                    'phoneNumber' => $user['telephone'] ?? '000000000'
+                ]
+            ],
+            'numeroSend'    => '000000000', // Optionnel ou à demander au client
+            'nomclient'     => $nom,
+            'return_url'    => $returnUrl,
+            'webhook_url'   => $webhookUrl
+        ];
 
-        // Créer transaction en BDD
-        $txId = (new Transaction())->creer($userId, 'mensuel', 2000.00, $reference, $mfToken);
+        $mfResponse = MoneyFusion::initiate($paymentData);
+
+        if (!($mfResponse['statut'] ?? false) || empty($mfResponse['url'])) {
+            error_log("[Paiement] Échec initiation MoneyFusion: " . json_encode($mfResponse));
+            Response::json(['success' => false, 'message' => 'Impossible d\'initier le paiement pour le moment.'], 500);
+        }
+
+        $paymentUrl = $mfResponse['url'];
+        $mfToken    = $mfResponse['token'] ?? null;
+
+        // Créer transaction en BDD avec le montant réel (affiché)
+        $txId = (new Transaction())->creer($userId, $plan, $montantAffiche, $reference, $mfToken);
 
         // Cookie signé pour identifier la transaction même si session expire
         $this->setTxCookie($txId);
@@ -59,7 +95,7 @@ class PaiementController
                 'mf_token'    => $mfToken,
                 'payment_url' => $paymentUrl,
                 'email'       => $user['email'],
-                'plan'        => 'mensuel',
+                'plan'        => $plan,
                 'ts'          => time(),
             ]), 1800);
         }
@@ -69,84 +105,11 @@ class PaiementController
         Response::json(['success' => true, 'payment_url' => $paymentUrl, 'mf_token' => $mfToken]);
     }
 
-    /**
-     * Crée une session de paiement via l'API MoneyFusion.
-     * Retourne ['url' => ..., 'token' => ...] ou [] si erreur (fallback lien statique).
-     */
-    private function creerSessionMF(array $user, string $reference): array
-    {
-        $apiUrl     = rtrim($_ENV['MONEYFUSION_API_URL'] ?? 'https://www.pay.moneyfusion.net/paiement/paiement_api/', '/') . '/';
-        $mfToken    = $_ENV['MONEYFUSION_TOKEN'] ?? '';
-        $appUrl     = rtrim($_ENV['APP_URL'] ?? '', '/');
-        $webhookUrl = $appUrl . '/api/paiement/callback';
-        $returnUrl  = $appUrl . '/paiement/retour';
-        $nom        = trim(($user['prenom'] ?? '') . ' ' . ($user['nom'] ?? '')) ?: 'Client';
-
-        if (empty($mfToken)) {
-            error_log('[Paiement] MONEYFUSION_TOKEN non configuré — fallback lien statique');
-            return [];
-        }
-
-        $postFields = [
-            'token_yoo'        => $mfToken,
-            'montant'          => '2000',
-            'nom_client'       => $nom,
-            'client_telephone' => '000000000',
-            'webhook_url'      => $webhookUrl,
-            'success_url'      => $returnUrl,
-            'error_url'        => $returnUrl . '?error=1',
-            'personal_id'      => $reference,
-        ];
-
-        $ch = curl_init($apiUrl);
-        curl_setopt_array($ch, [
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => $postFields,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT        => 15,
-            CURLOPT_SSL_VERIFYPEER => true,
-        ]);
-        $raw = curl_exec($ch);
-        $err = curl_error($ch);
-        curl_close($ch);
-
-        if ($err || !$raw) {
-            error_log("[Paiement] cURL MF API error: {$err}");
-            return [];
-        }
-
-        $resp = json_decode($raw, true);
-        error_log("[Paiement] MF API response: {$raw}");
-
-        if (!$resp || !($resp['statut'] ?? false) || empty($resp['url'])) {
-            error_log("[Paiement] MF API réponse invalide: {$raw}");
-            return [];
-        }
-
-        return [
-            'url'   => $resp['url'],
-            'token' => $resp['token'] ?? null,
-        ];
-    }
 
     public function callback(): void
     {
         $rawBody = file_get_contents('php://input');
         error_log('[MF Webhook] Payload reçu: ' . $rawBody);
-
-        // Vérification HMAC si secret configuré
-        $secret = $_ENV['MONEYFUSION_WEBHOOK_SECRET'] ?? '';
-        if (!empty($secret)) {
-            $receivedSig = $_SERVER['HTTP_X_MONEYFUSION_SIGNATURE']
-                        ?? $_SERVER['HTTP_X_SIGNATURE']
-                        ?? '';
-            $expectedSig = hash_hmac('sha256', $rawBody, $secret);
-            if (!hash_equals($expectedSig, $receivedSig)) {
-                error_log('[MF Webhook] Signature invalide');
-                http_response_code(403);
-                exit;
-            }
-        }
 
         $payload = json_decode($rawBody, true);
         if (!$payload) {
@@ -156,33 +119,30 @@ class PaiementController
             exit;
         }
 
-        $statut      = strtolower($payload['statut'] ?? $payload['status'] ?? '');
-        $personalId  = $payload['personal_id'] ?? $payload['reference'] ?? '';
-        $mfToken     = $payload['token']        ?? $payload['transaction_id'] ?? '';
-        $emailPayeur = $payload['email']         ?? $payload['customer_email'] ?? '';
-        $methode     = $payload['operateur']     ?? $payload['payment_method'] ?? $payload['method'] ?? null;
-        $montantRecu = (float) ($payload['montant'] ?? $payload['amount'] ?? 0);
+        // Mapping des champs basés sur la nouvelle doc
+        $event       = $payload['event'] ?? '';
+        $mfToken     = $payload['tokenPay'] ?? '';
+        $statut      = strtolower($payload['statut'] ?? '');
+        $montantRecu = (float) ($payload['Montant'] ?? 0);
+        $personalInfo = $payload['personal_Info'][0] ?? [];
+        $personalId  = $personalInfo['reference'] ?? '';
+        $userId      = (int) ($personalInfo['userId'] ?? 0);
 
-        $txModel = new Transaction();
-
-        // Stratégie 1 : trouver par personal_id (notre référence — fiable)
-        $transaction = !empty($personalId) ? $txModel->findByReference($personalId) : null;
-
-        // Stratégie 2 : trouver par token MF dans aggregateur_ref
-        if (!$transaction && !empty($mfToken)) {
-            $transaction = $txModel->findByAgregateurRef($mfToken);
+        if ($event === 'payin.session.pending') {
+            error_log("[MF Webhook] Paiement initié (pending) — token: $mfToken");
+            http_response_code(200);
+            echo 'OK';
+            exit;
         }
 
-        // Stratégie 3 : fallback par email (ancien comportement)
-        if (!$transaction && !empty($emailPayeur)) {
-            $user = (new User())->findByEmail($emailPayeur);
-            if ($user) {
-                $transaction = $txModel->findEnAttente((int) $user['id']);
-            }
+        $txModel = new Transaction();
+        $transaction = !empty($mfToken) ? $txModel->findByAgregateurRef($mfToken) : null;
+        if (!$transaction && !empty($personalId)) {
+            $transaction = $txModel->findByReference($personalId);
         }
 
         if (!$transaction) {
-            error_log("[MF Webhook] Transaction introuvable — personal_id:{$personalId} token:{$mfToken} email:{$emailPayeur}");
+            error_log("[MF Webhook] Transaction introuvable — ref:$personalId token:$mfToken");
             http_response_code(200);
             echo 'OK';
             exit;
@@ -199,31 +159,19 @@ class PaiementController
             exit;
         }
 
-        $estSucces = in_array($statut, ['success', 'succes', 'paid', 'completed', 'successful'], true);
-
-        if ($estSucces) {
-            $montantAttendu = (float) ($_ENV['PRIX_MENSUEL_XAF'] ?? 2000);
-            if ($montantRecu > 0 && $montantRecu < $montantAttendu) {
-                error_log("[MF Webhook] Montant insuffisant: reçu {$montantRecu}, attendu {$montantAttendu}");
-                $txModel->mettreAJour($txId, 'echec', $mfToken ?: $personalId, $rawBody);
-                if ($redis->isAvailable()) $redis->del("payment_pending:{$userId}");
-                http_response_code(200);
-                echo 'OK';
-                exit;
-            }
-
-            $txModel->mettreAJour($txId, 'succes', $mfToken ?: $personalId, $rawBody, $methode);
+        if ($event === 'payin.session.completed' && ($statut === 'paid' || $payload['statut'] === true)) {
+            // Activation
+            $txModel->mettreAJour($txId, 'succes', $mfToken, $rawBody);
             (new Abonnement())->creer($userId, $transaction['plan'] ?? 'mensuel', 30);
 
             if ($redis->isAvailable()) $redis->del("payment_pending:{$userId}");
             Cache::forget("abonnement:{$userId}");
 
             error_log("[MF Webhook] Abonnement activé pour user {$userId} — tx:{$txId}");
-
-        } else {
-            $txModel->mettreAJour($txId, 'echec', $mfToken ?: $personalId, $rawBody);
+        } elseif ($event === 'payin.session.cancelled' || $statut === 'failure' || $statut === 'no paid') {
+            $txModel->mettreAJour($txId, 'echec', $mfToken, $rawBody);
             if ($redis->isAvailable()) $redis->del("payment_pending:{$userId}");
-            error_log("[MF Webhook] Paiement échoué pour user {$userId}, statut: {$statut}");
+            error_log("[MF Webhook] Paiement échoué/annulé pour user {$userId}");
         }
 
         http_response_code(200);
@@ -232,18 +180,16 @@ class PaiementController
 
     public function retour(): void
     {
-        // GET params que MoneyFusion ajoute au redirect (success_url)
-        $getToken  = $_GET['token']       ?? $_GET['transaction_id'] ?? null;
-        $getStatut = strtolower($_GET['statut'] ?? $_GET['status'] ?? '');
-        $getRef    = $_GET['personal_id'] ?? $_GET['reference']     ?? null;
+        $getToken = $_GET['token'] ?? null;
+        $getRef   = $_GET['personal_id'] ?? $_GET['reference'] ?? null;
 
-        error_log("[Retour] GET params — token:{$getToken} statut:{$getStatut} ref:{$getRef}");
+        error_log("[Retour] Redirect reçu — token:{$getToken} ref:{$getRef}");
 
         $txModel = new Transaction();
         $userId  = Session::userId();
         $tx      = null;
 
-        // Stratégie 1 : session active → chercher tx par user
+        // 1. Déjà identifié par session ?
         if ($userId) {
             $abonnement = (new Abonnement())->getActif($userId);
             if ($abonnement) {
@@ -253,7 +199,7 @@ class PaiementController
             $tx = $txModel->findEnAttente($userId);
         }
 
-        // Stratégie 2 : token MF dans GET → trouver la tx par aggregateur_ref
+        // 2. Par token MF
         if (!$tx && $getToken) {
             $candidate = $txModel->findByAgregateurRef($getToken);
             if ($candidate && $candidate['statut'] === 'en_attente') {
@@ -262,7 +208,7 @@ class PaiementController
             }
         }
 
-        // Stratégie 3 : personal_id dans GET → trouver par référence
+        // 3. Par référence
         if (!$tx && $getRef) {
             $candidate = $txModel->findByReference($getRef);
             if ($candidate && $candidate['statut'] === 'en_attente') {
@@ -271,92 +217,36 @@ class PaiementController
             }
         }
 
-        // Stratégie 4 : cookie signé ca_tx → trouver par ID
-        if (!$tx) {
-            $cookieTxId = $this->readSignedCookie();
-            if ($cookieTxId) {
-                $candidate = $txModel->findById($cookieTxId);
-                if ($candidate && $candidate['statut'] === 'en_attente') {
-                    $tx     = $candidate;
-                    $userId = (int) $tx['user_id'];
-                }
-            }
-        }
-
-        // Aucune transaction identifiable
         if (!$tx || !$userId) {
-            error_log("[Retour] Transaction introuvable — token:{$getToken} ref:{$getRef}");
-            $this->clearTxCookie();
-            if (Session::userId()) {
-                Response::redirect('/abonnement/choisir?status=pending');
-            }
-            Response::redirect('/auth/connexion?redirect=' . urlencode('/abonnement/choisir?status=pending'));
+            error_log("[Retour] Transaction introuvable ou user non identifié");
+            Response::redirect('/abonnement/choisir?status=pending');
         }
 
         $txId = (int) $tx['id'];
-        error_log("[Retour] Transaction trouvée — tx:{$txId} user:{$userId}");
 
-        // Déjà traitée (idempotence)
-        if ($tx['statut'] === 'succes') {
-            $this->clearTxCookie();
-            if (Session::userId() == $userId) {
-                Response::redirect('/abonnement/confirmation');
-            }
-            Response::redirect('/auth/connexion?payment_ok=1&redirect=' . urlencode('/abonnement/confirmation'));
-        }
+        // Vérification proactive via l'API
+        $mfToken = $getToken ?: ($tx['aggregateur_ref'] ?? null);
+        if ($mfToken) {
+            $verified = MoneyFusion::checkStatus($mfToken);
+            if ($verified && ($verified['statut'] ?? false)) {
+                $statusData = $verified['data'] ?? [];
+                if (($statusData['statut'] ?? '') === 'paid') {
+                    $txModel->mettreAJour($txId, 'succes', $mfToken, json_encode($verified));
+                    (new Abonnement())->creer($userId, $tx['plan'] ?? 'mensuel', 30);
+                    
+                    $redis = \Core\Redis::getInstance();
+                    if ($redis->isAvailable()) $redis->del("payment_pending:{$userId}");
+                    Cache::forget("abonnement:{$userId}");
+                    $this->clearTxCookie();
 
-        // Tentative de vérification MF par ordre de fiabilité
-        $tokensToTry = array_values(array_unique(array_filter([
-            $getToken,
-            $tx['aggregateur_ref'] ?? null,
-            $getRef,
-        ])));
-
-        foreach ($tokensToTry as $token) {
-            $verified = $this->verifierPaiementMF($token);
-            if ($verified) {
-                $methode = $verified['operateur'] ?? $verified['payment_method'] ?? null;
-                $txModel->mettreAJour($txId, 'succes', $token, json_encode($verified), $methode);
-                (new Abonnement())->creer($userId, $tx['plan'] ?? 'mensuel', 30);
-
-                $redis = \Core\Redis::getInstance();
-                if ($redis->isAvailable()) $redis->del("payment_pending:{$userId}");
-                Cache::forget("abonnement:{$userId}");
-                $this->clearTxCookie();
-
-                error_log("[Retour] Abonnement activé — user:{$userId} tx:{$txId} token:{$token}");
-
-                if (Session::userId() == $userId) {
+                    error_log("[Retour] Abonnement activé via checkStatus — user:{$userId} tx:{$txId}");
                     Response::redirect('/abonnement/confirmation');
                 }
-                Response::redirect('/auth/connexion?payment_ok=1&redirect=' . urlencode('/abonnement/confirmation'));
             }
         }
 
-        // MF confirme succès via GET statut mais vérification API indisponible
-        $mfSaysOk = in_array($getStatut, ['success', 'succes', 'paid', 'completed', 'successful'], true);
-        if ($mfSaysOk && !empty($getToken)) {
-            $txModel->mettreAJour($txId, 'succes', $getToken, json_encode($_GET), null);
-            (new Abonnement())->creer($userId, $tx['plan'] ?? 'mensuel', 30);
-
-            $redis = \Core\Redis::getInstance();
-            if ($redis->isAvailable()) $redis->del("payment_pending:{$userId}");
-            Cache::forget("abonnement:{$userId}");
-            $this->clearTxCookie();
-
-            error_log("[Retour] Abonnement activé via statut GET — user:{$userId} tx:{$txId}");
-
-            if (Session::userId() == $userId) {
-                Response::redirect('/abonnement/confirmation');
-            }
-            Response::redirect('/auth/connexion?payment_ok=1&redirect=' . urlencode('/abonnement/confirmation'));
-        }
-
-        $this->clearTxCookie();
-        if (Session::userId()) {
-            Response::redirect('/abonnement/choisir?status=pending');
-        }
-        Response::redirect('/auth/connexion?redirect=' . urlencode('/abonnement/choisir?status=pending'));
+        // Si pas encore "paid", on laisse le webhook ou le polling gérer
+        Response::redirect('/abonnement/choisir?status=pending');
     }
 
     public function statut(): void
@@ -374,24 +264,24 @@ class PaiementController
         $txModel = new Transaction();
         $tx      = $txModel->findEnAttente($userId);
 
-        // Tenter vérification MF proactive si token fourni ou stocké dans la tx
         if ($tx) {
             $mfToken = $_GET['mf_token'] ?? ($tx['aggregateur_ref'] ?? null);
             if ($mfToken) {
-                $verified = $this->verifierPaiementMF($mfToken);
-                if ($verified) {
-                    $txId    = (int) $tx['id'];
-                    $methode = $verified['operateur'] ?? $verified['payment_method'] ?? null;
-                    $txModel->mettreAJour($txId, 'succes', $mfToken, json_encode($verified), $methode);
-                    (new Abonnement())->creer($userId, $tx['plan'] ?? 'mensuel', 30);
+                $verified = MoneyFusion::checkStatus($mfToken);
+                if ($verified && ($verified['statut'] ?? false)) {
+                    $statusData = $verified['data'] ?? [];
+                    if (($statusData['statut'] ?? '') === 'paid') {
+                        $txId = (int) $tx['id'];
+                        $txModel->mettreAJour($txId, 'succes', $mfToken, json_encode($verified));
+                        (new Abonnement())->creer($userId, $tx['plan'] ?? 'mensuel', 30);
 
-                    $redis = \Core\Redis::getInstance();
-                    if ($redis->isAvailable()) $redis->del("payment_pending:{$userId}");
-                    Cache::forget("abonnement:{$userId}");
-                    $this->clearTxCookie();
+                        $redis = \Core\Redis::getInstance();
+                        if ($redis->isAvailable()) $redis->del("payment_pending:{$userId}");
+                        Cache::forget("abonnement:{$userId}");
+                        $this->clearTxCookie();
 
-                    error_log("[Statut] Abonnement activé via polling — user:{$userId} tx:{$txId} token:{$mfToken}");
-                    Response::json(['success' => true, 'abonne' => true, 'redirect' => url('/abonnement/confirmation')]);
+                        Response::json(['success' => true, 'abonne' => true, 'redirect' => url('/abonnement/confirmation')]);
+                    }
                 }
             }
         }
@@ -427,37 +317,4 @@ class PaiementController
         setcookie('ca_tx', '', ['expires' => time() - 3600, 'path' => '/']);
     }
 
-    /**
-     * Vérifie le statut d'un paiement via l'API MoneyFusion v3.
-     * GET https://pay.moneyfusion.net/api/v3/payments/status/{token}
-     * Réponse: {"statut": true, "data": {"status": "paid", ...}}
-     */
-    private function verifierPaiementMF(string $mfPaymentToken): array|false
-    {
-        if (empty($mfPaymentToken)) return false;
-
-        $url = 'https://pay.moneyfusion.net/api/v3/payments/status/' . rawurlencode($mfPaymentToken);
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT        => 10,
-            CURLOPT_SSL_VERIFYPEER => true,
-        ]);
-        $raw = curl_exec($ch);
-        $err = curl_error($ch);
-        curl_close($ch);
-
-        if ($err || !$raw) {
-            error_log("[MF Verify] cURL error: {$err} token:{$mfPaymentToken}");
-            return false;
-        }
-
-        error_log("[MF Verify] response token:{$mfPaymentToken} — {$raw}");
-        $resp = json_decode($raw, true);
-        if (!$resp || empty($resp['data'])) return false;
-
-        $status = strtolower($resp['data']['status'] ?? '');
-        return $status === 'paid' ? $resp['data'] : false;
-    }
 }
