@@ -7,6 +7,7 @@ $totalPages = (int)($totalPages ?? 1);
 $total      = (int)($total ?? 0);
 $filters    = $filters ?? [];
 $series     = $series ?? [];
+$isReadOnly = ($_SESSION['admin_role'] ?? '') === 'moderateur_1';
 
 // Active tab: si un filtre status=* est présent → onglet "suspended"
 if (!empty($filters['status'])) {
@@ -82,10 +83,12 @@ if (!function_exists('pgUrl')) {
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Exporter CSV
     </a>
+    <?php if (!$isReadOnly): ?>
     <button class="btn-primary" data-modal-open="modal-create-user">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Nouvel utilisateur
     </button>
+    <?php endif; ?>
   </div>
 </div>
 
@@ -198,6 +201,7 @@ if (!function_exists('pgUrl')) {
           <?php else: ?>—<?php endif; ?>
         </td>
         <td>
+          <?php if (!$isReadOnly): ?>
           <div class="table-actions" style="opacity:1;gap:4px;">
             <label class="toggle-switch" title="<?= $u['is_active'] ? 'Suspendre' : 'Activer' ?>">
               <input type="checkbox" class="user-toggle"
@@ -221,6 +225,7 @@ if (!function_exists('pgUrl')) {
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
             </button>
           </div>
+          <?php endif; ?>
         </td>
       </tr>
       <?php endforeach; ?>

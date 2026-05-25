@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Controllers\Admin;
 
-use Core\{Response, Session, Database, Totp};
+use Core\{Response, Session, Database, Totp, Settings};
 use Models\Admin;
 use PDO;
 
@@ -73,6 +73,9 @@ class ParametresController
             }
             $this->upsertSetting($key, $val);
         }
+
+        // Invalider le cache Settings pour que les nouveaux paramètres soient pris en compte immédiatement
+        Settings::forgetAll();
 
         Session::flash('success', 'Paramètres enregistrés avec succès.');
         Response::redirect('/admin/parametres?tab=' . ($_POST['_tab'] ?? 'general'));
@@ -169,7 +172,7 @@ class ParametresController
             Response::json(['success' => false, 'message' => 'Email invalide.'], 422);
         }
 
-        if (!in_array($role, ['super_admin', 'admin', 'moderateur'], true)) {
+        if (!in_array($role, ['super_admin', 'admin', 'moderateur', 'moderateur_1'], true)) {
             Response::json(['success' => false, 'message' => 'Rôle invalide.'], 422);
         }
 

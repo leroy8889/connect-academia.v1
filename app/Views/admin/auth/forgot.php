@@ -22,7 +22,7 @@
         <div style="color: #fca5a5; font-size: 13.5px; font-weight: 500;"><?= e($error) ?></div>
       </div>
       
-      <a href="<?= url('/admin/forgot-password') ?>" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 52px; background: #8C52FF; color: #ffffff; text-decoration: none; border-radius: 14px; font-weight: 600; font-size: 14px; transition: all 0.2s ease; box-shadow: 0 8px 20px rgba(140, 82, 255, 0.25);">
+      <a href="<?= url('/Administratorconnect/forgot-password') ?>" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 52px; background: #8C52FF; color: #ffffff; text-decoration: none; border-radius: 14px; font-weight: 600; font-size: 14px; transition: all 0.2s ease; box-shadow: 0 8px 20px rgba(140, 82, 255, 0.25);">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Réessayer avec un autre email
       </a>
@@ -38,7 +38,7 @@
     <?php endif; ?>
 
     <?php if (!$success && !$error): ?>
-      <form action="<?= url('/admin/forgot-password') ?>" method="POST" style="display: flex; flex-direction: column; gap: 20px;">
+      <form action="<?= url('/Administratorconnect/forgot-password') ?>" method="POST" style="display: flex; flex-direction: column; gap: 20px;">
         <input type="hidden" name="_csrf_token" value="<?= \Core\Session::getCsrfToken() ?>">
         
         <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -60,7 +60,7 @@
     <?php endif; ?>
 
     <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.06); text-align: center;">
-      <a href="<?= url('/admin/login') ?>" style="color: rgba(255,255,255,0.4); text-decoration: none; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; transition: color 0.2s;">
+      <a href="<?= url('/Administratorconnect/login') ?>" style="color: rgba(255,255,255,0.4); text-decoration: none; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; transition: color 0.2s;">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Retour à la connexion
       </a>

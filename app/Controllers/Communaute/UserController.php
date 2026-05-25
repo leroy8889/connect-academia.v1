@@ -8,24 +8,42 @@ use Models\{User, Post, Follow, Bookmark, Comment, Notification};
 
 class UserController
 {
-    public function show(string $id): void
+    public function monProfil(): void
     {
-        $profileId     = (int) $id;
+        $uuid = Session::userUuid();
+        if (!$uuid) {
+            Response::redirect('/auth/connexion');
+            return;
+        }
+        Response::redirect('/communaute/profil/' . $uuid);
+    }
+
+    public function show(string $uuid): void
+    {
+        // Validation UUID format pour éviter les requêtes malformées
+        if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $uuid)) {
+            http_response_code(404);
+            require BASE_PATH . '/app/Views/errors/404.php';
+            return;
+        }
+
         $currentUserId = Session::userId();
         $userModel     = new User();
 
-        $profileUser = $userModel->findById($profileId);
+        // findProfileByUuid : champs publics uniquement, pas d'email/password/tokens
+        $profileUser = $userModel->findProfileByUuid($uuid);
         if (!$profileUser) {
             http_response_code(404);
             require BASE_PATH . '/app/Views/errors/404.php';
             return;
         }
 
-        $isOwner    = ($currentUserId === $profileId);
-        $posts      = (new Post())->getByUser($profileId, 20);
+        $profileId   = (int) $profileUser['id'];
+        $isOwner     = ($currentUserId === $profileId);
+        $posts       = (new Post())->getByUser($profileId, 20);
         $isFollowing = $isOwner ? false : (new Follow())->isFollowing($currentUserId, $profileId);
-        $bookmarks  = $isOwner ? (new Bookmark())->getByUser($profileId, 20) : [];
-        $comments   = (new Comment())->getByUser($profileId, 20);
+        $bookmarks   = $isOwner ? (new Bookmark())->getByUser($profileId, 20) : [];
+        $comments    = (new Comment())->getByUser($profileId, 20);
         $unreadNotifs = (new Notification())->getUnreadCount($currentUserId);
 
         $profileUser['photo_profil'] = User::normalizePhotoPath($profileUser['photo_profil'] ?? null);
@@ -42,6 +60,7 @@ class UserController
             'bookmarks'    => $bookmarks,
             'comments'     => $comments,
             'unreadNotifs' => $unreadNotifs,
+            'hideFooter'   => true,
         ]);
     }
 
@@ -53,12 +72,13 @@ class UserController
         $result = (new Follow())->toggle($userId, $targetId);
 
         if ($result['following']) {
+            $actorUuid = Session::userUuid() ?? '';
             (new Notification())->create([
                 'user_id'  => $targetId,
                 'actor_id' => $userId,
                 'type'     => 'follow',
                 'message'  => Session::get('user_name') . " a commencé à vous suivre",
-                'link'     => "/communaute/profil/{$userId}",
+                'link'     => "/communaute/profil/{$actorUuid}",
             ]);
         }
 

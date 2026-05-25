@@ -79,6 +79,9 @@ class PostController
             if ($fileError !== UPLOAD_ERR_OK || empty($_FILES['image']['tmp_name'])) {
                 Response::json(['success' => false, 'error' => ['code' => 'UPLOAD_ERROR', 'message' => 'Erreur upload image']], 422);
             }
+            if ((int) $_FILES['image']['size'] > 10 * 1024 * 1024) {
+                Response::json(['success' => false, 'error' => ['code' => 'UPLOAD_ERROR', 'message' => 'Cette image est trop lourde, veuillez la changer (max 10 Mo).']], 422);
+            }
             try {
                 $data['image'] = (new Uploader())->handleImage($_FILES['image'], 'posts');
             } catch (\Exception $e) {

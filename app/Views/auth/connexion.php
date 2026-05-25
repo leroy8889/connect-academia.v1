@@ -141,7 +141,7 @@
       </form>
 
       <div class="footer-links">
-        <a href="<?= url('/auth/mot-de-passe-oublie') ?>" class="link-gray">Mot de passe oublié ?</a>
+        
         <p class="signup-text">Pas encore membre ? <a href="<?= url('/auth/inscription') ?>">S'inscrire</a></p>
         <p class="copyright">Tous droits réservés - Connect'Academia</p>
       </div>

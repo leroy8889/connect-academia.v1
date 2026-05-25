@@ -1,81 +1,474 @@
-<div class="main-container" style="display: flex; min-height: 100vh; background: #0f0f12; font-family: 'Inter', sans-serif;">
+<?php
+use Core\Session;
+$errors = Session::getFlash('errors', []);
+?>
+<div class="auth-split-layout">
 
-  <div class="image-section" style="flex: 1; background: url('../../../assets/images/Images en 409x610 - Page de Connexion 2.png') no-repeat center center; background-size: cover; border-right: 1px solid rgba(255, 255, 255, 0.05);"></div>
+  <!-- Panneau gauche — illustration -->
+  <div class="auth-image-panel auth-image-panel--reset" aria-hidden="true"></div>
 
-  <div class="form-section" style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; position: relative;">
-    
-    <div style="position: absolute; top: 10%; right: 10%; width: 200px; height: 200px; background: rgba(140, 82, 255, 0.1); filter: blur(60px); border-radius: 50%; pointer-events: none;"></div>
+  <!-- Panneau droit — formulaire -->
+  <main class="auth-form-panel">
+    <div class="auth-form-panel__inner">
 
-    <div class="auth-form-wrapper" style="width: 100%; max-width: 420px; background: #1c1c1e; border-radius: 24px; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.08);">
-      
-      <div style="text-align: center; margin-bottom: 25px;">
-        <img src="<?= asset('images/logo.jpeg') ?>" alt="Logo Connect'Academia" style="max-width: 120px; height: auto; border-radius: 12px;">
-      </div>
-
-      <div style="text-align: center; margin-bottom: 32px;">
-        <div style="display: inline-flex; align-items: center; background: rgba(140, 82, 255, 0.1); color: #a855f7; padding: 6px 14px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; border: 1px solid rgba(140, 82, 255, 0.2);">
+      <!-- Eyebrow -->
+      <div style="text-align:center;margin-bottom:var(--space-8);">
+        <span class="ca-badge ca-badge-brand-soft" style="font-size:10px;letter-spacing:1.5px;margin-bottom:var(--space-4);display:inline-flex;">
+          <i data-lucide="shield-check" style="width:13px;height:13px;"></i>
           SÉCURITÉ CONNECT'ACADEMIA
-        </div>
-        <h1 style="color: #ffffff; font-size: 26px; margin: 0 0 12px 0; font-weight: 800; letter-spacing: -0.5px;">Nouveau mot de passe</h1>
-        <p style="color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0;">
-          Choisissez un mot de passe sécurisé (minimum 8 caractères).
+        </span>
+        <h1 class="ca-h1" style="color:#fff;margin:var(--space-3) 0 var(--space-2);">Nouveau mot de passe</h1>
+        <p class="ca-body" style="color:rgba(255,255,255,0.5);line-height:1.6;margin:0;">
+          Choisis un mot de passe fort (min. 8 caractères).
         </p>
       </div>
 
+      <!-- Erreur générale -->
       <?php if (!empty($errors['general'])): ?>
-      <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 16px; padding: 16px; margin-bottom: 24px; text-align: center;">
-        <div style="color: #fca5a5; font-size: 13.5px; font-weight: 500;"><?= e($errors['general']) ?></div>
+      <div class="ca-alert ca-alert--error" role="alert" style="margin-bottom:var(--space-6);">
+        <i data-lucide="alert-circle" style="width:18px;height:18px;flex-shrink:0;"></i>
+        <span><?= htmlspecialchars($errors['general'], ENT_QUOTES | ENT_HTML5, 'UTF-8') ?></span>
       </div>
       <?php endif; ?>
 
-      <form action="<?= url('/auth/reinitialiser') ?>" method="POST" style="display: flex; flex-direction: column; gap: 20px;">
-        <input type="hidden" name="_csrf_token" value="<?= \Core\Session::getCsrfToken() ?>">
-        <input type="hidden" name="token" value="<?= e($token ?? '') ?>">
+      <!-- Formulaire -->
+      <form id="reset-form" action="<?= url('/auth/reinitialiser') ?>" method="POST" novalidate>
+        <input type="hidden" name="_csrf_token" value="<?= Session::getCsrfToken() ?>">
+        <input type="hidden" name="token" value="<?= htmlspecialchars($token ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8') ?>">
 
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <label style="color: #94a3b8; font-size: 12px; font-weight: 600; margin-left: 4px; text-transform: uppercase;">Nouveau mot de passe</label>
-          <div style="position: relative; display: flex; align-items: center;">
-            <span style="position: absolute; left: 16px; color: rgba(255,255,255,0.3);">
-              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <div style="display:flex;flex-direction:column;gap:var(--space-5);">
+
+          <!-- Champ mot de passe -->
+          <div class="ca-field">
+            <label class="ca-label" for="password">Nouveau mot de passe</label>
+            <div class="ca-input-wrap">
+              <i data-lucide="lock" class="ca-input-icon"></i>
+              <input
+                class="ca-input ca-input--dark <?= !empty($errors['password']) ? 'error' : '' ?>"
+                type="password"
+                id="password"
+                name="password"
+                placeholder="••••••••"
+                autocomplete="new-password"
+                required
+                minlength="8"
+                aria-describedby="pwd-strength <?= !empty($errors['password']) ? 'pwd-error' : '' ?>"
+              >
+              <button type="button" class="ca-toggle-pwd" aria-label="Afficher/masquer le mot de passe" data-target="password">
+                <i data-lucide="eye" style="width:16px;height:16px;"></i>
+              </button>
+            </div>
+            <?php if (!empty($errors['password'])): ?>
+            <span id="pwd-error" class="ca-error">
+              <i data-lucide="alert-circle" style="width:12px;height:12px;"></i>
+              <?= htmlspecialchars($errors['password'], ENT_QUOTES | ENT_HTML5, 'UTF-8') ?>
             </span>
-            <input type="password" name="password" placeholder="••••••••" required
-                   style="width: 100%; height: 54px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 0 16px 0 48px; color: #ffffff; outline: none; font-size: 15px; transition: all 0.3s ease;">
-          </div>
-        </div>
+            <?php endif; ?>
 
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <label style="color: #94a3b8; font-size: 12px; font-weight: 600; margin-left: 4px; text-transform: uppercase;">Confirmer le mot de passe</label>
-          <div style="position: relative; display: flex; align-items: center;">
-            <span style="position: absolute; left: 16px; color: rgba(255,255,255,0.3);">
-              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            <!-- Jauge de force -->
+            <div id="pwd-strength" class="pwd-strength" aria-live="polite">
+              <div class="pwd-strength__bars">
+                <span class="pwd-strength__bar"></span>
+                <span class="pwd-strength__bar"></span>
+                <span class="pwd-strength__bar"></span>
+                <span class="pwd-strength__bar"></span>
+              </div>
+              <span id="pwd-strength-label" class="ca-caption" style="color:rgba(255,255,255,0.35);">Entrez un mot de passe</span>
+            </div>
+          </div>
+
+          <!-- Champ confirmation -->
+          <div class="ca-field">
+            <label class="ca-label" for="password_confirmation">Confirmer le mot de passe</label>
+            <div class="ca-input-wrap">
+              <i data-lucide="check-circle" class="ca-input-icon"></i>
+              <input
+                class="ca-input ca-input--dark <?= !empty($errors['password_confirmation']) ? 'error' : '' ?>"
+                type="password"
+                id="password_confirmation"
+                name="password_confirmation"
+                placeholder="••••••••"
+                autocomplete="new-password"
+                required
+              >
+              <button type="button" class="ca-toggle-pwd" aria-label="Afficher/masquer la confirmation" data-target="password_confirmation">
+                <i data-lucide="eye" style="width:16px;height:16px;"></i>
+              </button>
+            </div>
+            <?php if (!empty($errors['password_confirmation'])): ?>
+            <span class="ca-error">
+              <i data-lucide="alert-circle" style="width:12px;height:12px;"></i>
+              <?= htmlspecialchars($errors['password_confirmation'], ENT_QUOTES | ENT_HTML5, 'UTF-8') ?>
             </span>
-            <input type="password" name="password_confirmation" placeholder="••••••••" required
-                   style="width: 100%; height: 54px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 0 16px 0 48px; color: #ffffff; outline: none; font-size: 15px; transition: all 0.3s ease;">
+            <?php endif; ?>
+            <span id="confirm-match" class="ca-help" style="display:none;"></span>
           </div>
-        </div>
 
-        <button type="submit" class="btn-submit-premium">
-          RÉINITIALISER LE MOT DE PASSE
-        </button>
+          <!-- Bouton submit -->
+          <button type="submit" id="submit-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:var(--space-2);">
+            <i data-lucide="shield-check" id="btn-icon" style="width:18px;height:18px;"></i>
+            <span id="btn-label">Réinitialiser le mot de passe</span>
+          </button>
+        </div>
       </form>
 
-      <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.06); text-align: center;">
-        <a href="<?= url('/auth/connexion') ?>" class="link-back-premium">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <!-- Retour connexion -->
+      <div style="margin-top:var(--space-8);padding-top:var(--space-6);border-top:1px solid rgba(255,255,255,0.07);text-align:center;">
+        <a href="<?= url('/auth/connexion') ?>" class="ca-link-back">
+          <i data-lucide="arrow-left" style="width:15px;height:15px;"></i>
           Retour à la connexion
         </a>
       </div>
 
-      <p style="text-align: center; color: rgba(255,255,255,0.2); font-size: 11px; margin-top: 24px; font-weight: 500;">Tous droits réservés - Connect'Academia</p>
-    </div>
-  </div>
+      <p style="text-align:center;color:rgba(255,255,255,0.15);font-size:11px;margin-top:var(--space-6);">
+        Tous droits réservés — Connect'Academia
+      </p>
 
-  <style>
-    .btn-submit-premium { width: 100%; height: 54px; background: #8C52FF; color: #ffffff; border: none; border-radius: 14px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s ease; box-shadow: 0 10px 25px rgba(140, 82, 255, 0.3); }
-    .btn-submit-premium:hover { background: #7a41eb; transform: translateY(-2px); box-shadow: 0 15px 30px rgba(140, 82, 255, 0.4); }
-    .link-back-premium { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
-    .link-back-premium:hover { color: #8C52FF; transform: translateX(-3px); }
-    input:focus { border-color: #8C52FF !important; background: rgba(140, 82, 255, 0.05) !important; box-shadow: 0 0 0 4px rgba(140, 82, 255, 0.1); }
-    @media (max-width: 900px) { .image-section { display: none; } .form-section { flex: none; width: 100%; padding: 20px; } }
-  </style>
-</div>
+    </div><!-- /.auth-form-panel__inner -->
+  </main>
+
+</div><!-- /.auth-split-layout -->
+
+<style>
+/* ── Layout split ─────────────────────────────────────────────────── */
+.auth-split-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #0F0F12;
+}
+
+/* Panneau image gauche */
+.auth-image-panel {
+  flex: 1;
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
+}
+.auth-image-panel--reset {
+  background-image: url('<?= asset('images/Images en 409x610 - Page de Connexion 2.png') ?>');
+  background-color: #16161E;
+}
+
+/* Panneau formulaire droit */
+.auth-form-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-10) var(--space-10);
+  position: relative;
+  overflow-y: auto;
+}
+.auth-form-panel__inner {
+  width: 100%;
+  max-width: 420px;
+  background: #1C1C22;
+  border-radius: var(--radius-xl);
+  padding: var(--space-10);
+  box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.07);
+  animation: ca-slide-up 400ms cubic-bezier(0.2,0.8,0.2,1) both;
+}
+
+/* ── Alerte erreur ────────────────────────────────────────────────── */
+.ca-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+}
+.ca-alert--error {
+  background: rgba(255,82,82,0.09);
+  border: 1px solid rgba(255,82,82,0.22);
+  color: #FCA5A5;
+}
+
+/* ── Champs dark ──────────────────────────────────────────────────── */
+.ca-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: var(--fw-semibold);
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: var(--space-2);
+  display: block;
+}
+.ca-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.ca-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.ca-input-icon {
+  position: absolute;
+  left: 16px;
+  width: 18px;
+  height: 18px;
+  color: rgba(255,255,255,0.25);
+  pointer-events: none;
+  transition: color 150ms ease;
+}
+.ca-input-wrap:focus-within .ca-input-icon {
+  color: var(--purple-neon);
+}
+.ca-input--dark {
+  width: 100%;
+  height: 54px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: var(--radius-md);
+  padding: 0 48px 0 48px;
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body-lg);
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+.ca-input--dark::placeholder { color: rgba(255,255,255,0.2); }
+.ca-input--dark:focus {
+  border-color: var(--purple-neon);
+  background: rgba(139,82,250,0.05);
+  box-shadow: 0 0 0 4px rgba(139,82,250,0.15);
+}
+.ca-input--dark.error {
+  border-color: var(--error);
+  box-shadow: 0 0 0 4px rgba(255,82,82,0.13);
+}
+
+/* Bouton œil */
+.ca-toggle-pwd {
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.25);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 150ms ease;
+}
+.ca-toggle-pwd:hover { color: var(--purple-neon); }
+
+/* ── Textes aide ──────────────────────────────────────────────────── */
+.ca-help  { font-size: 11px; color: rgba(255,255,255,0.3); }
+.ca-error {
+  font-size: 11px;
+  color: #FCA5A5;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ── Jauge de force ───────────────────────────────────────────────── */
+.pwd-strength {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-1);
+}
+.pwd-strength__bars {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+.pwd-strength__bar {
+  flex: 1;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: rgba(255,255,255,0.08);
+  transition: background 250ms ease;
+}
+
+/* ── Bouton primary (dark theme override) ─────────────────────────── */
+.btn {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-button);
+  letter-spacing: 0.01em;
+  border: 0;
+  cursor: pointer;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  transition: all 200ms cubic-bezier(.2,.8,.2,1);
+}
+.btn-primary {
+  padding: 14px 24px;
+  background: var(--purple-neon);
+  color: #fff;
+  box-shadow: 0 8px 24px var(--purple-glow-30);
+}
+.btn-primary:hover  { background: var(--purple-hover); transform: translateY(-1px); box-shadow: 0 12px 28px var(--purple-glow-30); }
+.btn-primary:active { background: var(--purple-press); transform: scale(0.98); }
+.btn-primary:disabled { background: #4B2D8A; cursor: not-allowed; transform: none; box-shadow: none; opacity: 0.7; }
+.btn-lg { padding: 16px 32px; font-size: 15px; }
+
+/* ── Lien retour ──────────────────────────────────────────────────── */
+.ca-link-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: rgba(255,255,255,0.35);
+  font-size: 13px;
+  font-family: var(--font-sans);
+  font-weight: var(--fw-medium);
+  text-decoration: none;
+  transition: all 200ms ease;
+}
+.ca-link-back:hover { color: var(--purple-neon); transform: translateX(-3px); }
+
+/* ── Badge dark override ──────────────────────────────────────────── */
+.ca-badge-brand-soft {
+  background: rgba(139,82,250,0.15);
+  color: #A87EFB;
+  border: 1px solid rgba(139,82,250,0.25);
+}
+
+/* ── Animation entrée ────────────────────────────────────────────── */
+@keyframes ca-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .auth-image-panel { display: none; }
+  .auth-form-panel  { padding: var(--space-5); }
+}
+@media (max-width: 480px) {
+  .auth-form-panel__inner { padding: var(--space-8) var(--space-6); }
+}
+</style>
+
+<!-- Lucide icons -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  lucide.createIcons();
+
+  // ── Toggle visibilité mot de passe ─────────────────────────────────
+  document.querySelectorAll('.ca-toggle-pwd').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var targetId = btn.dataset.target;
+      var input    = document.getElementById(targetId);
+      var icon     = btn.querySelector('[data-lucide]');
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        input.type = 'password';
+        icon.setAttribute('data-lucide', 'eye');
+      }
+      lucide.createIcons();
+    });
+  });
+
+  // ── Jauge force mot de passe ───────────────────────────────────────
+  var pwdInput    = document.getElementById('password');
+  var bars        = document.querySelectorAll('.pwd-strength__bar');
+  var strengthLbl = document.getElementById('pwd-strength-label');
+
+  var LEVELS = [
+    { label: '',                  color: 'rgba(255,255,255,0.08)', filled: 0 },
+    { label: 'Très faible',       color: '#FF5252',               filled: 1 },
+    { label: 'Faible',            color: '#FFAB00',               filled: 2 },
+    { label: 'Moyen',             color: '#FFAB00',               filled: 3 },
+    { label: 'Fort',              color: '#00C853',               filled: 4 },
+  ];
+
+  function scorePassword(pwd) {
+    if (!pwd)         return 0;
+    if (pwd.length < 8) return 1;
+    var score = 1;
+    if (pwd.length >= 12)             score++;
+    if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
+    if (/[0-9]/.test(pwd))            score++;
+    if (/[^A-Za-z0-9]/.test(pwd))    score = Math.min(4, score + 1);
+    return Math.min(4, score);
+  }
+
+  if (pwdInput) {
+    pwdInput.addEventListener('input', function () {
+      var score = scorePassword(this.value);
+      var level = LEVELS[score];
+      bars.forEach(function (bar, i) {
+        bar.style.background = i < level.filled ? level.color : 'rgba(255,255,255,0.08)';
+      });
+      strengthLbl.textContent = level.label;
+      strengthLbl.style.color = level.label ? level.color : 'rgba(255,255,255,0.35)';
+    });
+  }
+
+  // ── Validation correspondance en temps réel ────────────────────────
+  var confirmInput = document.getElementById('password_confirmation');
+  var confirmHint  = document.getElementById('confirm-match');
+
+  function checkMatch() {
+    if (!confirmInput.value) {
+      confirmHint.style.display = 'none';
+      return;
+    }
+    confirmHint.style.display = 'flex';
+    if (pwdInput.value === confirmInput.value) {
+      confirmHint.textContent = '✓ Les mots de passe correspondent.';
+      confirmHint.style.color = '#86EFAC';
+    } else {
+      confirmHint.textContent = '✗ Les mots de passe ne correspondent pas.';
+      confirmHint.style.color = '#FCA5A5';
+    }
+  }
+
+  if (confirmInput) {
+    confirmInput.addEventListener('input', checkMatch);
+    if (pwdInput) pwdInput.addEventListener('input', checkMatch);
+  }
+
+  // ── Désactivation bouton à la soumission ───────────────────────────
+  var form      = document.getElementById('reset-form');
+  var submitBtn = document.getElementById('submit-btn');
+  var btnLabel  = document.getElementById('btn-label');
+  var btnIcon   = document.getElementById('btn-icon');
+
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      // Validation côté client avant envoi
+      var pwd     = pwdInput ? pwdInput.value : '';
+      var confirm = confirmInput ? confirmInput.value : '';
+
+      if (pwd.length < 8) {
+        e.preventDefault();
+        pwdInput.classList.add('error');
+        pwdInput.focus();
+        return;
+      }
+      if (pwd !== confirm) {
+        e.preventDefault();
+        confirmInput.classList.add('error');
+        confirmInput.focus();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      btnLabel.textContent = 'Réinitialisation…';
+      btnIcon.setAttribute('data-lucide', 'loader');
+      lucide.createIcons();
+    });
+  }
+});
+</script>

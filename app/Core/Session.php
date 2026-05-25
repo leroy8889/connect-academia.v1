@@ -70,6 +70,11 @@ class Session
         return isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
     }
 
+    public static function userUuid(): ?string
+    {
+        return $_SESSION['user_uuid'] ?? null;
+    }
+
     public static function userRole(): ?string
     {
         return $_SESSION['user_role'] ?? null;

@@ -71,11 +71,11 @@ class MoneyFusion
     }
 
     /**
-     * Vérifie le statut d'un paiement.
+     * Vérifie le statut d'un paiement via l'API v3.
      */
     public static function checkStatus(string $token): array
     {
-        $url = self::DEFAULT_CHECK_URL . '/' . $token;
+        $url = 'https://pay.moneyfusion.net/api/v3/payments/status/' . rawurlencode($token);
 
         $ch = curl_init($url);
         curl_setopt_array($ch, [
@@ -85,9 +85,28 @@ class MoneyFusion
         ]);
 
         $response = curl_exec($ch);
+        $err = curl_error($ch);
         curl_close($ch);
 
+        if ($err || !$response) {
+            error_log("[MoneyFusion] checkStatus cURL error: {$err} token:{$token}");
+            return ['statut' => false, 'message' => 'cURL error: ' . $err];
+        }
+
         $data = json_decode($response, true);
-        return $data ?: ['statut' => false, 'message' => 'Failed to check payment status'];
+        if (!$data) {
+            error_log("[MoneyFusion] checkStatus réponse non-JSON: " . substr($response, 0, 200));
+            return ['statut' => false, 'message' => 'Invalid JSON response'];
+        }
+
+        // Normalise v3 API: data.status → data.statut pour compatibilité descendante
+        if (isset($data['data']['status'])) {
+            $data['data']['statut'] = strtolower($data['data']['status']);
+        }
+        // Top-level statut pour les appels: if ($verified['statut'])
+        $data['statut'] = !empty($data['data']);
+
+        error_log("[MoneyFusion] checkStatus token:{$token} statut:" . ($data['data']['statut'] ?? 'n/a'));
+        return $data;
     }
 }

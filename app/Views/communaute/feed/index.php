@@ -51,7 +51,7 @@ $userId    = \Core\Session::userId();
         </svg>
         Explorer
       </a>
-      <a href="<?= url('/communaute/profil/' . $userId) ?>" class="sidebar__nav-item">
+      <a href="<?= url('/communaute/mon-profil') ?>" class="sidebar__nav-item">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
         </svg>
@@ -118,20 +118,7 @@ $userId    = \Core\Session::userId();
         </button>
       </div>
       <div class="post-composer__actions">
-        <div class="post-composer__attachment-btns">
-          <button class="post-composer__attach-btn" type="button" id="open-composer-question">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
-            Question
-          </button>
-          <button class="post-composer__attach-btn" type="button" id="open-composer-resource">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-            </svg>
-            Ressource
-          </button>
-        </div>
+        
       </div>
     </div>
 
@@ -259,7 +246,7 @@ $userId    = \Core\Session::userId();
         <div class="suggested-card__title">Personnes à suivre</div>
         <?php foreach ($suggestions as $s): ?>
           <div class="suggested-user" data-user-id="<?= (int)$s['id'] ?>">
-            <a href="<?= url('/communaute/profil/' . (int)$s['id']) ?>">
+            <a href="<?= url('/communaute/profil/' . e($s['uuid'])) ?>">
               <img
                 src="<?= e($s['photo_profil'] ? url($s['photo_profil']) : asset('images/default-avatar.svg')) ?>"
                 alt="<?= e($s['prenom'] . ' ' . $s['nom']) ?>"
@@ -267,7 +254,7 @@ $userId    = \Core\Session::userId();
                 onerror="this.onerror=null;this.src=<?= htmlspecialchars(json_encode(asset('images/default-avatar.svg')), ENT_QUOTES) ?>">
             </a>
             <div class="suggested-user__info">
-              <a href="<?= url('/communaute/profil/' . (int)$s['id']) ?>" class="suggested-user__name">
+              <a href="<?= url('/communaute/profil/' . e($s['uuid'])) ?>" class="suggested-user__name">
                 <?= e($s['prenom'] . ' ' . $s['nom']) ?>
               </a>
               <div class="suggested-user__role"><?= e(ucfirst($s['role'] ?? '')) ?></div>
@@ -358,6 +345,84 @@ $userId    = \Core\Session::userId();
     </div>
   </div>
 </div>
+
+<!-- Modal fonctionnalité en cours de développement -->
+<div id="development-modal-overlay" class="hidden"
+     style="position:fixed;inset:0;background:rgba(15,10,30,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:1100;display:flex;align-items:center;justify-content:center;padding:1rem">
+  <div id="development-modal"
+       role="dialog" aria-modal="true" aria-labelledby="dev-modal-title"
+       style="background:#fff;border-radius:var(--radius-lg);width:100%;max-width:420px;box-shadow:0 24px 64px rgba(0,0,0,.18);overflow:hidden;animation:devModalIn .25s cubic-bezier(.34,1.56,.64,1)">
+
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 20px 0">
+      <div style="width:32px"></div><!-- spacer -->
+      <div style="width:32px;height:32px"></div><!-- spacer -->
+      <button id="close-development-modal" type="button" aria-label="Fermer"
+              style="width:32px;height:32px;border:none;background:var(--color-gray-100);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--color-gray-500);flex-shrink:0;transition:background .15s"
+              onmouseover="this.style.background='var(--color-gray-200)'"
+              onmouseout="this.style.background='var(--color-gray-100)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:16px 28px 24px;text-align:center">
+      <!-- Icône -->
+      <div style="width:72px;height:72px;background:var(--color-lavender);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+
+      <!-- Titre -->
+      <h3 id="dev-modal-title"
+          style="font-size:var(--font-size-lg);font-weight:700;color:var(--color-dark);margin:0 0 10px;line-height:1.3">
+        Bientôt disponible
+      </h3>
+
+      <!-- Message -->
+      <p style="font-size:var(--font-size-sm);color:var(--color-gray-600);line-height:1.65;margin:0">
+        Cette fonctionnalité est <strong style="color:var(--color-primary)">en cours de développement</strong>.<br>
+        Elle sera disponible très prochainement.<br>
+        Merci pour votre patience !
+      </p>
+
+      <!-- Badge -->
+      <div style="display:inline-flex;align-items:center;gap:6px;margin-top:18px;padding:6px 14px;background:var(--color-lavender);border-radius:var(--radius-full)">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="var(--color-primary)" stroke="none">
+          <circle cx="12" cy="12" r="12"/>
+        </svg>
+        <span style="font-size:var(--font-size-xs);font-weight:600;color:var(--color-primary);letter-spacing:.3px">EN DÉVELOPPEMENT</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:0 28px 24px">
+      <button id="close-development-modal-btn" type="button"
+              style="width:100%;padding:12px;background:var(--color-primary);color:#fff;border:none;border-radius:var(--radius-md);font-size:var(--font-size-base);font-weight:600;cursor:pointer;transition:background .15s"
+              onmouseover="this.style.background='#7440E0'"
+              onmouseout="this.style.background='var(--color-primary)'">
+        J'ai compris
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<style>
+@keyframes devModalIn {
+  from { opacity:0; transform:scale(.92) translateY(12px); }
+  to   { opacity:1; transform:scale(1) translateY(0); }
+}
+@media (max-width:480px) {
+  #development-modal { max-width:100% !important; border-bottom-left-radius:0 !important; border-bottom-right-radius:0 !important; }
+  #development-modal-overlay { align-items:flex-end !important; }
+}
+</style>
 
 <!-- Panel commentaires -->
 <div class="comments-overlay" id="comments-overlay"></div>

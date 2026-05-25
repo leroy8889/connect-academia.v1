@@ -26,6 +26,20 @@ class User extends BaseModel
         )->fetch(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Chargement sécurisé d'un profil public : aucun champ sensible retourné.
+     * Utiliser cette méthode pour les pages profil (URL par UUID).
+     */
+    public function findProfileByUuid(string $uuid): array|false
+    {
+        return $this->query(
+            "SELECT id, uuid, nom, prenom, photo_profil, role, bio, serie_id,
+                    etablissement, followers_count, following_count, posts_count, created_at
+             FROM users WHERE uuid = ? AND is_deleted = 0 AND is_active = 1",
+            [$uuid]
+        )->fetch(PDO::FETCH_ASSOC);
+    }
+
     public function create(array $data): int
     {
         $uuid         = $this->generateUuid();
@@ -117,7 +131,7 @@ class User extends BaseModel
         $params[] = $limit;
 
         return $this->query(
-            "SELECT u.id, u.nom, u.prenom, u.photo_profil, u.role, u.serie_id, u.followers_count
+            "SELECT u.id, u.uuid, u.nom, u.prenom, u.photo_profil, u.role, u.serie_id, u.followers_count
              FROM users u
              LEFT JOIN follows f ON f.followed_id = u.id AND f.follower_id = ?
              WHERE u.id != ? AND u.is_deleted = 0 AND u.is_active = 1 AND f.id IS NULL
@@ -149,7 +163,7 @@ class User extends BaseModel
     {
         $like = '%' . $q . '%';
         return $this->query(
-            "SELECT id, nom, prenom, photo_profil, role, followers_count
+            "SELECT id, uuid, nom, prenom, photo_profil, role, followers_count
              FROM users WHERE is_deleted = 0 AND is_active = 1
                AND (nom LIKE ? OR prenom LIKE ? OR email LIKE ?)
              ORDER BY followers_count DESC LIMIT ?",

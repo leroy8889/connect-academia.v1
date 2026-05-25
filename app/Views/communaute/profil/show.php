@@ -7,11 +7,12 @@ $bookmarks    = $bookmarks    ?? [];
 $comments     = $comments     ?? [];
 $unreadNotifs = (int) ($unreadNotifs ?? 0);
 
-$profileId  = (int) ($profileUser['id'] ?? 0);
-$fullName   = e(($profileUser['prenom'] ?? '') . ' ' . ($profileUser['nom'] ?? ''));
-$role       = $profileUser['role'] ?? 'eleve';
-$photo      = $profileUser['photo_profil'] ?? null;
-$bio        = $profileUser['bio'] ?? null;
+$profileId   = (int) ($profileUser['id'] ?? 0);
+$profileUuid = $profileUser['uuid'] ?? '';
+$fullName    = e(($profileUser['prenom'] ?? '') . ' ' . ($profileUser['nom'] ?? ''));
+$role        = $profileUser['role'] ?? 'eleve';
+$photo       = $profileUser['photo_profil'] ?? null;
+$bio         = $profileUser['bio'] ?? null;
 
 function relativeDate(string $date): string {
     $diff = time() - strtotime($date);
@@ -19,6 +20,19 @@ function relativeDate(string $date): string {
     if ($diff < 86400)   return floor($diff / 3600) . 'h';
     if ($diff < 604800)  return floor($diff / 86400) . 'j';
     return date('d/m/Y', strtotime($date));
+}
+
+function renderPostText(string $text, string $uid): string {
+    $maxChars = 300;
+    $escaped  = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+    if (mb_strlen($text) <= $maxChars) {
+        return '<div class="post-card__text">' . nl2br($escaped) . '</div>';
+    }
+    $truncated = htmlspecialchars(mb_substr($text, 0, $maxChars), ENT_QUOTES, 'UTF-8');
+    return '<div class="post-card__text post-text-collapsible" data-full-text="' . $escaped . '" id="ptext-' . htmlspecialchars($uid, ENT_QUOTES) . '">'
+        . nl2br($truncated) . '<span aria-hidden="true">…</span>'
+        . ' <button class="post-card__read-more post-text-expand-php" type="button">En savoir plus</button>'
+        . '</div>';
 }
 ?>
 
@@ -251,7 +265,7 @@ function relativeDate(string $date): string {
                    onerror="this.onerror=null;this.src=<?= htmlspecialchars(json_encode(asset('images/default-avatar.svg')), ENT_QUOTES) ?>">
               <div class="post-card__info">
                 <div class="post-card__author">
-                  <a href="<?= url('/communaute/profil/' . $profileId) ?>" class="post-card__name"><?= $pAuthor ?></a>
+                  <a href="<?= url('/communaute/profil/' . e($profileUuid)) ?>" class="post-card__name"><?= $pAuthor ?></a>
                   <?php if ($role === 'professeur'): ?>
                     <span class="post-card__badge post-card__badge--teacher">Professeur</span>
                   <?php endif; ?>
@@ -266,7 +280,7 @@ function relativeDate(string $date): string {
             </div>
 
             <div class="post-card__content">
-              <div class="post-card__text"><?= nl2br(htmlspecialchars($p['contenu'] ?? '', ENT_QUOTES)) ?></div>
+              <?= renderPostText($p['contenu'] ?? '', (string)((int)($p['id'] ?? 0))) ?>
               <?php if (!empty($p['image'])): ?>
                 <div class="post-card__media" style="margin-top:10px">
                   <img src="<?= e($p['image']) ?>" alt="Image du post" loading="lazy"
@@ -352,14 +366,14 @@ function relativeDate(string $date): string {
                      alt="<?= $bName ?>" class="post-card__avatar"
                      onerror="this.onerror=null;this.src=<?= htmlspecialchars(json_encode(asset('images/default-avatar.svg')), ENT_QUOTES) ?>">
                 <div class="post-card__info">
-                  <a href="<?= url('/communaute/profil/' . (int)($b['user_id'] ?? 0)) ?>" class="post-card__name"><?= $bName ?></a>
+                  <a href="<?= url('/communaute/profil/' . e($b['user_uuid'] ?? '')) ?>" class="post-card__name"><?= $bName ?></a>
                   <div class="post-card__meta">
                     <span><?= relativeDate($b['created_at'] ?? '') ?></span>
                   </div>
                 </div>
               </div>
               <div class="post-card__content">
-                <div class="post-card__text"><?= nl2br(htmlspecialchars($b['contenu'] ?? '', ENT_QUOTES)) ?></div>
+                <?= renderPostText($b['contenu'] ?? '', 'bk-' . (string)((int)($b['id'] ?? 0))) ?>
                 <?php if (!empty($b['image'])): ?>
                   <div class="post-card__media" style="margin-top:10px">
                     <img src="<?= e($b['image']) ?>" alt="Image du post" loading="lazy"
@@ -435,6 +449,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const navbarAvatar     = document.querySelector('.navbar__avatar');
     const profileFormPhoto = document.getElementById('profile-form-photo-input');
 
+    // ── Handler "En savoir plus" pour posts rendus en PHP ────
+    document.addEventListener('click', function (e) {
+        if (!e.target.classList.contains('post-text-expand-php')) return;
+        const wrapper = e.target.closest('.post-text-collapsible');
+        if (!wrapper) return;
+        const rawText = wrapper.dataset.fullText;
+        const div = document.createElement('div');
+        div.textContent = rawText;
+        wrapper.innerHTML = div.innerHTML.replace(/\n/g, '<br>');
+        wrapper.classList.remove('post-text-collapsible');
+    });
+
     if (avatarEditBtn && avatarInput) {
         avatarEditBtn.addEventListener('click', function () {
             avatarInput.click();
@@ -443,6 +469,13 @@ document.addEventListener('DOMContentLoaded', function () {
         avatarInput.addEventListener('change', async function () {
             const file = this.files[0];
             if (!file) return;
+
+            if (file.size > 8 * 1024 * 1024) {
+                if (typeof App !== 'undefined') App.toast.warning('Cette image est trop lourde, veuillez en mettre une autre (max 8 Mo).');
+                else alert('Cette image est trop lourde, veuillez en mettre une autre (max 8 Mo).');
+                this.value = '';
+                return;
+            }
 
             // URL de secours (ancienne photo déjà normalisée)
             const fallbackSrc = <?= json_encode($photo ?? asset('images/default-avatar.svg')) ?>;

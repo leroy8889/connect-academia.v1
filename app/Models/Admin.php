@@ -156,15 +156,16 @@ class Admin extends BaseModel
         return compact('totalUsers', 'totalRessources', 'activesMonth', 'engagement', 'totalPosts', 'pendingReports');
     }
 
-    public function getCroissanceInscriptions(): array
+    public function getCroissanceInscriptions(int $months = 6): array
     {
+        $months = max(1, min(24, $months));
         $db = Database::getInstance()->getConnection();
         return $db->query(
             "SELECT DATE_FORMAT(created_at, '%b %Y') AS mois,
                     DATE_FORMAT(created_at, '%Y-%m') AS mois_key,
                     COUNT(*) AS nb
              FROM users
-             WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH) AND is_deleted = 0
+             WHERE created_at >= DATE_SUB(NOW(), INTERVAL {$months} MONTH) AND is_deleted = 0
              GROUP BY DATE_FORMAT(created_at, '%Y-%m'), DATE_FORMAT(created_at, '%b %Y')
              ORDER BY mois_key ASC"
         )->fetchAll(PDO::FETCH_ASSOC);

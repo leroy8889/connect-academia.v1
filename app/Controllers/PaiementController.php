@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Controllers;
 
-use Core\{Response, Session, RateLimiter, Cache, MoneyFusion};
+use Core\{Response, Session, RateLimiter, Cache, MoneyFusion, Settings};
 use Models\{User, Transaction, Abonnement};
 
 class PaiementController
@@ -43,13 +43,19 @@ class PaiementController
 
         $reference = sprintf('CA-%d-%d-%s', $userId, time(), strtoupper(bin2hex(random_bytes(2))));
         
-        // Préparation des données pour MoneyFusion
-        $appUrl     = rtrim($_ENV['APP_URL'] ?? '', '/');
+        // Auto-détection de l'URL depuis la requête (fonctionne avec ngrok, tunnel, tout domaine)
+        $proto  = $_SERVER['HTTP_X_FORWARDED_PROTO']
+               ?? ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http');
+        $host   = $_SERVER['HTTP_HOST'] ?? '';
+        $appUrl = $host
+            ? rtrim($proto . '://' . $host . BASE_URL, '/')
+            : rtrim($_ENV['APP_URL'] ?? '', '/');
         $webhookUrl = $appUrl . '/api/paiement/callback';
         $returnUrl  = $appUrl . '/paiement/retour';
+        error_log("[Paiement] URLs calculées — base:{$appUrl} webhook:{$webhookUrl}");
         $nom        = trim(($user['prenom'] ?? '') . ' ' . ($user['nom'] ?? '')) ?: 'Étudiant Connect Academia';
         $plan           = $_GET['plan'] ?? 'mensuel';
-        $montantAffiche = $plan === 'annuel' ? (float)($_ENV['PRIX_ANNUEL_XAF'] ?? 15000) : (float)($_ENV['PRIX_MENSUEL_XAF'] ?? 2000);
+        $montantAffiche = $plan === 'annuel' ? Settings::getPrixAnnuel() : Settings::getPrixMensuel();
         $montantAEnvoyer = MoneyFusion::calculateAmountToSend($montantAffiche);
 
         $paymentData = [
@@ -228,12 +234,14 @@ class PaiementController
         $mfToken = $getToken ?: ($tx['aggregateur_ref'] ?? null);
         if ($mfToken) {
             $verified = MoneyFusion::checkStatus($mfToken);
+            error_log("[Retour] checkStatus token:{$mfToken} — " . json_encode($verified['data'] ?? $verified));
             if ($verified && ($verified['statut'] ?? false)) {
                 $statusData = $verified['data'] ?? [];
-                if (($statusData['statut'] ?? '') === 'paid') {
+                $statusVal  = strtolower($statusData['statut'] ?? $statusData['status'] ?? '');
+                if ($statusVal === 'paid') {
                     $txModel->mettreAJour($txId, 'succes', $mfToken, json_encode($verified));
                     (new Abonnement())->creer($userId, $tx['plan'] ?? 'mensuel', 30);
-                    
+
                     $redis = \Core\Redis::getInstance();
                     if ($redis->isAvailable()) $redis->del("payment_pending:{$userId}");
                     Cache::forget("abonnement:{$userId}");
@@ -270,7 +278,8 @@ class PaiementController
                 $verified = MoneyFusion::checkStatus($mfToken);
                 if ($verified && ($verified['statut'] ?? false)) {
                     $statusData = $verified['data'] ?? [];
-                    if (($statusData['statut'] ?? '') === 'paid') {
+                    $statusVal  = strtolower($statusData['statut'] ?? $statusData['status'] ?? '');
+                    if ($statusVal === 'paid') {
                         $txId = (int) $tx['id'];
                         $txModel->mettreAJour($txId, 'succes', $mfToken, json_encode($verified));
                         (new Abonnement())->creer($userId, $tx['plan'] ?? 'mensuel', 30);
@@ -297,7 +306,8 @@ class PaiementController
             'path'     => '/',
             'httponly' => true,
             'samesite' => 'Lax',
-            'secure'   => str_starts_with($_ENV['APP_URL'] ?? '', 'https'),
+            'secure'   => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                       || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'),
         ]);
     }
 

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Controllers;
 
-use Core\{Response, Session};
+use Core\{Response, Session, Settings};
 use Models\{User, Abonnement, Announcement};
 
 class HubController
@@ -27,11 +27,10 @@ class HubController
             Response::redirect('/auth/connexion');
         }
 
-        // Statut abonnement
-        $abonnement   = (new Abonnement())->getActif($userId);
-        $periodeJours = (int) ($_ENV['PERIODE_GRATUITE_JOURS'] ?? 1);
-        $createdAt    = strtotime($user['created_at']);
-        $expireGratuit = $createdAt + ($periodeJours * 86400);
+        // Statut abonnement — période depuis DB (Settings) en priorité, fallback .env
+        $abonnement    = (new Abonnement())->getActif($userId);
+        $createdAt     = strtotime($user['created_at']);
+        $expireGratuit = $createdAt + Settings::getPeriodeGratuiteSecondes();
         $resteGratuit  = max(0, $expireGratuit - time());
 
         $acces = $resteGratuit > 0 || $abonnement !== false;
@@ -50,6 +49,8 @@ class HubController
             'stats'         => $stats,
             'enCours'       => $enCours,
             'annonce'       => $annonce,
+            'prixMensuel'   => Settings::getPrixMensuel(),
+            'prixAnnuel'    => Settings::getPrixAnnuel(),
             'extraCss'      => ['hub.css'],
         ]);
     }

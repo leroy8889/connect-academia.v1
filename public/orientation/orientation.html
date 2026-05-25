@@ -34,6 +34,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Boldonse&family=Montserrat:ital,wght@0,100..900;1,100..900;400;700;800&display=swap" rel="stylesheet">
 
 <style>
+    html, body { overflow-x: hidden; }
     :root {
     --primary-color: #8B52FA;
     --light-bg: #F3EFFF;
@@ -699,11 +700,302 @@
     .success-hero h1 { font-size: 2.2rem; }
 }
 
+  /* ===== POPUP BIENTÔT DISPONIBLE ===== */
+  .popup-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 8, 20, 0.72);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    animation: popupFadeIn 0.45s ease forwards;
+    animation-delay: 0.6s;
+  }
+
+  @keyframes popupFadeIn {
+    to { opacity: 1; }
+  }
+
+  .popup-card {
+    background: #ffffff;
+    border-radius: 24px;
+    max-width: 460px;
+    width: 100%;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+    transform: translateY(30px) scale(0.97);
+    animation: popupSlideUp 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation-delay: 0.6s;
+    position: relative;
+  }
+
+  @keyframes popupSlideUp {
+    to { transform: translateY(0) scale(1); }
+  }
+
+  .popup-header-strip {
+    background: linear-gradient(135deg, #8B52FA 0%, #6d28d9 100%);
+    padding: 28px 28px 22px 28px;
+    position: relative;
+  }
+
+  .popup-header-strip .popup-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+
+  .popup-header-strip .popup-icon i {
+    color: #fff;
+    font-size: 1.3rem;
+  }
+
+  .popup-header-strip h2 {
+    color: #ffffff;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    line-height: 1.35;
+    margin: 0;
+    padding-right: 30px;
+  }
+
+  .popup-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.18);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+    color: #fff;
+    font-size: 0.85rem;
+    line-height: 1;
+  }
+
+  .popup-close-btn:hover {
+    background: rgba(255, 255, 255, 0.32);
+  }
+
+  .popup-body {
+    padding: 28px 28px 32px 28px;
+  }
+
+  .popup-body p {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.05rem;
+    color: #4b5563;
+    line-height: 1.65;
+    margin: 0 0 26px 0;
+  }
+
+  .popup-body p strong {
+    color: #1f1f2e;
+  }
+
+  .popup-cta-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 15px 24px;
+    background: linear-gradient(135deg, #8B52FA 0%, #7239e5 100%);
+    color: #ffffff;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow: 0 8px 24px rgba(139, 82, 250, 0.35);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    letter-spacing: 0.01em;
+  }
+
+  .popup-cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(139, 82, 250, 0.45);
+    color: #ffffff;
+  }
+
+  .popup-cta-btn:active {
+    transform: translateY(0);
+  }
+
+  .popup-whatsapp-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    justify-content: center;
+  }
+
+  .popup-whatsapp-note span {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.85rem;
+    color: #9ca3af;
+  }
+
+  .popup-whatsapp-note i {
+    color: #25d366;
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 480px) {
+    .popup-card {
+      border-radius: 20px;
+    }
+    .popup-header-strip {
+      padding: 22px 20px 18px 20px;
+    }
+    .popup-header-strip h2 {
+      font-size: 1.1rem;
+    }
+    .popup-body {
+      padding: 22px 20px 26px 20px;
+    }
+    .popup-body p {
+      font-size: 0.88rem;
+    }
+    .popup-cta-btn {
+      font-size: 0.9rem;
+      padding: 14px 20px;
+    }
+  }
+  /* ===== FIN POPUP ===== */
+
+  /* ==========================================
+     SECTION VIDÉO DE PRÉSENTATION
+     ========================================== */
+
+  .section-video-pres {
+    padding: 80px 24px;
+    background: #f7f7f9;
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  .video-pres-inner {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  /* Outer card blanche — fidèle à l'image */
+  .video-pres-card {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow:
+      0 1px 3px rgba(0,0,0,0.06),
+      0 12px 40px rgba(0,0,0,0.10);
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+
+  /* Player sombre centré dans la card — fidèle à l'image */
+  .vp-player-wrap {
+    background: #111118;
+    border-radius: 14px;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    box-shadow:
+      0 4px 16px rgba(0,0,0,0.20),
+      0 1px 3px rgba(0,0,0,0.12);
+  }
+
+  .vp-player-wrap video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* Responsive tablette */
+  @media (max-width: 768px) {
+    .section-video-pres {
+      padding: 60px 16px;
+    }
+    .video-pres-card {
+      padding: 16px;
+      border-radius: 18px;
+    }
+    .vp-player-wrap {
+      border-radius: 10px;
+    }
+  }
+
+  /* Responsive mobile */
+  @media (max-width: 480px) {
+    .section-video-pres {
+      padding: 40px 12px;
+    }
+    .video-pres-card {
+      padding: 10px;
+      border-radius: 14px;
+    }
+    .vp-player-wrap {
+      border-radius: 8px;
+    }
+  }
+
+  /* Paysage mobile */
+  @media (max-width: 960px) and (orientation: landscape) {
+    .vp-player-wrap {
+      max-height: 65vh;
+      aspect-ratio: unset;
+    }
+    .vp-player-wrap video {
+      max-height: 65vh;
+    }
+  }
+
   </style>
 
 </head>
 
 <body id="top">
+
+  <!-- POPUP ORIENTATION BIENTÔT DISPONIBLE -->
+  <div class="popup-backdrop" id="orientationPopup" role="dialog" aria-modal="true" aria-labelledby="popupTitle">
+    <div class="popup-card">
+      <div class="popup-header-strip">
+        <div class="popup-icon">
+          <i class="fa-solid fa-compass"></i>
+        </div>
+        <h2 id="popupTitle">La fonctionnalité Orientation arrive bientôt.</h2>
+        <button class="popup-close-btn" id="popupCloseBtn" aria-label="Fermer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="popup-body">
+        <p>Retrouvez prochainement tous les établissements d'enseignement supérieur du Gabon et plus sur <strong>Connect'Academia</strong> afin de choisir votre filière et votre école en toute confiance, juste à temps pour le BAC.</p>
+        <a href="https://chat.whatsapp.com/BiE25HR0QjQFnPJTfqtDmx" target="_blank" rel="noopener noreferrer" class="popup-cta-btn">
+          Je veux être parmi les premiers <i class="fa-solid fa-arrow-right"></i>
+        </a>
+        <div class="popup-whatsapp-note">
+          <i class="fa-brands fa-whatsapp"></i>
+          <span>Rejoindre le groupe WhatsApp Connect'Academia</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- 
     - #HEADER
@@ -810,7 +1102,7 @@
                         <option value="eco">Économie</option>
                     </select>
                 </div>
-                <button class="btn-search">
+                <button type="button" class="btn-search">
                     <i class="fa-solid fa-magnifying-glass"></i> Rechercher
                 </button>
             </div>
@@ -828,23 +1120,13 @@
                 <i class="fa-solid fa-graduation-cap"></i>
             </div>
             <div class="card-content1">
-                <h3>Public</h3>
+                <h3>Université</h3>
                 <div class="underline"></div>
-                <a href="universités-publics.html" class="btn-savoir">Voir</a>
+                <a href="javascript:void(0)" class="btn-savoir">Bientôt disponible</a>
             </div>
         </div>
 
-        <!-- Carte Privé (Décalée vers le bas comme sur l'image) -->
-        <div class="card1 card-green offset-down">
-            <div class="card-icon1">
-                <i class="fa-solid fa-building-columns"></i>
-            </div>
-            <div class="card-content1">
-                <h3>Privé</h3>
-                <div class="underline"></div>
-                <a href="privés.html" class="btn-savoir">Voir</a>
-            </div>
-        </div>
+        
 
         <!-- Carte RUP -->
         <div class="card1 card-blue">
@@ -852,37 +1134,60 @@
                 <i class="fa-solid fa-graduation-cap"></i>
             </div>
             <div class="card-content1">
-                <h3>Institut Supérieur</h3>
+                <h3>Grandes écoles</h3>
                 <div class="underline"></div>
-                <a href="institut.html" class="btn-savoir">Voir</a>
+                <a href="javascript:void(0)" class="btn-savoir">Bientôt disponible</a>
             </div>
         </div>
     </div>
 </section>
 
+<!-- ========================================
+     SECTION VIDÉO DE PRÉSENTATION
+     ======================================== -->
+<section class="section-video-pres">
+    <div class="video-pres-inner">
+        <div class="video-pres-card">
+            <div class="vp-player-wrap">
+                <video
+                    src="../../assets/images/orientation-video.mp4"
+                    controls
+                    preload="metadata"
+                    playsinline
+                    aria-label="Vidéo de présentation de Connect'Academia"
+                >
+                    Votre navigateur ne supporte pas la lecture vidéo.
+                </video>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!--
 <section class="section-stats">
     <div class="container-stats">
         <div class="stats-cards-wrapper">
-            <!-- Carte 1: Universités Publiques -->
+           
             <div class="stat-card">
                 <div class="stat-number">5</div>
                 <div class="stat-label">Universités Publiques</div>
             </div>
 
-            <!-- Carte 2: Grandes écoles & INSTITUTS PUBLICS -->
+           Carte 2: Grandes écoles & INSTITUTS PUBLICS 
             <div class="stat-card">
                 <div class="stat-number">25</div>
                 <div class="stat-label">établissements privés</div>
             </div>
 
-            <!-- Carte 3: établissements privés -->
+             Carte 3: établissements privés 
             <div class="stat-card">
                 <div class="stat-number">8</div>
                 <div class="stat-label">Grandes écoles & INSTITUTS PUBLICS</div>
             </div>
         </div>
     </div>
-</section>
+</section> 
+ -->
 
 <section class="success-page">
   
@@ -893,7 +1198,7 @@
           <span class="badge-exclu">EXCLUSIVITÉ ÉTUDIANT</span>
           <h2>Deviens Ambassadeur <span class="purple-text">Connect' Academia</span></h2>
           <p>Aide tes camarades à s'orienter et débloque un <strong>Accès Premium GRATUIT</strong> à vie ainsi que des invitations à nos événements VIP.</p>
-          <button class="btn-ambassador">Rejoindre le Programme</button>
+          <a href="https://chat.whatsapp.com/HMX65hiQcVwHUXA1i6iuv2?mode=gi_t"><button type="button" class="btn-ambassador">Rejoindre le Programme</button></a>
       </div>
       
       <!-- Visuel de droite (Cartes empilées) -->
@@ -910,17 +1215,12 @@
 
   <!-- Partage Social -->
   <div class="share-area">
-      <p>Partage l'opportunité avec tes amis de terminale :</p>
+      <p>Soyez le premier a tester la fonctionnalité Orientation :</p>
       <div class="share-buttons">
           <button class="btn-share whatsapp">
-              <i class="fa-brands fa-whatsapp"></i> WhatsApp
+              <a href="https://chat.whatsapp.com/BiE25HR0QjQFnPJTfqtDmx"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
           </button>
-          <button class="btn-share facebook">
-              <i class="fa-brands fa-facebook"></i> Facebook
-          </button>
-          <button class="btn-share copy-link">
-              <i class="fa-solid fa-link"></i> Copier le lien
-          </button>
+         
       </div>
   </div>
 </section>
@@ -936,16 +1236,21 @@
         <div class="footer-brand">
 
           <a href="../../index.php" class="logo">
-            <img src="../../assets/images/Logo 1 CA COMPLET.svg" width="250" height="250" alt="Connect'Academia logo">
+            <img src="../../assets/images/logo1-removebg-preview.png" width="162" height="50" alt="Connect'Academia logo">
           </a>
 
           <p class="footer-brand-text">
-            La plateforme éducative dédiée aux lycéens et étudiants gabonais.
+            La première plateforme dédiée à l'orientation des élèves et étudiants au Gabon.
           </p>
 
           <div class="wrapper">
+            <span class="span">Call:</span>
+            <a href="tel:+241077980375" class="footer-link">+241 077 98 03 75</a>
+          </div>
+
+          <div class="wrapper">
             <span class="span">Email:</span>
-            <a href="mailto:contact@connect-academia.ga" class="footer-link">contact@connect-academia.ga</a>
+            <a href="mailto:contact@connectacademia.io" class="footer-link">contact@connectacademia.io</a>
           </div>
 
         </div>
@@ -961,11 +1266,15 @@
           </li>
 
           <li>
-            <a href="../../assets/lib/tarifs.html" class="footer-link">Tarifs</a>
+            <a href="../../auth/inscription" class="footer-link">Inscription</a>
           </li>
 
           <li>
-            <a href="orientation.html" class="footer-link">Orientation</a>
+            <a href="../../index.php" class="footer-link">Accueil</a>
+          </li>
+
+          <li>
+            <a href="../../assets/lib/tarifs.html" class="footer-link">Tarifs</a>
           </li>
 
         </ul>
@@ -981,36 +1290,65 @@
           </li>
 
           <li>
+            <a href="../../index.php#social-media" class="footer-link">Médias sociaux</a>
+          </li>
+
+          <li>
             <a href="../../auth/connexion" class="footer-link">Connexion</a>
           </li>
 
           <li>
-            <a href="../../public/auth/inscription.html" class="footer-link">Inscription</a>
+            <a href="../../assets/lib/mentions-legales.html" class="footer-link">Mentions légales</a>
           </li>
 
         </ul>
 
         <div class="footer-list">
 
-          <p class="footer-list-title">Réseaux sociaux</p>
+          <p class="footer-list-title">Contacts</p>
+
+          <p class="footer-list-text">
+            Saisissez votre adresse e-mail pour vous inscrire à notre newsletter.
+          </p>
+
+          <form action="" class="newsletter-form">
+            <input type="email" name="email_address" placeholder="Votre email" required class="input-field">
+
+            <button type="submit" class="btn has-before">
+              <span class="span">S'abonner</span>
+              <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+            </button>
+          </form>
 
           <ul class="social-list">
 
             <li>
-              <a href="#" class="social-link">
+              <a href="https://www.facebook.com/people/Connect-Academia/61568164406172/#" class="social-link">
                 <ion-icon name="logo-facebook"></ion-icon>
               </a>
             </li>
 
             <li>
-              <a href="#" class="social-link">
-                <ion-icon name="logo-linkedin"></ion-icon>
+              <a href="https://www.instagram.com/connectacademia.ga" class="social-link">
+                <ion-icon name="logo-instagram"></ion-icon>
               </a>
             </li>
 
             <li>
-              <a href="#" class="social-link">
-                <ion-icon name="logo-instagram"></ion-icon>
+              <a href="https://chat.whatsapp.com/BiE25HR0QjQFnPJTfqtDmx" class="social-link">
+                <ion-icon name="logo-whatsapp"></ion-icon>
+              </a>
+            </li>
+
+            <li>
+              <a href="https://www.tiktok.com/@connect.academia.ga" class="social-link">
+                <ion-icon name="logo-tiktok"></ion-icon>
+              </a>
+            </li>
+
+            <li>
+              <a href="https://www.linkedin.com/company/connect-academia-ga/" class="social-link">
+                <ion-icon name="logo-linkedin"></ion-icon>
               </a>
             </li>
 
@@ -1025,7 +1363,7 @@
       <div class="container">
 
         <p class="copyright">
-          Copyright 2026 All Rights Reserved by <a href="https://www.instagram.com/500_vault" class="copyright-link">500_vault</a>
+          Copyright 2026 All Rights Reserved by <a href="https://www.instagram.com/connectacademia.ga" class="copyright-link">Connect'Academia</a>
         </p>
 
       </div>
@@ -1047,11 +1385,78 @@
   -->
   <script src="../../assets/js/script.js" defer></script>
 
-  <!-- 
+  <script>
+  (function () {
+    /* Filet de sécurité vidéo
+       Problème : MAMP peut servir le .mp4 sans Content-Type correct → le navigateur
+       tente de naviguer vers l'URL du fichier, ce qui recharge la page.
+       Ce script stoppe toute navigation non intentionnelle pendant la lecture. */
+    document.addEventListener('DOMContentLoaded', function () {
+      var vid = document.querySelector('.vp-player-wrap video');
+      if (!vid) return;
+
+      /* Capture le focus sur la vidéo au lancement
+         → empêche les raccourcis clavier (Espace, Entrée) de déclencher
+           des liens ou boutons en arrière-plan */
+      vid.addEventListener('play', function () { vid.focus(); });
+
+      /* Stoppe la propagation des clics hors du conteneur vidéo */
+      var wrap = document.querySelector('.vp-player-wrap');
+      if (wrap) {
+        wrap.addEventListener('click', function (e) { e.stopPropagation(); });
+      }
+
+      /* Bloque toute tentative de navigation pendant la lecture vidéo */
+      window.addEventListener('beforeunload', function (e) {
+        if (!vid.paused && !vid.ended) {
+          e.preventDefault();
+          e.returnValue = '';
+        }
+      });
+
+      /* Si le navigateur essaie de naviguer vers le fichier vidéo lui-même,
+         on annule et on revient à la page d'orientation */
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) return;
+        if (performance && performance.getEntriesByType) {
+          var navEntries = performance.getEntriesByType('navigation');
+          if (navEntries.length && navEntries[0].type === 'back_forward') {
+            if (!vid.paused) vid.pause();
+          }
+        }
+      });
+    });
+  })();
+  </script>
+
+  <!--
     - ionicon link
   -->
   <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
   <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+
+  <script>
+    (function () {
+      var popup = document.getElementById('orientationPopup');
+      var closeBtn = document.getElementById('popupCloseBtn');
+      function closePopup() {
+        popup.style.transition = 'opacity 0.3s ease';
+        popup.style.opacity = '0';
+        setTimeout(function () { popup.style.display = 'none'; }, 300);
+      }
+      closeBtn.addEventListener('click', closePopup);
+      popup.addEventListener('click', function (e) {
+        if (e.target === popup) closePopup();
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closePopup();
+      });
+    })();
+  </script>
+
+  <script>
+(function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="GCRCfFG4ahJN6GlIIbvyC";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+  </script>
 
 </body>
 

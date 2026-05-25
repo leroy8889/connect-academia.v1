@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Middleware;
 
-use Core\{Session, Response, Cache};
+use Core\{Session, Response, Cache, Settings};
 use Models\User;
 
 class AbonneMiddleware
@@ -20,10 +20,9 @@ class AbonneMiddleware
             Response::redirect('/auth/connexion');
         }
 
-        // Période gratuite : 15 heures à partir de created_at
-        $createdAt     = strtotime($user['created_at']);
-        $periodeHeures = (int) ($_ENV['PERIODE_GRATUITE_HEURES'] ?? 15);
-        $expireAt      = $createdAt + ($periodeHeures * 3600);
+        // Période gratuite : source primaire = DB (periode_gratuite_jours en jours), fallback .env
+        $createdAt = strtotime($user['created_at']);
+        $expireAt  = $createdAt + Settings::getPeriodeGratuiteSecondes();
 
         if (time() <= $expireAt) {
             return; // Encore dans la période gratuite
@@ -38,7 +37,10 @@ class AbonneMiddleware
         // Vérifier abonnement actif en BDD
         $abonnement = (new \Models\Abonnement())->getActif($userId);
         if ($abonnement) {
-            Cache::set("abonnement:{$userId}", $abonnement, 3600);
+            // TTL = secondes restantes jusqu'à fin d'abonnement (max 1h)
+            // Garantit que le cache expire au même moment que l'abonnement
+            $remaining = max(60, strtotime($abonnement['fin']) - time());
+            Cache::set("abonnement:{$userId}", $abonnement, min(3600, $remaining));
             return;
         }
 
@@ -55,6 +57,42 @@ class AbonneMiddleware
             Response::json(['success' => false, 'error' => ['code' => 'SUBSCRIPTION_REQUIRED', 'message' => 'Abonnement requis']], 402);
         }
         Response::redirect('/abonnement/choisir');
+    }
+
+    /**
+     * Vérifie si un utilisateur a accès aux fonctionnalités premium.
+     * Utilisé par le layout pour conditionner la navbar.
+     */
+    public static function hasAccess(?int $userId): bool
+    {
+        if (!$userId) {
+            return false;
+        }
+
+        $user = (new User())->findById($userId);
+        if (!$user) {
+            return false;
+        }
+
+        $expireAt = strtotime($user['created_at']) + Settings::getPeriodeGratuiteSecondes();
+
+        if (time() <= $expireAt) {
+            return true;
+        }
+
+        $cached = Cache::get("abonnement:{$userId}");
+        if ($cached !== null) {
+            return true;
+        }
+
+        $abonnement = (new \Models\Abonnement())->getActif($userId);
+        if ($abonnement) {
+            $remaining = max(60, strtotime($abonnement['fin']) - time());
+            Cache::set("abonnement:{$userId}", $abonnement, min(3600, $remaining));
+            return true;
+        }
+
+        return false;
     }
 
     private function isAjax(): bool

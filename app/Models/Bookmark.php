@@ -28,7 +28,7 @@ class Bookmark extends BaseModel
     public function getByUser(int $userId, int $limit = 20): array
     {
         $posts = $this->query(
-            "SELECT p.*, u.nom, u.prenom, u.photo_profil, u.role AS user_role
+            "SELECT p.*, u.nom, u.prenom, u.photo_profil, u.role AS user_role, u.uuid AS user_uuid
              FROM bookmarks b
              INNER JOIN posts p ON b.post_id = p.id
              INNER JOIN users u ON p.user_id = u.id

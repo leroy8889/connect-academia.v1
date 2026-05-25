@@ -565,9 +565,11 @@ const IaChat = (() => {
         const ressourceTitre = document.querySelector('.viewer-sidebar__title')?.textContent?.trim() || '';
         const filename = `Connect'Academia-reponse-${new Date().toISOString().slice(0, 10)}.pdf`;
 
-        // Masque plein-écran : cache le wrapper pendant la génération
+        // Masque plein-écran : feedback visuel pendant génération.
+        // data-html2canvas-ignore => html2canvas l'exclut du clone → le mask ne couvre plus le wrapper.
         const mask = document.createElement('div');
         mask.setAttribute('aria-hidden', 'true');
+        mask.setAttribute('data-html2canvas-ignore', 'true');
         mask.style.cssText = [
             'position:fixed', 'inset:0', 'z-index:99999',
             'background:rgba(255,255,255,0.97)',
@@ -576,8 +578,9 @@ const IaChat = (() => {
         ].join(';');
         mask.innerHTML = '<div style="color:#8B52FA;font-family:Arial,sans-serif;font-weight:600;font-size:14px;">Génération du PDF…</div>';
 
-        // Wrapper positionné dans la viewport (position:fixed) pour contourner
-        // le overflow:hidden de #main-content qui coupait le rendu html2canvas
+        // Wrapper position:fixed top:0 left:0 — html2canvas le rend à y=0 en coords document.
+        // scrollY:0 dans les options html2canvas fait démarrer le viewport de rendu à y=0
+        // → l'élément fixed à (0,0) est bien dans la zone capturée même si la page est scrollée.
         const wrapper = document.createElement('div');
         wrapper.setAttribute('aria-hidden', 'true');
         wrapper.style.cssText = [
@@ -645,15 +648,24 @@ const IaChat = (() => {
             if (btn) { btn.disabled = false; btn.classList.remove('ia-download-btn--loading'); }
         };
 
-        // Laisser le DOM se stabiliser avant la capture html2canvas
+        // Double rAF : garantit que le DOM est rendu avant la capture.
         requestAnimationFrame(() => {
-            html2pdf().set({
-                margin:      [12, 10, 12, 10],
-                filename:    filename,
-                image:       { type: 'jpeg', quality: 0.97 },
-                html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
-                jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            }).from(wrapper).save().then(cleanup).catch(cleanup);
+            requestAnimationFrame(() => {
+                html2pdf().set({
+                    margin:      [12, 10, 12, 10],
+                    filename:    filename,
+                    image:       { type: 'jpeg', quality: 0.97 },
+                    html2canvas: {
+                        scale:      2,
+                        useCORS:    true,
+                        allowTaint: true,
+                        logging:    false,
+                        scrollX:    0,
+                        scrollY:    0,
+                    },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                }).from(wrapper).save().then(cleanup).catch(cleanup);
+            });
         });
     }
 

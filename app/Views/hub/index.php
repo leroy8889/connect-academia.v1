@@ -10,6 +10,8 @@ if ($serie) {
 }
 $progGlobale = (int) ($stats['progression_globale'] ?? 0);
 $annonce     = $annonce ?? false;
+$prixMensuel = $prixMensuel ?? 2000;
+$prixAnnuel  = $prixAnnuel  ?? 15000;
 ?>
 
 <div class="hub">
@@ -51,7 +53,7 @@ $annonce     = $annonce ?? false;
         <p class="hub__hero-sub hub__hero-sub--warning">
           <i data-lucide="alert-triangle"></i>
           Période gratuite expirée —
-          <a href="<?= url('/abonnement/choisir') ?>">S'abonner pour 2 000 XAF/mois</a>
+          <a href="<?= url('/abonnement/choisir') ?>">S'abonner pour <?= number_format($prixMensuel, 0, ',', ' ') ?> XAF/mois</a>
         </p>
         <?php endif; ?>
       </div>
@@ -145,7 +147,7 @@ $annonce     = $annonce ?? false;
     <div class="hub__modules-grid">
 
       <!-- Apprentissage -->
-      <a href="<?= url('/apprentissage') ?>"
+      <a href="<?= url($acces ? '/apprentissage' : '/abonnement/choisir') ?>"
          class="hub__module-card hub__module-card--apprentissage <?= !$acces ? 'hub__module-card--locked' : '' ?>">
         <div class="hub__module-card__header">
           <div class="hub__module-icon">
@@ -174,7 +176,7 @@ $annonce     = $annonce ?? false;
       </a>
 
       <!-- Communauté -->
-      <a href="<?= url('/communaute') ?>"
+      <a href="<?= url($acces ? '/communaute' : '/abonnement/choisir') ?>"
          class="hub__module-card hub__module-card--communaute <?= !$acces ? 'hub__module-card--locked' : '' ?>">
         <div class="hub__module-card__header">
           <div class="hub__module-icon">
@@ -240,7 +242,7 @@ $annonce     = $annonce ?? false;
             <span class="hub__plan-name">Mensuel</span>
           </div>
           <div class="hub__plan-price">
-            <span class="hub__plan-amount">2 000</span>
+            <span class="hub__plan-amount"><?= number_format($prixMensuel, 0, ',', ' ') ?></span>
             <span class="hub__plan-currency">XAF/mois</span>
           </div>
           <a href="<?= url('/abonnement/choisir') ?>" class="btn btn--outline btn--full">Choisir</a>
@@ -251,7 +253,7 @@ $annonce     = $annonce ?? false;
             <span class="hub__plan-save">-37%</span>
           </div>
           <div class="hub__plan-price">
-            <span class="hub__plan-amount">15 000</span>
+            <span class="hub__plan-amount"><?= number_format($prixAnnuel, 0, ',', ' ') ?></span>
             <span class="hub__plan-currency">XAF/an</span>
           </div>
           <a href="<?= url('/abonnement/choisir') ?>" class="btn btn--primary btn--full">Choisir</a>

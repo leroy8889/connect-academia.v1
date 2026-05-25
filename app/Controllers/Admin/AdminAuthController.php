@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Controllers\Admin;
 
-use Core\{Response, Session, Totp, Redis, RateLimiter};
+use Core\{Response, Session, Totp, Redis, RateLimiter, AdminPermissions};
 use Models\Admin;
 // Importation de PHPMailer
 use PHPMailer\PHPMailer\PHPMailer;
@@ -40,7 +40,7 @@ class AdminAuthController
 
         if (!$email || !$password) {
             Session::flash('error', 'Veuillez remplir tous les champs.');
-            Response::redirect('/admin/login');
+            Response::redirect('/Administratorconnect/login');
         }
 
         // ── Couche 1 : lockout session (fiable, sans Redis) ───────────────
@@ -51,7 +51,7 @@ class AdminAuthController
             Session::flash('login_locked', true);
             Session::flash('wait_min', $waitMin);
             Session::flash('wait_secs', $waitSecs);
-            Response::redirect('/admin/login');
+            Response::redirect('/Administratorconnect/login');
         }
 
         // ── Couche 2 : Redis rate limiter (IP-based) ──────────────────────
@@ -62,7 +62,7 @@ class AdminAuthController
             Session::flash('login_locked', true);
             Session::flash('wait_min', $waitMin);
             Session::flash('wait_secs', $waitSecs);
-            Response::redirect('/admin/login');
+            Response::redirect('/Administratorconnect/login');
         }
 
         $admin = $this->model->findByEmail($email);
@@ -89,7 +89,7 @@ class AdminAuthController
                 Session::flash('error', 'Email ou mot de passe incorrect.');
             }
 
-            Response::redirect('/admin/login');
+            Response::redirect('/Administratorconnect/login');
         }
 
         // ── Succès : on efface tous les compteurs ─────────────────────────
@@ -111,10 +111,10 @@ class AdminAuthController
         // Envoi de l'email
         if ($this->sendOTPEmail($admin['email'], $otp)) {
             Session::flash('success', 'Un code de sécurité a été envoyé à votre adresse email.');
-            Response::redirect('/admin/login'); // La vue détectera 'admin_2fa_pending' et affichera l'OTP
+            Response::redirect('/Administratorconnect/login'); // La vue détectera 'admin_2fa_pending' et affichera l'OTP
         } else {
             Session::flash('error', "Erreur lors de l'envoi du code de sécurité.");
-            Response::redirect('/admin/login');
+            Response::redirect('/Administratorconnect/login');
         }
     }
 
@@ -122,15 +122,15 @@ class AdminAuthController
     {
         $pending = Session::get('admin_2fa_pending');
         if (!$pending) {
-            Response::redirect('/admin/login');
+            Response::redirect('/Administratorconnect/login');
         }
 
         // On privilégie 'otp_code_val' qui est le champ caché contenant le code complet (6 chiffres)
         $code = trim((string)($_POST['otp_code_val'] ?? $_POST['otp_code'] ?? ''));
-        
+
         if (empty($code) || strlen($code) !== 6) {
             Session::flash('error', 'Veuillez entrer le code complet à 6 chiffres.');
-            Response::redirect('/admin/login');
+            Response::redirect('/Administratorconnect/login');
             return;
         }
 
@@ -140,13 +140,13 @@ class AdminAuthController
             
             if (!$admin) {
                 Session::remove('admin_2fa_pending');
-                Response::redirect('/admin/login');
+                Response::redirect('/Administratorconnect/login');
                 return;
             }
 
             Session::remove('admin_2fa_pending');
             $this->startAdminSession($admin);
-            
+
             $this->model->logConnection(
                 $admin['id'],
                 $admin['email'],
@@ -154,10 +154,10 @@ class AdminAuthController
                 $_SERVER['HTTP_USER_AGENT'] ?? '',
                 'succes'
             );
-            Response::redirect('/admin');
+            Response::redirect(AdminPermissions::getDefaultPath($admin['role'] ?? 'admin'));
         } else {
             Session::flash('error', 'Code de sécurité invalide ou expiré.');
-            Response::redirect('/admin/login');
+            Response::redirect('/Administratorconnect/login');
         }
     }
 
@@ -171,13 +171,13 @@ class AdminAuthController
             $mail->isSMTP();
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'nguemaferdinand02@gmail.com'; 
-            $mail->Password   = 'plauhcjfwnxapcja'; 
+            $mail->Username   = 'connectacademiaheb@gmail.com'; 
+            $mail->Password   = 'fxbucacvmlldmsik'; 
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
             $mail->Port       = 465;
             $mail->CharSet    = 'UTF-8';
 
-            $mail->setFrom('security@connectacademia.com', 'Sécurité Connect Académie');
+            $mail->setFrom('security@connectacademia.com', 'Sécurité Connect Academia');
             $mail->addAddress($email);
             $mail->isHTML(true);
             $mail->Subject = "Code d'accès Administrateur - $otp";
@@ -219,7 +219,7 @@ class AdminAuthController
         Session::remove('admin_2fa_pending');
         Session::regenerate();
 
-        Response::redirect('/admin/login');
+        Response::redirect('/Administratorconnect/login');
     }
 
     private function startAdminSession(array $admin): void
@@ -257,7 +257,7 @@ class AdminAuthController
 
         if (!$email) {
             Session::flash('error', 'Veuillez entrer votre adresse email.');
-            Response::redirect('/admin/forgot-password');
+            Response::redirect('/Administratorconnect/forgot-password');
             return;
         }
 
@@ -266,7 +266,7 @@ class AdminAuthController
         // --- AJOUT : Si l'email n'existe pas dans la base ---
         if (!$admin) {
             Session::flash('error', "Cette adresse email n'est pas enregistrée dans notre base de données.");
-            Response::redirect('/admin/forgot-password');
+            Response::redirect('/Administratorconnect/forgot-password');
             return;
         }
 
@@ -283,8 +283,8 @@ class AdminAuthController
                 $mail->isSMTP();
                 $mail->Host       = 'smtp.gmail.com';
                 $mail->SMTPAuth   = true;
-                $mail->Username   = 'nguemaferdinand02@gmail.com'; 
-                $mail->Password   = 'plauhcjfwnxapcja'; 
+                $mail->Username   = 'connectacademiaheb@gmail.com'; 
+                $mail->Password   = 'fxbucacvmlldmsik'; 
                 $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
                 $mail->Port       = 465;
                 $mail->CharSet    = 'UTF-8';
@@ -295,7 +295,7 @@ class AdminAuthController
                 $mail->Subject = "Réinitialisation de votre mot de passe";
 
                 // Modification de l'URL pour pointer vers localhost en développement
-                $resetLink = "http://localhost:8000/admin/reset-password?token=" . $token;
+                $resetLink = "http://localhost:8000/Administratorconnect/reset-password?token=" . $token;
 
                 $mail->Body = "
                 <div style='background-color: #f4f4f9; padding: 40px; font-family: sans-serif;'>
@@ -316,7 +316,7 @@ class AdminAuthController
 
         // Message générique par sécurité (ne pas confirmer si l'email existe ou non)
         Session::flash('success', 'Si votre compte existe, un lien de réinitialisation vous a été envoyé.');
-        Response::redirect('/admin/forgot-password');
+        Response::redirect('/Administratorconnect/forgot-password');
     }
 
     /**
@@ -327,7 +327,7 @@ class AdminAuthController
         $token = $_GET['token'] ?? '';
         
         if (!$token) {
-            Response::redirect('/admin/login');
+            Response::redirect('/Administratorconnect/login');
         }
 
         // --- RÉCUPÉRATION DE L'EMAIL VIA LE TOKEN ---
@@ -351,7 +351,7 @@ class AdminAuthController
 
         if (empty($password) || $password !== $confirm) {
             Session::flash('error', 'Les mots de passe sont vides ou ne correspondent pas.');
-            Response::redirect("/admin/reset-password?token=$token");
+            Response::redirect("/Administratorconnect/reset-password?token=$token");
         }
 
         // Note: Vous devrez implémenter la logique de vérification du token 
@@ -362,7 +362,7 @@ class AdminAuthController
 
         if (!$admin) {
             Session::flash('error', 'Ce lien de réinitialisation est invalide ou a expiré.');
-            Response::redirect('/admin/forgot-password');
+            Response::redirect('/Administratorconnect/forgot-password');
             return;
         }
 
@@ -371,12 +371,12 @@ class AdminAuthController
         if ($this->model->updatePassword((int)$admin['id'], $hashedPassword)) {
             // Suppression du token après usage pour la sécurité
             $this->model->deleteResetToken($token);
-            
+
             Session::flash('success', 'Votre mot de passe a été mis à jour avec succès.');
-            Response::redirect('/admin/login');
+            Response::redirect('/Administratorconnect/login');
         } else {
             Session::flash('error', 'Une erreur est survenue lors de la mise à jour.');
-            Response::redirect("/admin/reset-password?token=$token");
+            Response::redirect("/Administratorconnect/reset-password?token=$token");
         }
     }
 }

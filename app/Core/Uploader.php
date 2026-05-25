@@ -40,10 +40,9 @@ class Uploader
             throw new \RuntimeException("Fichier temporaire introuvable.");
         }
 
-        // Limite pratique : 20 Mo pour un avatar (largement suffisant)
-        $maxBytes = 20 * 1024 * 1024;
+        $maxBytes = 8 * 1024 * 1024;
         if ((int) $file['size'] > $maxBytes) {
-            throw new \RuntimeException("Photo trop volumineuse (max 20 Mo). Compressez-la avant l'envoi.");
+            throw new \RuntimeException("Cette image est trop lourde, veuillez en mettre une autre (max 8 Mo).");
         }
 
         // Vérification du type MIME réel

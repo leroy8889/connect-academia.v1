@@ -1190,6 +1190,37 @@ table.admin-table tbody tr:hover .table-actions { opacity: 1; }
 }
 .chart-wrap p { font-size: 12px; color: var(--txt-m); margin-bottom: 16px; }
 
+/* Period tabs — growth chart */
+.period-tabs {
+  display: flex;
+  gap: 3px;
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 3px;
+  flex-shrink: 0;
+}
+.period-tab {
+  padding: 5px 13px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--txt-m);
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  letter-spacing: 0.04em;
+  font-family: var(--font-mid);
+  line-height: 1;
+}
+.period-tab:hover { color: var(--txt); }
+.period-tab.active {
+  background: var(--card);
+  color: var(--ap);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+}
+.chart-canvas-wrap { position: relative; }
+
 /* Grid widgets */
 .widgets-grid {
   display: grid;

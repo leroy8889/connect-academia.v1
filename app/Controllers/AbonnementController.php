@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Controllers;
 
-use Core\{Response, Session};
+use Core\{Response, Session, Settings};
 use Models\{Abonnement, User};
 
 class AbonnementController
@@ -21,10 +21,12 @@ class AbonnementController
         $status = $_GET['status'] ?? '';
 
         Response::view('abonnement/choisir', [
-            'pageTitle'  => "Choisir un abonnement — Connect'Academia",
-            'user'       => $user,
-            'abonnement' => null,
-            'status'     => $status,
+            'pageTitle'   => "Choisir un abonnement — Connect'Academia",
+            'user'        => $user,
+            'abonnement'  => null,
+            'status'      => $status,
+            'prixMensuel' => Settings::getPrixMensuel(),
+            'prixAnnuel'  => Settings::getPrixAnnuel(),
         ]);
     }
 

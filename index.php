@@ -65,8 +65,11 @@ function url(string $path = ''): string
 
 function asset(string $path): string
 {
-    $path = ltrim($path, '/');
-    return BASE_URL === '' ? '/public/assets/' . $path : BASE_URL . '/public/assets/' . $path;
+    $path     = ltrim($path, '/');
+    $fullPath = __DIR__ . '/public/assets/' . $path;
+    $ver      = file_exists($fullPath) ? '?v=' . filemtime($fullPath) : '';
+    $base     = BASE_URL === '' ? '/public/assets/' . $path : BASE_URL . '/public/assets/' . $path;
+    return $base . $ver;
 }
 
 function e(string $value): string

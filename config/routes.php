@@ -51,7 +51,8 @@ $router->post('/api/apprentissage/favoris/{id}',            'Apprentissage\Favor
 // ── COMMUNAUTÉ ────────────────────────────────────────────────────────────
 $router->get('/communaute',                                 'Communaute\FeedController@index',               ['auth', 'abonne']);
 $router->get('/communaute/explorer',                        'Communaute\FeedController@explore',             ['auth', 'abonne']);
-$router->get('/communaute/profil/{id}',                     'Communaute\UserController@show',                ['auth', 'abonne']);
+$router->get('/communaute/profil/{uuid}',                   'Communaute\UserController@show',                ['auth', 'abonne']);
+$router->get('/communaute/mon-profil',                      'Communaute\UserController@monProfil',           ['auth', 'abonne']);
 $router->get('/communaute/chat',                            'Communaute\ChatController@salons',              ['auth', 'abonne']);
 $router->get('/communaute/chat/{salon_id}',                 'Communaute\ChatController@salon',               ['auth', 'abonne']);
 
@@ -84,15 +85,14 @@ $router->get('/api/communaute/comments/{id}/replies',       'Communaute\CommentC
 $router->post('/api/communaute/comments/{id}/like',         'Communaute\CommentController@likeComment',      ['auth']);
 
 // ── ADMIN ─────────────────────────────────────────────────────────────────
-$router->get('/admin/login',                                'Admin\AdminAuthController@showLogin');
-$router->post('/admin/login',                               'Admin\AdminAuthController@login',               ['csrf']);
-// AJOUT : Routes pour Mot de passe oublié Admin
-$router->get('/admin/forgot-password',                      'Admin\AdminAuthController@forgotPassword');
-$router->post('/admin/forgot-password',                     'Admin\AdminAuthController@sendResetLink',        ['csrf']);
-$router->get('/admin/reset-password',                       'Admin\AdminAuthController@showResetPassword');
-$router->post('/admin/reset-password',                      'Admin\AdminAuthController@updatePassword',      ['csrf']);
+$router->get('/Administratorconnect/login',                 'Admin\AdminAuthController@showLogin');
+$router->post('/Administratorconnect/login',                'Admin\AdminAuthController@login',               ['csrf']);
+$router->get('/Administratorconnect/forgot-password',       'Admin\AdminAuthController@forgotPassword');
+$router->post('/Administratorconnect/forgot-password',      'Admin\AdminAuthController@sendResetLink',        ['csrf']);
+$router->get('/Administratorconnect/reset-password',        'Admin\AdminAuthController@showResetPassword');
+$router->post('/Administratorconnect/reset-password',       'Admin\AdminAuthController@updatePassword',      ['csrf']);
 
-$router->post('/admin/verifier-2fa',                        'Admin\AdminAuthController@verify2fa',           ['csrf']);
+$router->post('/Administratorconnect/verifier-2fa',         'Admin\AdminAuthController@verify2fa',           ['csrf']);
 $router->post('/admin/logout',                              'Admin\AdminAuthController@logout',              ['csrf']);
 
 $router->get('/admin',                                      'Admin\DashboardController@index',               ['admin']);
@@ -156,3 +156,10 @@ $router->delete('/admin/api/admins/{id}',                   'Admin\ParametresCon
 
 // TEST : Route temporaire sans CSRF pour isoler l'erreur d'upload
 $router->post('/admin/api/contenu/ressource/test',          'Admin\ContenuController@storeRessource',        ['admin']);
+
+// ── CONTACT ───────────────────────────────────────────────────────────────
+$router->post('/api/contact',                               'ContactController@submit');
+$router->get('/admin/contact',                              'Admin\ContactController@index',                  ['admin']);
+$router->patch('/admin/api/contact/{id}/read',              'Admin\ContactController@markRead',               ['admin', 'csrf']);
+$router->post('/admin/api/contact/mark-all-read',           'Admin\ContactController@markAllRead',            ['admin', 'csrf']);
+$router->delete('/admin/api/contact/{id}',                  'Admin\ContactController@delete',                 ['admin', 'csrf']);

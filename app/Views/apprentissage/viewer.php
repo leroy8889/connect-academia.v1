@@ -25,7 +25,7 @@ $typeLabels = [
     'cours'            => 'Cours',
     'td'               => 'TD',
     'ancienne_epreuve' => 'Ancienne épreuve',
-    'corrige'          => 'Corrigé',
+    'corrige'          => 'Méthodologie',
 ];
 ?>
 

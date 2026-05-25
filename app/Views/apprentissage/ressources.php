@@ -8,7 +8,7 @@ $types = [
     'cours'            => 'Cours',
     'td'               => 'TD',
     'ancienne_epreuve' => 'Anciennes épreuves',
-    'corrige'          => 'Corrigés',
+    'corrige'          => 'Méthodologies',
 ];
 
 function typeIconRes(string $type): string {

@@ -90,7 +90,14 @@ const Comments = (() => {
         document.body.style.overflow = 'hidden';
 
         loadComments();
-        elements.textarea?.focus();
+
+        // Sur mobile : focus différé après fin d'animation (350ms) pour éviter
+        // le zoom viewport iOS déclenché pendant une transition en cours.
+        if (window.innerWidth > 480) {
+            elements.textarea?.focus();
+        } else {
+            setTimeout(() => elements.textarea?.focus(), 380);
+        }
     }
 
     // ── Close Panel ─────────────────────────────────

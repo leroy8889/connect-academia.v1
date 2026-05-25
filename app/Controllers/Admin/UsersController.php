@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Controllers\Admin;
 
-use Core\{Response, Session, Database};
+use Core\{Response, Session, Database, AdminPermissions};
 use Models\Admin;
-use Models\User; // Ajout nécessaire pour utiliser la méthode de normalisation
+use Models\User;
 use PDO;
 
 class UsersController
@@ -109,6 +109,10 @@ class UsersController
     // ── POST /admin/api/utilisateurs ─────────────────────────────────────
     public function store(): void
     {
+        if (AdminPermissions::isUsersReadOnly(Session::adminRole() ?? '')) {
+            Response::json(['success' => false, 'error' => ['code' => 'FORBIDDEN', 'message' => 'Accès en lecture seule pour votre rôle.']], 403);
+        }
+
         $prenom  = trim($_POST['prenom'] ?? '');
         $nom     = trim($_POST['nom'] ?? '');
         $email   = trim($_POST['email'] ?? '');
@@ -170,6 +174,10 @@ class UsersController
     // ── PATCH /admin/api/utilisateurs/{id} ───────────────────────────────
     public function update(array $params): void
     {
+        if (AdminPermissions::isUsersReadOnly(Session::adminRole() ?? '')) {
+            Response::json(['success' => false, 'error' => ['code' => 'FORBIDDEN', 'message' => 'Accès en lecture seule pour votre rôle.']], 403);
+        }
+
         $id      = (int) ($params['id'] ?? 0);
         $prenom  = trim($_POST['prenom'] ?? '');
         $nom     = trim($_POST['nom'] ?? '');
@@ -209,6 +217,10 @@ class UsersController
     // ── PATCH /admin/api/utilisateurs/{id}/toggle ────────────────────────
     public function toggle(array $params): void
     {
+        if (AdminPermissions::isUsersReadOnly(Session::adminRole() ?? '')) {
+            Response::json(['success' => false, 'error' => ['code' => 'FORBIDDEN', 'message' => 'Accès en lecture seule pour votre rôle.']], 403);
+        }
+
         $id     = (int) ($params['id'] ?? 0);
         $active = $this->model->toggleUser($id);
 
@@ -223,6 +235,10 @@ class UsersController
     // ── DELETE /admin/api/utilisateurs/{id} ──────────────────────────────
     public function delete(array $params): void
     {
+        if (AdminPermissions::isUsersReadOnly(Session::adminRole() ?? '')) {
+            Response::json(['success' => false, 'error' => ['code' => 'FORBIDDEN', 'message' => 'Accès en lecture seule pour votre rôle.']], 403);
+        }
+
         $id = (int) ($params['id'] ?? 0);
 
         $user = $this->db->prepare("SELECT id, prenom, nom FROM users WHERE id = ? AND is_deleted = 0");

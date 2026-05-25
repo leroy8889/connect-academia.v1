@@ -18,7 +18,7 @@ function typeLabel(string $type): string {
         'cours'            => 'Cours',
         'td'               => 'TD',
         'ancienne_epreuve' => 'Ancienne épreuve',
-        'corrige'          => 'Corrigé',
+        'corrige'          => 'Méthodologie',
         default            => ucfirst($type),
     };
 }

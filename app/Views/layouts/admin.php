@@ -13,6 +13,12 @@ try {
     $pendingReports = (new \Models\Report())->count("status = 'pending'");
 } catch (\Throwable $e) {}
 
+// Badge messages de contact non lus
+$unreadContacts = 0;
+try {
+    $unreadContacts = (new \Models\ContactMessage())->countUnread();
+} catch (\Throwable $e) {}
+
 function adminNavActive(string $path, string $current, string $base): string {
     $full = $base . $path;
     return ($current === $full || str_starts_with($current, $full . '/')) ? ' active' : '';
@@ -26,6 +32,16 @@ function adminNavActive(string $path, string $current, string $base): string {
   <meta name="csrf-token" content="<?= Session::getCsrfToken() ?>">
   <title><?= e($pageTitle ?? "Admin — Connect'Academia") ?></title>
   <link rel="icon" href="<?= asset('images/logo-officiel.png') ?>" type="image/png">
+
+  <!-- PWA -->
+  <link rel="manifest" href="<?= BASE_URL ?>/manifest.json">
+  <meta name="theme-color" content="#8B52FA">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Connect'Academia Admin">
+  <link rel="apple-touch-icon" href="<?= asset('images/icons/apple-touch-icon.png') ?>">
+
   <link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
   <script>
     window.CA_ADMIN = {
@@ -59,9 +75,15 @@ function adminNavActive(string $path, string $current, string $base): string {
     </div>
 
     <!-- Navigation -->
+    <?php
+        $isModo       = ($adminRole === 'moderateur');
+        $isModo1      = ($adminRole === 'moderateur_1');
+        $isSuperAdmin = ($adminRole === 'super_admin');
+    ?>
     <nav class="sidebar-nav">
 
-      <!-- PILOTAGE -->
+      <?php if (!$isModo): ?>
+      <!-- PILOTAGE — visible pour admin, super_admin, moderateur_1 -->
       <div class="sidebar-section">
         <div class="sidebar-section-label">Pilotage</div>
         <a href="<?= url('/admin') ?>" class="sidebar-link<?= adminNavActive('/admin', $currentUri, $baseUrl) && !str_contains($currentUri, '/admin/') ? ' active' : (str_ends_with($currentUri, '/admin') ? ' active' : '') ?>">
@@ -72,10 +94,12 @@ function adminNavActive(string $path, string $current, string $base): string {
           <span>Dashboard</span>
         </a>
       </div>
+      <?php endif; ?>
 
       <!-- APPRENTISSAGE -->
       <div class="sidebar-section">
         <div class="sidebar-section-label">Apprentissage</div>
+        <?php if (!$isModo): ?>
         <a href="<?= url('/admin/utilisateurs') ?>" class="sidebar-link<?= str_contains($currentUri, '/admin/utilisateurs') ? ' active' : '' ?>">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -85,6 +109,7 @@ function adminNavActive(string $path, string $current, string $base): string {
           </svg>
           <span>Utilisateurs</span>
         </a>
+        <?php endif; ?>
         <a href="<?= url('/admin/series-matieres') ?>" class="sidebar-link<?= str_contains($currentUri, '/admin/series-matieres') ? ' active' : '' ?>">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <circle cx="12" cy="12" r="10"/>
@@ -114,6 +139,7 @@ function adminNavActive(string $path, string $current, string $base): string {
           </svg>
           <span>Communauté</span>
         </a>
+        <?php if (!$isModo1): ?>
         <a href="<?= url('/admin/signalements') ?>" class="sidebar-link<?= str_contains($currentUri, '/admin/signalements') ? ' active' : '' ?>">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
@@ -131,9 +157,21 @@ function adminNavActive(string $path, string $current, string $base): string {
           </svg>
           <span>Annonces</span>
         </a>
+        <a href="<?= url('/admin/contact') ?>" class="sidebar-link<?= str_contains($currentUri, '/admin/contact') ? ' active' : '' ?>">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+          <span>Messages</span>
+          <?php if ($unreadContacts > 0): ?>
+            <span class="sidebar-badge"><?= $unreadContacts ?></span>
+          <?php endif; ?>
+        </a>
+        <?php endif; ?>
       </div>
 
-      <!-- PAIEMENTS -->
+      <?php if (!$isModo && !$isModo1): ?>
+      <!-- PAIEMENTS — masqué pour moderateur et moderateur_1 -->
       <div class="sidebar-section">
         <div class="sidebar-section-label">Finance</div>
         <a href="<?= url('/admin/paiement') ?>" class="sidebar-link<?= str_contains($currentUri, '/admin/paiement') ? ' active' : '' ?>">
@@ -144,8 +182,10 @@ function adminNavActive(string $path, string $current, string $base): string {
           <span>Paiements</span>
         </a>
       </div>
+      <?php endif; ?>
 
-      <!-- SYSTÈME -->
+      <?php if (!$isModo): ?>
+      <!-- SYSTÈME — visible pour admin, super_admin, moderateur_1 -->
       <div class="sidebar-section">
         <div class="sidebar-section-label">Système</div>
         <a href="<?= url('/admin/analytics') ?>" class="sidebar-link<?= str_contains($currentUri, '/admin/analytics') ? ' active' : '' ?>">
@@ -156,6 +196,7 @@ function adminNavActive(string $path, string $current, string $base): string {
           </svg>
           <span>Analytics</span>
         </a>
+        <?php if (!$isModo1): ?>
         <a href="<?= url('/admin/notifications') ?>" class="sidebar-link<?= str_contains($currentUri, '/admin/notifications') ? ' active' : '' ?>">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -163,6 +204,8 @@ function adminNavActive(string $path, string $current, string $base): string {
           </svg>
           <span>Notifications</span>
         </a>
+        <?php endif; ?>
+        <?php if ($isSuperAdmin): ?>
         <a href="<?= url('/admin/parametres') ?>" class="sidebar-link<?= str_contains($currentUri, '/admin/parametres') ? ' active' : '' ?>">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <circle cx="12" cy="12" r="3"/>
@@ -170,7 +213,9 @@ function adminNavActive(string $path, string $current, string $base): string {
           </svg>
           <span>Paramètres</span>
         </a>
+        <?php endif; ?>
       </div>
+      <?php endif; ?>
 
     </nav>
 
@@ -223,12 +268,14 @@ function adminNavActive(string $path, string $current, string $base): string {
           </svg>
           Exporter
         </button>
+        <?php if (!$isModo && !$isModo1): ?>
         <a href="<?= url('/admin/notifications') ?>" class="topbar-icon-btn" title="Notifications">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
           </svg>
         </a>
+        <?php endif; ?>
         <div class="topbar-avatar" title="<?= e($adminName) ?>"><?= $adminInitial ?></div>
 
         <!-- Logout rapide -->
@@ -263,5 +310,17 @@ function adminNavActive(string $path, string $current, string $base): string {
   #sidebar-toggle { display: block !important; }
 }
 </style>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('<?= BASE_URL ?>/sw.js', {
+      scope: '<?= BASE_URL ?>/'
+    }).catch(function (err) {
+      console.warn('[PWA] SW registration failed:', err);
+    });
+  });
+}
+</script>
 </body>
 </html>

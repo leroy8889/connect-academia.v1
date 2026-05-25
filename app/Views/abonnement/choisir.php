@@ -1,8 +1,10 @@
 <?php
-$user       = $user       ?? [];
-$abonnement = $abonnement ?? null;
-$status     = $status     ?? '';
-$userEmail  = htmlspecialchars($user['email'] ?? '', ENT_QUOTES);
+$user        = $user        ?? [];
+$abonnement  = $abonnement  ?? null;
+$status      = $status      ?? '';
+$prixMensuel = $prixMensuel ?? (float) ($_ENV['PRIX_MENSUEL_XAF'] ?? 2000);
+$prixAnnuel  = $prixAnnuel  ?? (float) ($_ENV['PRIX_ANNUEL_XAF']  ?? 15000);
+$userEmail   = htmlspecialchars($user['email'] ?? '', ENT_QUOTES);
 $csrfToken  = \Core\Session::getCsrfToken();
 ?>
 
@@ -248,7 +250,7 @@ $csrfToken  = \Core\Session::getCsrfToken();
     <div class="pricing-card card-light-pink">
       <h3 class="plan-name">Plan Découverte</h3>
       <div class="plan-price">
-        <div class="price-big"><?= number_format((float)($_ENV['PRIX_MENSUEL_XAF'] ?? 2000), 0, ',', ' ') ?> FCFA</div>
+        <div class="price-big"><?= number_format($prixMensuel, 0, ',', ' ') ?> FCFA</div>
         <div class="price-sub">/ mois <sup>HT</sup></div>
       </div>
       <ul class="plan-features">
@@ -261,7 +263,7 @@ $csrfToken  = \Core\Session::getCsrfToken();
       </ul>
       <div class="plan-divider"></div>
       <button id="btn-payer-mensuel" class="btn-plan-pay" onclick="initierPaiement()">
-        Payer <?= number_format((float)($_ENV['PRIX_MENSUEL_XAF'] ?? 2000), 0, ',', ' ') ?> XAF / mois
+        Payer <?= number_format($prixMensuel, 0, ',', ' ') ?> XAF / mois
       </button>
     </div>
 
@@ -270,7 +272,7 @@ $csrfToken  = \Core\Session::getCsrfToken();
       <div class="popular-badge">LA PLUS POPULAIRE ✨</div>
       <h3 class="plan-name">CONNECT+</h3>
       <div class="plan-price">
-        <div class="price-big"><?= number_format((float)($_ENV['PRIX_ANNUEL_XAF'] ?? 15000), 0, ',', ' ') ?> FCFA</div>
+        <div class="price-big"><?= number_format($prixAnnuel, 0, ',', ' ') ?> FCFA</div>
         <div class="price-sub">/ année <sup>HT</sup></div>
       </div>
       <ul class="plan-features">
@@ -290,6 +292,7 @@ $csrfToken  = \Core\Session::getCsrfToken();
   <div class="pricing-footer">
     <a href="<?= url('/hub') ?>" style="color:var(--primary);">← Retour au Hub</a>
   </div>
+
 </div>
 
 <script>
@@ -321,12 +324,12 @@ async function initierPaiement() {
       const msg = data.error?.message ?? 'Une erreur est survenue. Réessayez.';
       showError(msg);
       btn.disabled = false;
-      btn.innerHTML = 'Payer <?= number_format((float)($_ENV['PRIX_MENSUEL_XAF'] ?? 2000), 0, ',', ' ') ?> XAF / mois';
+      btn.innerHTML = 'Payer <?= number_format($prixMensuel, 0, ',', ' ') ?> XAF / mois';
     }
   } catch (e) {
     showError('Erreur réseau. Vérifiez votre connexion et réessayez.');
     btn.disabled = false;
-    btn.innerHTML = 'Payer <?= number_format((float)($_ENV['PRIX_MENSUEL_XAF'] ?? 2000), 0, ',', ' ') ?> XAF / mois';
+    btn.innerHTML = 'Payer <?= number_format($prixMensuel, 0, ',', ' ') ?> XAF / mois';
   }
 }
 

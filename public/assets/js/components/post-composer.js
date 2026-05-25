@@ -109,9 +109,15 @@ const PostComposer = (() => {
         elements.textarea?.addEventListener('drop', (e) => {
             e.preventDefault();
             elements.textarea.style.borderColor = '';
-            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            const files = Array.from(e.dataTransfer.files).filter(f => allowedTypes.includes(f.type));
             if (files.length > 0) {
-                showImagePreview(files[0]);
+                const file = files[0];
+                if (file.size > 10 * 1024 * 1024) {
+                    App.toast.warning('Cette image est trop lourde, veuillez la changer (max 10 Mo).');
+                    return;
+                }
+                showImagePreview(file);
             }
         });
 
@@ -169,7 +175,8 @@ const PostComposer = (() => {
             return;
         }
         if (file.size > maxSize) {
-            App.toast.warning('Image trop lourde (max 10 Mo)');
+            App.toast.warning('Cette image est trop lourde, veuillez la changer (max 10 Mo).');
+            e.target.value = '';
             return;
         }
 

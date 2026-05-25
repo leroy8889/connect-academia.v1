@@ -172,7 +172,7 @@ if ($is2fa) {
       </div>
     <?php endif; ?>
 
-    <form action="<?= url('/admin/login') ?>" method="POST" autocomplete="off">
+    <form action="<?= url('/Administratorconnect/login') ?>" method="POST" autocomplete="off">
       <input type="hidden" name="_csrf_token" value="<?= \Core\Session::getCsrfToken() ?>">
 
       <div class="admin-field">
@@ -208,7 +208,7 @@ if ($is2fa) {
           <input type="checkbox" name="remember" value="1">
           Rester connecté
         </label>
-        <a href="<?= url('/admin/forgot-password') ?>" class="admin-forgot">Mot de passe oublié ?</a>
+        <a href="<?= url('/Administratorconnect/forgot-password') ?>" class="admin-forgot">Mot de passe oublié ?</a>
       </div>
 
       <button type="submit" class="btn-admin-primary" id="btn-login-submit"
@@ -247,7 +247,7 @@ if ($is2fa) {
         <div class="qr-label">SCANNEZ L'OTP</div>
     </div>
 
-    <form action="<?= url('/admin/verifier-2fa') ?>" method="POST" id="otp-form">
+    <form action="<?= url('/Administratorconnect/verifier-2fa') ?>" method="POST" id="otp-form">
       <input type="hidden" name="_csrf_token" value="<?= \Core\Session::getCsrfToken() ?>">
       <input type="hidden" name="otp_code_val" id="otp-code-hidden">
 

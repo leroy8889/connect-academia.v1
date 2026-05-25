@@ -29,6 +29,12 @@ const Feed = (() => {
     // ── Dropdown 3-points (délégation document) ─────
     function initDropdowns() {
         document.addEventListener('click', function (e) {
+            // Bouton "En savoir plus" — délégation globale
+            if (e.target.classList.contains('post-text-expand-btn')) {
+                expandPostContent(e.target);
+                return;
+            }
+
             const toggleBtn = e.target.closest('[data-dropdown-toggle]');
 
             if (toggleBtn) {
@@ -133,6 +139,8 @@ const Feed = (() => {
     }
 
     // ── Filtres ─────────────────────────────────────
+    const DEV_FILTERS = ['question', 'ressource', 'partage'];
+
     function initFilters() {
         elements.filterBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -141,6 +149,12 @@ const Feed = (() => {
 
                 // Lire data-filter en priorité, fallback data-type
                 const filterValue = btn.dataset.filter ?? btn.dataset.type ?? '';
+
+                // Filtres en cours de développement → popup, pas de changement d'état
+                if (DEV_FILTERS.includes(filterValue)) {
+                    openDevelopmentModal();
+                    return;
+                }
 
                 if (filterValue === currentFilter) return;
 
@@ -370,7 +384,7 @@ const Feed = (() => {
                 <img class="post-card__avatar" src="${App.escapeHtml(avatarUrl)}" alt="${App.escapeHtml(userName)}" loading="lazy">
                 <div class="post-card__info">
                     <div class="post-card__author">
-                        <a href="${baseUrl}/communaute/profil/${post.user_id}" class="post-card__name">${App.escapeHtml(userName)}</a>
+                        <a href="${baseUrl}/communaute/profil/${post.user_uuid}" class="post-card__name">${App.escapeHtml(userName)}</a>
                         ${badgeHtml}
                         ${typeBadge}
                     </div>
@@ -399,7 +413,7 @@ const Feed = (() => {
             </div>
 
             <div class="post-card__content">
-                <p class="post-card__text">${formatPostContent(post.contenu)}</p>
+                ${renderPostContent(post.contenu)}
                 ${tagsHtml}
             </div>
 
@@ -454,6 +468,29 @@ const Feed = (() => {
         // Newlines
         text = text.replace(/\n/g, '<br>');
         return text;
+    }
+
+    // ── Render Post Content with "En savoir plus" ───
+    const READ_MORE_LIMIT = 300;
+
+    function renderPostContent(content) {
+        if (!content || content.length <= READ_MORE_LIMIT) {
+            return `<p class="post-card__text">${formatPostContent(content || '')}</p>`;
+        }
+        const truncated = content.substring(0, READ_MORE_LIMIT);
+        return `<div class="post-card__content-wrapper" data-full-text="${App.escapeHtml(content)}">
+            <p class="post-card__text">${formatPostContent(truncated)}<span aria-hidden="true">…</span></p>
+            <button class="post-card__read-more post-text-expand-btn" type="button">En savoir plus</button>
+        </div>`;
+    }
+
+    function expandPostContent(btn) {
+        const wrapper = btn.closest('.post-card__content-wrapper');
+        if (!wrapper) return;
+        const rawText = wrapper.dataset.fullText;
+        const p = wrapper.querySelector('.post-card__text');
+        if (p) p.innerHTML = formatPostContent(rawText);
+        btn.remove();
     }
 
     // ── Like Toggle ─────────────────────────────────
@@ -607,6 +644,7 @@ const Feed = (() => {
         bookmarkPost,
         reportPost,
         loadSearchResults,
+        expandPostContent,
         destroy
     };
 })();

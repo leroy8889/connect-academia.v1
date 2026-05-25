@@ -711,6 +711,7 @@ function sv(array $s, string $key, mixed $default = ''): mixed {
           <select name="role" class="form-select" required>
             <option value="admin">Admin</option>
             <option value="moderateur">Modérateur</option>
+            <option value="moderateur_1">Modérateur 1</option>
             <option value="super_admin">Super Admin</option>
           </select>
         </div>

@@ -164,6 +164,35 @@ input, select, textarea { font-family: var(--font-sans, var(--font)); }
   text-decoration: none;
 }
 
+.navbar__nav-link--locked {
+  color: #9CA3AF;
+  cursor: pointer;
+  opacity: .75;
+}
+.navbar__nav-link--locked:hover {
+  color: #EF4444;
+  background: #FEF2F2;
+}
+
+.navbar__user-dropdown-item--locked {
+  color: #9CA3AF !important;
+  cursor: pointer;
+  opacity: .75;
+}
+.navbar__user-dropdown-item--locked:hover {
+  color: #EF4444 !important;
+  background: #FEF2F2;
+}
+
+.mobile-nav__link--locked {
+  color: #9CA3AF;
+  opacity: .75;
+}
+.mobile-nav__link--locked:hover {
+  background: #FEF2F2;
+  color: #EF4444;
+}
+
 .navbar__actions {
   display: flex;
   align-items: center;

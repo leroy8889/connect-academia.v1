@@ -210,7 +210,7 @@ if ($mysqlOk) {
     <h2>✅ Installation terminée !</h2>
     <p style="color:#6B7280;margin-bottom:1rem">La base de données a été créée. Voici vos identifiants admin :</p>
     <div class="creds">
-      <p><strong>URL Admin :</strong> <code><?= htmlspecialchars(rtrim($_ENV['APP_URL'] ?? '', '/') . '/admin/login') ?></code></p>
+      <p><strong>URL Admin :</strong> <code><?= htmlspecialchars(rtrim($_ENV['APP_URL'] ?? '', '/') . '/Administratorconnect/login') ?></code></p>
       <p><strong>Email :</strong> <code>admin@connect-academia.ga</code></p>
       <p><strong>Mot de passe :</strong> <code>Admin@2026!</code></p>
     </div>

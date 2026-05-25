@@ -1,34 +1,42 @@
 <?php
 // Variables attendues du DashboardController:
-// $kpi, $croissance, $parSerie, $dernieres, $activiteRecente, $activiteMatieres
+// $kpi, $croissance, $allCroissance, $parSerie, $dernieres, $activiteRecente, $activiteMatieres
 $kpi              = $kpi ?? [];
 $croissance       = $croissance ?? [];
+$allCroissance    = $allCroissance ?? [3 => [], 6 => $croissance, 12 => []];
 $parSerie         = $parSerie ?? [];
-$dernieres        = $dernieres ?? [];
-$activiteRecente  = $activiteRecente ?? [];
+$dernieres        = array_slice($dernieres ?? [], 0, 5);
+$activiteRecente  = array_slice($activiteRecente ?? [], 0, 5);
 $activiteMatieres = $activiteMatieres ?? [];
 
 $totalVues = array_sum(array_column($parSerie, 'nb'));
 
-$croissanceLabels = json_encode(array_column($croissance, 'mois'));
-$croissanceMonths = array_map('intval', array_column($croissance, 'nb'));
-$croissanceData   = json_encode($croissanceMonths);
+// Prépare les datasets pour les 3 périodes (3M, 6M, 12M) — utilisés par Chart.js
+function _buildPeriodDataset(array $rows): array {
+    $vals     = array_map('intval', array_column($rows, 'nb'));
+    $labels   = array_column($rows, 'mois');
+    $total    = array_sum($vals);
+    $bestIdx  = !empty($vals) ? (int) array_search(max($vals), $vals) : null;
+    $bestMois = $bestIdx !== null ? ($rows[$bestIdx]['mois'] ?? '—') : '—';
+    $bestVal  = !empty($vals) ? max($vals) : 0;
+    $avg      = !empty($vals) ? round(array_sum($vals) / count($vals), 1) : 0;
+    $taux     = (count($vals) >= 2 && $vals[0] > 0)
+        ? round((($vals[count($vals)-1] - $vals[0]) / $vals[0]) * 100, 1)
+        : null;
+    return compact('labels', 'vals', 'total', 'bestMois', 'bestVal', 'avg', 'taux');
+}
 
-// Cumul total pour stats strip
-$cumul = array_sum($croissanceMonths);
+$periodsDatasets = [
+    3  => _buildPeriodDataset($allCroissance[3]  ?? []),
+    6  => _buildPeriodDataset($allCroissance[6]  ?? $croissance),
+    12 => _buildPeriodDataset($allCroissance[12] ?? []),
+];
+$datasetsJSON = json_encode($periodsDatasets);
+$def          = $periodsDatasets[6]; // default period for initial HTML render
 
-// Stats strip
-$croissanceTotalPeriode = $cumul;
-$croissanceBestIdx      = !empty($croissanceMonths) ? array_search(max($croissanceMonths), $croissanceMonths) : null;
-$croissanceBestMois     = $croissanceBestIdx !== null ? ($croissance[$croissanceBestIdx]['mois'] ?? '—') : '—';
-$croissanceBestVal      = !empty($croissanceMonths) ? max($croissanceMonths) : 0;
-$croissanceMoyenne      = !empty($croissanceMonths) ? round(array_sum($croissanceMonths) / count($croissanceMonths), 1) : 0;
-$croissanceTaux         = (count($croissanceMonths) >= 2 && $croissanceMonths[0] > 0)
-    ? round((($croissanceMonths[count($croissanceMonths)-1] - $croissanceMonths[0]) / $croissanceMonths[0]) * 100, 1)
-    : null;
-$serieLabels      = json_encode(array_column($parSerie, 'serie'));
-$serieData        = json_encode(array_map('intval', array_column($parSerie, 'nb')));
-$serieCouleurs    = json_encode(array_column($parSerie, 'couleur'));
+$serieLabels   = json_encode(array_column($parSerie, 'serie'));
+$serieData     = json_encode(array_map('intval', array_column($parSerie, 'nb')));
+$serieCouleurs = json_encode(array_column($parSerie, 'couleur'));
 
 $maxConsult = max(1, max(array_column($activiteMatieres, 'nb_consultations') ?: [1]));
 
@@ -135,57 +143,77 @@ $kpiCards = [
 
   <!-- Croissance inscriptions -->
   <div class="chart-wrap" style="grid-column: 1 / -1;">
+
     <!-- En-tête -->
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:12px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:12px;flex-wrap:wrap;">
       <div>
-        <h3 style="margin-bottom:2px;">Croissance des inscriptions</h3>
-        <p style="margin-bottom:0;">Variation mensuelle des inscriptions — 6 derniers mois</p>
+        <h3 style="margin-bottom:3px;">Croissance des inscriptions</h3>
+        <p style="margin-bottom:0;">
+          Nouvelles inscriptions —
+          <span id="gc-period-label">6 derniers mois</span>
+        </p>
       </div>
-      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
-        <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--txt-m);">
-          <span style="width:20px;height:2.5px;border-radius:2px;background:#8B52FA;display:inline-block;"></span>
-          Inscriptions / mois
-        </span>
-        <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--txt-m);">
-          <span style="width:20px;height:2px;border-radius:2px;background:rgba(139,82,250,0.35);display:inline-block;border-top:2px dashed #8B52FA;"></span>
-          Moyenne
-        </span>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <!-- Légende -->
+        <div style="display:flex;gap:14px;align-items:center;">
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--txt-m);">
+            <span style="width:20px;height:2.5px;border-radius:2px;background:#8B52FA;display:inline-block;"></span>
+            Inscriptions
+          </span>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--txt-m);">
+            <svg width="20" height="6" style="overflow:visible;"><line x1="0" y1="3" x2="20" y2="3" stroke="rgba(139,82,250,0.45)" stroke-width="1.5" stroke-dasharray="5 3"/></svg>
+            Moyenne
+          </span>
+        </div>
+        <!-- Tabs de période -->
+        <div class="period-tabs" role="tablist" aria-label="Période d'analyse">
+          <button class="period-tab" data-period="3" role="tab" aria-selected="false">3M</button>
+          <button class="period-tab active" data-period="6" role="tab" aria-selected="true">6M</button>
+          <button class="period-tab" data-period="12" role="tab" aria-selected="false">12M</button>
+        </div>
       </div>
     </div>
 
-    <!-- Strip de statistiques rapides -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">
+    <!-- Stats strip (dynamique — mis à jour par JS lors du changement de période) -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;">
+
       <div style="background:rgba(139,82,250,0.06);border:1px solid rgba(139,82,250,0.15);border-radius:8px;padding:10px 14px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-m);margin-bottom:4px;">Total période</div>
-        <div style="font-size:20px;font-weight:800;font-family:var(--font-head);color:var(--txt);"><?= number_format($croissanceTotalPeriode) ?></div>
+        <div id="gc-stat-total" style="font-size:20px;font-weight:800;font-family:var(--font-head);color:var(--txt);"><?= number_format($def['total']) ?></div>
         <div style="font-size:10px;color:var(--txt-l);">inscriptions</div>
       </div>
+
       <div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:8px;padding:10px 14px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-m);margin-bottom:4px;">Meilleur mois</div>
-        <div style="font-size:20px;font-weight:800;font-family:var(--font-head);color:var(--txt);"><?= number_format($croissanceBestVal) ?></div>
-        <div style="font-size:10px;color:var(--txt-l);"><?= htmlspecialchars($croissanceBestMois) ?></div>
+        <div id="gc-stat-best-val" style="font-size:20px;font-weight:800;font-family:var(--font-head);color:var(--txt);"><?= number_format($def['bestVal']) ?></div>
+        <div id="gc-stat-best-mois" style="font-size:10px;color:var(--txt-l);"><?= e($def['bestMois']) ?></div>
       </div>
+
       <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;padding:10px 14px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-m);margin-bottom:4px;">Moyenne / mois</div>
-        <div style="font-size:20px;font-weight:800;font-family:var(--font-head);color:var(--txt);"><?= number_format($croissanceMoyenne, 1) ?></div>
+        <div id="gc-stat-avg" style="font-size:20px;font-weight:800;font-family:var(--font-head);color:var(--txt);"><?= number_format($def['avg'], 1) ?></div>
         <div style="font-size:10px;color:var(--txt-l);">inscriptions</div>
       </div>
-      <div style="background:<?= $croissanceTaux === null ? 'rgba(152,152,176,0.06)' : ($croissanceTaux >= 0 ? 'rgba(34,197,94,0.06)' : 'rgba(239,68,68,0.06)') ?>;border:1px solid <?= $croissanceTaux === null ? 'rgba(152,152,176,0.15)' : ($croissanceTaux >= 0 ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)') ?>;border-radius:8px;padding:10px 14px;">
+
+      <?php
+        $defTaux   = $def['taux'];
+        $tauxBg    = $defTaux === null ? 'rgba(152,152,176,0.06)' : ($defTaux >= 0 ? 'rgba(34,197,94,0.06)' : 'rgba(239,68,68,0.06)');
+        $tauxBd    = $defTaux === null ? 'rgba(152,152,176,0.15)' : ($defTaux >= 0 ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)');
+        $tauxColor = $defTaux === null ? 'var(--txt-l)' : ($defTaux >= 0 ? '#22C55E' : '#EF4444');
+        $tauxTxt   = $defTaux === null ? '—' : (($defTaux >= 0 ? '+' : '') . number_format($defTaux, 1) . '%');
+        $tauxSub   = $defTaux === null ? 'données insuffisantes' : '1er → dernier mois';
+      ?>
+      <div id="gc-stat-taux-wrap" style="background:<?= $tauxBg ?>;border:1px solid <?= $tauxBd ?>;border-radius:8px;padding:10px 14px;transition:background .25s,border-color .25s;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-m);margin-bottom:4px;">Évolution</div>
-        <?php if ($croissanceTaux !== null): ?>
-        <div style="font-size:20px;font-weight:800;font-family:var(--font-head);color:<?= $croissanceTaux >= 0 ? '#22C55E' : '#EF4444' ?>;">
-          <?= $croissanceTaux >= 0 ? '+' : '' ?><?= number_format($croissanceTaux, 1) ?>%
-        </div>
-        <div style="font-size:10px;color:var(--txt-l);">1er → dernier mois</div>
-        <?php else: ?>
-        <div style="font-size:20px;font-weight:800;font-family:var(--font-head);color:var(--txt-l);">—</div>
-        <div style="font-size:10px;color:var(--txt-l);">données insuffisantes</div>
-        <?php endif; ?>
+        <div id="gc-stat-taux" style="font-size:20px;font-weight:800;font-family:var(--font-head);color:<?= $tauxColor ?>;"><?= $tauxTxt ?></div>
+        <div id="gc-stat-taux-sub" style="font-size:10px;color:var(--txt-l);"><?= $tauxSub ?></div>
       </div>
     </div>
 
     <!-- Canvas -->
-    <canvas id="chartCroissance" height="100"></canvas>
+    <div class="chart-canvas-wrap">
+      <canvas id="chartCroissance" height="95"></canvas>
+    </div>
   </div>
 
   <!-- Activité par matière -->
@@ -311,61 +339,132 @@ $kpiCards = [
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-(function() {
-  const primary = '#8B52FA';
-  const gridColor = '#EBEBF5';
-  const tickColor = '#9898B0';
+/* ── Croissance des inscriptions ──────────────────────────── */
+(function () {
+  const PERIODS = <?= $datasetsJSON ?>;
+  const PRIMARY = '#8B52FA';
+  const TICK    = '#9898B0';
+  const GRID    = 'rgba(235,235,245,0.9)';
 
-  // Croissance — courbe de variation
-  const ctx1 = document.getElementById('chartCroissance');
-  if (ctx1) {
-    const c2d    = ctx1.getContext('2d');
-    const h      = ctx1.clientHeight || 220;
+  let chart        = null;
+  let activePeriod = 6;
 
-    const gradFill = c2d.createLinearGradient(0, 0, 0, h);
-    gradFill.addColorStop(0,   'rgba(139,82,250,0.28)');
-    gradFill.addColorStop(0.6, 'rgba(139,82,250,0.06)');
-    gradFill.addColorStop(1,   'rgba(139,82,250,0)');
+  const PERIOD_LABELS = { 3: '3 derniers mois', 6: '6 derniers mois', 12: '12 derniers mois' };
 
-    const monthlyData = <?= $croissanceData ?>;
-    const labels      = <?= $croissanceLabels ?>;
-    const avg         = monthlyData.length ? monthlyData.reduce((a,b) => a+b, 0) / monthlyData.length : 0;
-    const avgLine     = monthlyData.map(() => Math.round(avg * 10) / 10);
+  function makeGradient(ctx2d, height) {
+    const g = ctx2d.createLinearGradient(0, 0, 0, height);
+    g.addColorStop(0,    'rgba(139,82,250,0.20)');
+    g.addColorStop(0.55, 'rgba(139,82,250,0.07)');
+    g.addColorStop(1,    'rgba(139,82,250,0)');
+    return g;
+  }
 
-    // delta mois/mois
-    const deltas = monthlyData.map((v, i) => {
-      if (i === 0 || monthlyData[i-1] === 0) return null;
-      return ((v - monthlyData[i-1]) / monthlyData[i-1] * 100).toFixed(1);
+  function getDeltas(vals) {
+    return vals.map((v, i) => {
+      if (i === 0 || vals[i - 1] === 0) return null;
+      return ((v - vals[i - 1]) / vals[i - 1] * 100).toFixed(1);
     });
+  }
 
-    new Chart(ctx1, {
+  /* plugin inline : étiquettes de valeur + badge pic */
+  const peakPlugin = {
+    id: 'peakPlugin',
+    afterDatasetsDraw(ch) {
+      const { ctx: c, data } = ch;
+      const meta = ch.getDatasetMeta(0);
+      const vals = data.datasets[0].data;
+      if (!vals.length) return;
+      const peak = Math.max(...vals);
+
+      meta.data.forEach((pt, i) => {
+        const v = vals[i];
+        if (v == null) return;
+        const isPeak = v === peak && peak > 0;
+        c.save();
+
+        if (isPeak) {
+          /* badge violet arrondi */
+          const lbl = String(v);
+          c.font = 'bold 11px system-ui,-apple-system';
+          const tw = c.measureText(lbl).width;
+          const pw = tw + 14, ph = 18;
+          const px = pt.x - pw / 2;
+          const py = pt.y - 42;
+          /* fond */
+          c.fillStyle = PRIMARY;
+          c.beginPath();
+          c.roundRect(px, py, pw, ph, 5);
+          c.fill();
+          /* petite flèche vers le bas */
+          c.fillStyle = PRIMARY;
+          c.beginPath();
+          c.moveTo(pt.x - 4, py + ph);
+          c.lineTo(pt.x + 4, py + ph);
+          c.lineTo(pt.x,     py + ph + 5);
+          c.closePath();
+          c.fill();
+          /* texte */
+          c.fillStyle = '#fff';
+          c.textAlign = 'center';
+          c.textBaseline = 'middle';
+          c.fillText(lbl, pt.x, py + ph / 2);
+        } else {
+          /* étiquette simple */
+          c.fillStyle = PRIMARY;
+          c.font = '600 11px system-ui,-apple-system';
+          c.textAlign = 'center';
+          c.textBaseline = 'bottom';
+          c.globalAlpha = 0.80;
+          c.fillText(v, pt.x, pt.y - 10);
+        }
+        c.restore();
+      });
+    }
+  };
+
+  function buildChart(period) {
+    const d = PERIODS[period];
+    const canvas = document.getElementById('chartCroissance');
+    if (!canvas || !d) return;
+
+    if (chart) { chart.destroy(); chart = null; }
+
+    const ctx2d  = canvas.getContext('2d');
+    const height = canvas.clientHeight || 260;
+    const vals   = d.vals;
+    const peak   = vals.length ? Math.max(...vals) : 0;
+    const deltas = getDeltas(vals);
+    const avgArr = vals.map(() => d.avg);
+    const grad   = makeGradient(ctx2d, height);
+
+    chart = new Chart(canvas, {
       type: 'line',
       data: {
-        labels,
+        labels: d.labels,
         datasets: [
           {
             label: 'Inscriptions',
-            data: monthlyData,
-            borderColor: '#8B52FA',
-            backgroundColor: gradFill,
-            borderWidth: 3,
-            pointRadius: 6,
-            pointBackgroundColor: '#8B52FA',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2.5,
-            pointHoverRadius: 9,
+            data: vals,
+            borderColor: PRIMARY,
+            backgroundColor: grad,
+            borderWidth: 2.5,
+            pointRadius: vals.map(v => v === peak && peak > 0 ? 7 : 5),
+            pointBackgroundColor: vals.map(v => v === peak && peak > 0 ? '#fff' : PRIMARY),
+            pointBorderColor:     vals.map(v => v === peak && peak > 0 ? PRIMARY : '#fff'),
+            pointBorderWidth:     vals.map(v => v === peak && peak > 0 ? 3 : 2),
+            pointHoverRadius: 8,
             pointHoverBackgroundColor: '#fff',
-            pointHoverBorderColor: '#8B52FA',
-            pointHoverBorderWidth: 3,
+            pointHoverBorderColor: PRIMARY,
+            pointHoverBorderWidth: 2.5,
             fill: true,
-            tension: 0.45,
+            tension: 0.42,
           },
           {
             label: 'Moyenne',
-            data: avgLine,
-            borderColor: 'rgba(139,82,250,0.35)',
+            data: avgArr,
+            borderColor: 'rgba(139,82,250,0.32)',
             borderWidth: 1.5,
-            borderDash: [5, 4],
+            borderDash: [6, 4],
             pointRadius: 0,
             pointHoverRadius: 0,
             fill: false,
@@ -377,31 +476,37 @@ $kpiCards = [
         responsive: true,
         maintainAspectRatio: true,
         interaction: { mode: 'index', intersect: false },
-        animation: { duration: 1000, easing: 'easeInOutQuart' },
+        animation: { duration: 520, easing: 'easeInOutQuart' },
+        layout: { padding: { top: 30 } },
         plugins: {
           legend: { display: false },
           tooltip: {
             backgroundColor: '#13112A',
             titleColor: '#fff',
-            bodyColor: 'rgba(255,255,255,0.7)',
-            padding: 14,
+            bodyColor: 'rgba(255,255,255,0.72)',
+            padding: { x: 14, y: 12 },
             cornerRadius: 10,
-            borderColor: 'rgba(139,82,250,0.3)',
+            borderColor: 'rgba(139,82,250,0.30)',
             borderWidth: 1,
             displayColors: false,
             callbacks: {
-              title: (items) => items[0].label,
-              label: (item) => {
+              title: items => items[0].label,
+              label: item => {
                 if (item.datasetIndex === 1) return null;
-                return `  ${item.parsed.y} inscription${item.parsed.y > 1 ? 's' : ''}`;
+                const v = item.parsed.y;
+                return `  ${v} inscription${v > 1 ? 's' : ''}`;
               },
-              afterLabel: (item) => {
+              afterLabel: item => {
                 if (item.datasetIndex === 1) return null;
-                const d = deltas[item.dataIndex];
-                if (d === null) return `  Moyenne : ${Math.round(avg)}`;
-                const arrow = parseFloat(d) >= 0 ? '↑' : '↓';
-                const color = parseFloat(d) >= 0 ? '+' : '';
-                return [`  ${arrow} ${color}${d}% vs mois préc.`, `  Moyenne : ${Math.round(avg)}`];
+                const delta = deltas[item.dataIndex];
+                const lines = [];
+                if (delta !== null) {
+                  const up   = parseFloat(delta) >= 0;
+                  const sign = up ? '+' : '';
+                  lines.push(`  ${up ? '↑' : '↓'} ${sign}${delta}% vs mois préc.`);
+                }
+                lines.push(`  Moy. : ${d.avg} / mois`);
+                return lines;
               }
             }
           }
@@ -409,61 +514,95 @@ $kpiCards = [
         scales: {
           y: {
             beginAtZero: true,
-            grid: { color: gridColor },
+            grid: { color: GRID, drawBorder: false },
+            border: { display: false },
             ticks: {
-              color: tickColor,
+              color: TICK,
               font: { size: 11 },
               stepSize: 1,
-              callback: (v) => Number.isInteger(v) ? v : null,
+              padding: 6,
+              callback: v => Number.isInteger(v) ? v : null,
             },
+            suggestedMax: peak + Math.max(2, Math.ceil(peak * 0.18)),
           },
           x: {
             grid: { display: false },
-            ticks: { color: tickColor, font: { size: 11 } },
+            border: { display: false },
+            ticks: { color: TICK, font: { size: 11 }, padding: 6 },
           }
         }
       },
-      plugins: [{
-        id: 'pointLabels',
-        afterDatasetsDraw(chart) {
-          const { ctx: c, data } = chart;
-          const meta = chart.getDatasetMeta(0);
-          meta.data.forEach((pt, i) => {
-            const val = data.datasets[0].data[i];
-            if (val == null) return;
-            c.save();
-            c.fillStyle = '#8B52FA';
-            c.font = 'bold 11px system-ui';
-            c.textAlign = 'center';
-            c.textBaseline = 'bottom';
-            c.fillText(val, pt.x, pt.y - 10);
-            c.restore();
-          });
-        }
-      }]
+      plugins: [peakPlugin]
     });
+
+    /* stats strip */
+    updateStats(d, period);
   }
 
-  // Séries donut
-  const ctx2 = document.getElementById('chartSeries');
-  if (ctx2) {
-    const labels   = <?= $serieLabels ?>;
-    const dataVals = <?= $serieData ?>;
-    const colors   = <?= $serieCouleurs ?>;
-    if (labels.length > 0) {
-      new Chart(ctx2, {
-        type: 'doughnut',
-        data: { labels, datasets: [{ data: dataVals, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
-        options: {
-          responsive: false,
-          cutout: '68%',
-          plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} élèves` } }
-          }
-        }
-      });
+  function updateStats(d, period) {
+    document.getElementById('gc-period-label').textContent = PERIOD_LABELS[period] || `${period} mois`;
+
+    const fmt = n => Number(n).toLocaleString('fr-FR');
+    document.getElementById('gc-stat-total').textContent    = fmt(d.total);
+    document.getElementById('gc-stat-best-val').textContent = fmt(d.bestVal);
+    document.getElementById('gc-stat-best-mois').textContent = d.bestMois;
+    document.getElementById('gc-stat-avg').textContent = Number(d.avg).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+    const wrap    = document.getElementById('gc-stat-taux-wrap');
+    const tauxEl  = document.getElementById('gc-stat-taux');
+    const tauxSub = document.getElementById('gc-stat-taux-sub');
+    if (d.taux === null) {
+      wrap.style.background   = 'rgba(152,152,176,0.06)';
+      wrap.style.borderColor  = 'rgba(152,152,176,0.15)';
+      tauxEl.style.color      = 'var(--txt-l)';
+      tauxEl.textContent      = '—';
+      tauxSub.textContent     = 'données insuffisantes';
+    } else {
+      const up = d.taux >= 0;
+      wrap.style.background  = up ? 'rgba(34,197,94,0.06)' : 'rgba(239,68,68,0.06)';
+      wrap.style.borderColor = up ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)';
+      tauxEl.style.color     = up ? '#22C55E' : '#EF4444';
+      tauxEl.textContent     = (up ? '+' : '') + parseFloat(d.taux).toFixed(1) + '%';
+      tauxSub.textContent    = '1er → dernier mois';
     }
   }
+
+  /* tabs */
+  document.querySelectorAll('.period-tab').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const p = parseInt(this.dataset.period, 10);
+      if (p === activePeriod) return;
+      activePeriod = p;
+      document.querySelectorAll('.period-tab').forEach(b => {
+        b.classList.toggle('active', b === this);
+        b.setAttribute('aria-selected', b === this ? 'true' : 'false');
+      });
+      buildChart(p);
+    });
+  });
+
+  buildChart(activePeriod);
+})();
+
+/* ── Répartition par série (donut) ────────────────────────── */
+(function () {
+  const ctx2 = document.getElementById('chartSeries');
+  if (!ctx2) return;
+  const labels   = <?= $serieLabels ?>;
+  const dataVals = <?= $serieData ?>;
+  const colors   = <?= $serieCouleurs ?>;
+  if (!labels.length) return;
+  new Chart(ctx2, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: dataVals, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
+    options: {
+      responsive: false,
+      cutout: '68%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} élèves` } }
+      }
+    }
+  });
 })();
 </script>

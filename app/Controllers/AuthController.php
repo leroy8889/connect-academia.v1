@@ -166,140 +166,296 @@ class AuthController
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             Session::flash('errors', ['email' => 'Adresse email invalide.']);
+            Session::flash('old', ['email' => $email]);
             Response::redirect('/auth/mot-de-passe-oublie');
         }
 
+        // Rate limiting — par IP : 5 req / 15 min
+        $rlIp = RateLimiter::ipKey('forgot');
+        if (RateLimiter::tooManyAttempts($rlIp, 5)) {
+            $wait = max(1, (int) ceil(RateLimiter::availableIn($rlIp) / 60));
+            Session::flash('errors', ['general' => "Trop de tentatives. Réessayez dans {$wait} minute(s)."]);
+            Response::redirect('/auth/mot-de-passe-oublie');
+        }
+
+        // Rate limiting — par email : 3 req / 15 min (réponse identique = anti-énumération)
+        $rlEmail = RateLimiter::emailKey('forgot', $email);
+        if (RateLimiter::tooManyAttempts($rlEmail, 3)) {
+            Session::flash('success', 'Si cette adresse est enregistrée, vous recevrez un email sous peu.');
+            Response::redirect('/auth/mot-de-passe-oublie');
+        }
+
+        RateLimiter::hit($rlIp,    900); // fenêtre 15 min
+        RateLimiter::hit($rlEmail, 900);
+
         $userModel = new User();
-        $user = $userModel->findByEmail($email);
+        $user      = $userModel->findByEmail($email);
 
         if ($user) {
-            $token = bin2hex(random_bytes(32));
+            // Token cryptographique 256 bits — stocké hashé (SHA-256) en base
+            $token     = bin2hex(random_bytes(32));
+            $tokenHash = hash('sha256', $token);
+
             try {
                 $db = \Core\Database::getInstance()->getConnection();
-                $stmt = $db->prepare("DELETE FROM password_resets WHERE email = ?");
-                $stmt->execute([$email]);
 
-                $stmt = $db->prepare("INSERT INTO password_resets (email, token, created_at) VALUES (?, ?, ?)");
-                $stmt->execute([$email, $token, date('Y-m-d H:i:s')]);
+                // Supprime tout token précédent (un seul reset actif par compte)
+                $db->prepare("DELETE FROM password_resets WHERE email = ?")
+                   ->execute([$email]);
 
-                // Appel de l'envoi du mail
-                $this->sendResetEmail($email, $token);
+                $db->prepare("INSERT INTO password_resets (email, token_hash, created_at) VALUES (?, ?, NOW())")
+                   ->execute([$email, $tokenHash]);
+
+                $this->sendResetEmail($email, $token, $user['prenom'] ?? '');
 
             } catch (\Exception $e) {
-                error_log("Erreur BDD forgot: " . $e->getMessage());
-                Session::flash('errors', ['general' => 'Erreur technique de base de données.']);
-                Response::redirect('/auth/mot-de-passe-oublie');
+                error_log("Forgot password error: " . $e->getMessage());
+                // Erreur silencieuse — réponse identique (anti-énumération)
             }
         }
 
-        // Utilise la clé 'success' attendue par ta vue
+        // Toujours la même réponse, qu'il y ait un compte ou non
         Session::flash('success', 'Si cette adresse est enregistrée, vous recevrez un email sous peu.');
         Response::redirect('/auth/mot-de-passe-oublie');
     }
 
-    private function sendResetEmail(string $email, string $token): void
+    private function sendResetEmail(string $email, string $token, string $prenom = ''): void
     {
         $mail = new PHPMailer(true);
         try {
             $mail->isSMTP();
-            $mail->Host       = 'smtp.gmail.com';
-            $mail->SMTPAuth   = true;
-            $mail->Username   = 'nguemaferdinand02@gmail.com'; 
-            $mail->Password   = 'plauhcjfwnxapcja'; 
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-            $mail->Port       = 465;
-            $mail->CharSet    = 'UTF-8';
+            $mail->Host     = $_ENV['MAIL_HOST']     ?? 'smtp.gmail.com';
+            $mail->SMTPAuth = true;
+            $mail->Username = $_ENV['MAIL_USERNAME']  ?? '';
+            $mail->Password = $_ENV['MAIL_PASSWORD']  ?? '';
+            $mail->Port     = (int) ($_ENV['MAIL_PORT'] ?? 465);
+            $mail->CharSet  = 'UTF-8';
 
-            // Options pour éviter les blocages SSL en local
-            $mail->SMTPOptions = [
-                'ssl' => [
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
-                    'allow_self_signed' => true
-                ]
-            ];
+            $enc = strtolower($_ENV['MAIL_ENCRYPTION'] ?? 'smtps');
+            $mail->SMTPSecure = ($enc === 'tls')
+                ? PHPMailer::ENCRYPTION_STARTTLS
+                : PHPMailer::ENCRYPTION_SMTPS;
 
-            $mail->setFrom('security@connectacademia.com', "Connect'Academia");
+            // SSL strict en production — désactivé uniquement en local/dev
+            if (($_ENV['APP_ENV'] ?? 'production') !== 'production') {
+                $mail->SMTPOptions = [
+                    'ssl' => [
+                        'verify_peer'       => false,
+                        'verify_peer_name'  => false,
+                        'allow_self_signed' => true,
+                    ],
+                ];
+            }
+
+            $mail->setFrom(
+                $_ENV['MAIL_FROM_ADDRESS'] ?? 'security@connectacademia.com',
+                $_ENV['MAIL_FROM_NAME']    ?? "Connect'Academia"
+            );
             $mail->addAddress($email);
             $mail->isHTML(true);
-            $mail->Subject = "Réinitialisation de votre mot de passe";
+            $mail->Subject = "Réinitialise ton mot de passe — Connect'Academia";
 
-            $link = "http://localhost:8000/auth/reinitialiser/" . $token;
+            // URL robuste : APP_URL en prod, reconstruction dynamique en dev
+            $appUrl = rtrim($_ENV['APP_URL'] ?? '', '/');
+            if (!$appUrl) {
+                $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                $appUrl = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . rtrim(BASE_URL, '/');
+            }
+            $link = $appUrl . '/auth/reinitialiser/' . $token;
+            $name = htmlspecialchars($prenom ?: 'Étudiant', ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
-            $mail->Body = "
-                <div style='background: #1c1c1e; color: #ffffff; padding: 40px; font-family: sans-serif; border-radius: 20px;'>
-                    <h2 style='color: #8C52FF;'>Bonjour,</h2>
-                    <p>Vous avez demandé la réinitialisation de votre mot de passe Connect'Academia.</p>
-                    <p>Cliquez sur le bouton ci-dessous pour continuer :</p>
-                    <div style='text-align: center; margin: 30px 0;'>
-                        <a href='$link' style='display: inline-block; padding: 15px 25px; background: #8C52FF; color: white; text-decoration: none; border-radius: 10px; font-weight: bold;'>Réinitialiser mon mot de passe</a>
-                    </div>
-                    <p style='font-size: 12px; color: #94a3b8;'>Si vous n'êtes pas à l'origine de cette demande, ignorez cet email. Ce lien expirera dans 1 heure.</p>
-                </div>";
+            $mail->Body    = $this->buildResetEmailHtml($name, $link);
+            $mail->AltBody = "Bonjour {$name},\n\nRéinitialise ton mot de passe ici : {$link}\n\nCe lien expire dans 1 heure. Usage unique.\n\nSi tu n'es pas à l'origine de cette demande, ignore cet email.";
 
             $mail->send();
         } catch (Exception $e) {
-            error_log("Erreur PHPMailer : " . $mail->ErrorInfo);
-            // Si le mail échoue, on flash l'erreur technique pour le debug
-            Session::flash('errors', ['general' => "Le mail n'a pas pu être envoyé : " . $mail->ErrorInfo]);
+            error_log("PHPMailer reset error: " . ($mail->ErrorInfo ?: $e->getMessage()));
+            throw new \RuntimeException("Envoi email échoué : " . ($mail->ErrorInfo ?: $e->getMessage()));
         }
+    }
+
+    private function buildResetEmailHtml(string $name, string $link): string
+    {
+        $safeLink = htmlspecialchars($link, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $year     = date('Y');
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Réinitialisation de mot de passe</title>
+</head>
+<body style="margin:0;padding:0;background:#0A0A0F;font-family:'Segoe UI',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#0A0A0F;padding:40px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:560px;">
+
+      <!-- En-tête logo -->
+      <tr><td align="center" style="padding-bottom:28px;">
+        <table cellpadding="0" cellspacing="0" role="presentation">
+          <tr><td style="background:linear-gradient(135deg,#8B52FA,#7440D9);width:48px;height:48px;border-radius:14px;text-align:center;vertical-align:middle;">
+            <span style="color:#fff;font-size:22px;line-height:48px;">&#128274;</span>
+          </td></tr>
+        </table>
+        <p style="margin:14px 0 0;color:#8B52FA;font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;">CONNECT'ACADEMIA</p>
+      </td></tr>
+
+      <!-- Carte principale -->
+      <tr><td style="background:#16161E;border-radius:20px;padding:40px 36px;border:1px solid rgba(255,255,255,0.07);">
+
+        <p style="margin:0 0 6px;color:#FFFFFF;font-size:22px;font-weight:700;line-height:1.3;">Réinitialise ton mot de passe</p>
+        <p style="margin:0 0 28px;color:#9E9E9E;font-size:14px;line-height:1.65;">
+          Bonjour <strong style="color:#FFFFFF;">{$name}</strong>,<br>
+          nous avons reçu une demande de réinitialisation de mot de passe pour ton compte Connect'Academia.
+          Clique sur le bouton ci-dessous pour en choisir un nouveau.
+        </p>
+
+        <!-- Bouton CTA -->
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+          <tr><td align="center" style="padding:4px 0 32px;">
+            <a href="{$safeLink}"
+               style="display:inline-block;background:#8B52FA;color:#FFFFFF;text-decoration:none;padding:15px 38px;border-radius:50px;font-size:15px;font-weight:600;letter-spacing:0.2px;">
+              Réinitialiser mon mot de passe
+            </a>
+          </td></tr>
+        </table>
+
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+          <tr><td style="border-top:1px solid rgba(255,255,255,0.07);padding-top:28px;">
+
+            <!-- Expiration -->
+            <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+              <tr><td style="background:rgba(139,82,250,0.09);border:1px solid rgba(139,82,250,0.20);border-radius:12px;padding:13px 16px;">
+                <p style="margin:0;color:#A87EFB;font-size:13px;line-height:1.5;">
+                  &#9200;&nbsp; Ce lien est valide pendant <strong>1 heure</strong> uniquement et ne peut être utilisé qu'<strong>une seule fois</strong>.
+                </p>
+              </td></tr>
+            </table>
+
+            <!-- URL secours -->
+            <p style="margin:22px 0 4px;color:#6B7280;font-size:12px;">Si le bouton ne s'affiche pas, copie ce lien dans ton navigateur :</p>
+            <p style="margin:0;word-break:break-all;font-size:11px;color:#4A4A6A;">{$safeLink}</p>
+
+            <!-- Avis sécurité -->
+            <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-top:24px;">
+              <tr><td style="background:rgba(255,82,82,0.06);border-left:3px solid rgba(255,82,82,0.35);border-radius:0 8px 8px 0;padding:12px 14px;">
+                <p style="margin:0;color:#9E9E9E;font-size:12px;line-height:1.6;">
+                  &#128737;&nbsp; Si tu n'es pas à l'origine de cette demande, ignore cet email. Ton mot de passe restera inchangé.
+                </p>
+              </td></tr>
+            </table>
+
+          </td></tr>
+        </table>
+
+      </td></tr>
+
+      <!-- Pied de page -->
+      <tr><td align="center" style="padding-top:28px;">
+        <p style="margin:0;color:#3A3A4A;font-size:12px;">© {$year} Connect'Academia — Gabon</p>
+        <p style="margin:5px 0 0;color:#3A3A4A;font-size:11px;">Ce message est automatique, merci de ne pas y répondre.</p>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>
+HTML;
     }
 
     public function showReset(string $token): void
     {
-        $db = \Core\Database::getInstance()->getConnection();
-        $stmt = $db->prepare("SELECT * FROM password_resets WHERE token = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)");
-        $stmt->execute([$token]);
+        // Validation format avant toute requête DB
+        if (empty($token) || strlen($token) !== 64 || !ctype_xdigit($token)) {
+            Session::flash('errors', ['general' => 'Lien de réinitialisation invalide.']);
+            Response::redirect('/auth/mot-de-passe-oublie');
+        }
+
+        $tokenHash = hash('sha256', $token);
+
+        $db   = \Core\Database::getInstance()->getConnection();
+        $stmt = $db->prepare(
+            "SELECT email FROM password_resets
+             WHERE token_hash = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)"
+        );
+        $stmt->execute([$tokenHash]);
         $reset = $stmt->fetch();
 
         if (!$reset) {
-            Session::flash('errors', ['general' => 'Le lien est invalide ou a expiré.']);
+            Session::flash('errors', ['general' => 'Ce lien est expiré ou invalide. Faites une nouvelle demande.']);
             Response::redirect('/auth/mot-de-passe-oublie');
         }
 
         Response::view('auth/reinitialiser', [
             'pageTitle' => "Nouveau mot de passe — Connect'Academia",
-            'token'     => htmlspecialchars($token),
+            'token'     => $token,
             'errors'    => Session::getFlash('errors', []),
         ], 'auth');
     }
 
     public function reset(): void
     {
-        $token    = $_POST['token'] ?? '';
-        $password = $_POST['password'] ?? '';
+        $token    = $_POST['token']                 ?? '';
+        $password = $_POST['password']              ?? '';
         $confirm  = $_POST['password_confirmation'] ?? '';
 
-        if (empty($token) || strlen($password) < 8 || $password !== $confirm) {
-            Session::flash('errors', ['general' => 'Informations invalides (min 8 caractères).']);
+        // Validation format token
+        if (empty($token) || strlen($token) !== 64 || !ctype_xdigit($token)) {
+            Session::flash('errors', ['general' => 'Token invalide.']);
+            Response::redirect('/auth/mot-de-passe-oublie');
+        }
+
+        // Validation mot de passe
+        if (strlen($password) < 8) {
+            Session::flash('errors', ['password' => 'Le mot de passe doit contenir au moins 8 caractères.']);
             Response::redirect('/auth/reinitialiser/' . $token);
         }
 
-        try {
-            $db = \Core\Database::getInstance()->getConnection();
-            $stmt = $db->prepare("SELECT email FROM password_resets WHERE token = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)");
-            $stmt->execute([$token]);
-            $reset = $stmt->fetch();
-
-            if ($reset) {
-                $userModel = new User();
-                $hashedPassword = password_hash($password, PASSWORD_ARGON2ID);
-                
-                $update = $db->prepare("UPDATE users SET password_hash = ? WHERE email = ?");
-                $update->execute([$hashedPassword, $reset['email']]);
-
-                $delete = $db->prepare("DELETE FROM password_resets WHERE email = ?");
-                $delete->execute([$reset['email']]);
-
-                Session::flash('success', 'Votre mot de passe a été mis à jour.');
-                Response::redirect('/auth/connexion');
-            }
-        } catch (\Exception $e) {
-            error_log("Reset error: " . $e->getMessage());
+        if ($password !== $confirm) {
+            Session::flash('errors', ['password_confirmation' => 'Les mots de passe ne correspondent pas.']);
+            Response::redirect('/auth/reinitialiser/' . $token);
         }
 
-        Session::flash('errors', ['general' => 'Une erreur est survenue.']);
-        Response::redirect('/auth/mot-de-passe-oublie');
+        $tokenHash = hash('sha256', $token);
+
+        try {
+            $db   = \Core\Database::getInstance()->getConnection();
+            $stmt = $db->prepare(
+                "SELECT email FROM password_resets
+                 WHERE token_hash = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)"
+            );
+            $stmt->execute([$tokenHash]);
+            $reset = $stmt->fetch();
+
+            if (!$reset) {
+                Session::flash('errors', ['general' => 'Ce lien est expiré ou invalide. Faites une nouvelle demande.']);
+                Response::redirect('/auth/mot-de-passe-oublie');
+            }
+
+            $email          = $reset['email'];
+            $hashedPassword = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+
+            // Met à jour le mot de passe
+            $db->prepare("UPDATE users SET password_hash = ?, updated_at = NOW() WHERE email = ? AND is_deleted = 0")
+               ->execute([$hashedPassword, $email]);
+
+            // Supprime le token immédiatement (usage unique garanti)
+            $db->prepare("DELETE FROM password_resets WHERE email = ?")
+               ->execute([$email]);
+
+            // Libère le rate limiter email
+            RateLimiter::clear(RateLimiter::emailKey('forgot', $email));
+
+        } catch (\Exception $e) {
+            error_log("Password reset error: " . $e->getMessage());
+            Session::flash('errors', ['general' => 'Une erreur technique est survenue. Veuillez réessayer.']);
+            Response::redirect('/auth/mot-de-passe-oublie');
+        }
+
+        Session::flash('success', 'Mot de passe mis à jour. Tu peux te connecter.');
+        Response::redirect('/auth/connexion');
     }
 
     private function setUserSession(array $user): void

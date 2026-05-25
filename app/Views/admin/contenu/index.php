@@ -11,7 +11,7 @@ $typeBg = [
     'cours'            => ['bg' => '#F0FDF4', 'color' => '#16A34A', 'label' => 'COURS'],
     'td'               => ['bg' => '#EFF6FF', 'color' => '#1D4ED8', 'label' => 'TD'],
     'ancienne_epreuve' => ['bg' => '#FFF7ED', 'color' => '#C2410C', 'label' => 'SUJET'],
-    'corrige'          => ['bg' => '#FFF7ED', 'color' => '#B45309', 'label' => 'CORRIGÉ'],
+    'corrige'          => ['bg' => '#FFF7ED', 'color' => '#B45309', 'label' => 'MÉTHODOLOGIE'],
 ];
 ?>
 
@@ -64,7 +64,7 @@ $typeBg = [
       <option value="cours">Cours</option>
       <option value="td">TD</option>
       <option value="ancienne_epreuve">Sujets</option>
-      <option value="corrige">Corrigés</option>
+      <option value="corrige">Méthodologies</option>
     </select>
     <button class="btn-ghost">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>
@@ -173,7 +173,7 @@ $typeBg = [
               <option value="cours">Cours</option>
               <option value="td">Travail Dirigé (TD)</option>
               <option value="ancienne_epreuve">Ancienne Épreuve / Sujet</option>
-              <option value="corrige">Corrigé</option>
+              <option value="corrige">Méthodologie</option>
             </select>
           </div>
           <div class="form-group">
@@ -263,7 +263,7 @@ $typeBg = [
               <option value="cours">Cours</option>
               <option value="td">Travail Dirigé (TD)</option>
               <option value="ancienne_epreuve">Ancienne Épreuve / Sujet</option>
-              <option value="corrige">Corrigé</option>
+              <option value="corrige">Méthodologie</option>
             </select>
           </div>
           <div class="form-group">

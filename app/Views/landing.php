@@ -35,6 +35,15 @@
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- PWA -->
+  <link rel="manifest" href="<?= BASE_URL ?>/manifest.json">
+  <meta name="theme-color" content="#8B52FA">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Connect'Academia">
+  <link rel="apple-touch-icon" href="<?= BASE_URL ?>/public/assets/images/icons/apple-touch-icon.png">
 </head>
 
 <body id="top">
@@ -61,7 +70,7 @@
         <ul class="navbar-list">
 
           <li class="navbar-item">
-            <a href="#home" class="navbar-link" data-nav-link>Acceuil</a>
+            <a href="#home" class="navbar-link" data-nav-link>Accueil</a>
           </li>
 
           <li class="navbar-item">
@@ -114,11 +123,11 @@
           <div class="hero-content">
 
             <h1 class="h1 section-title">
-              Votre <span class="span"> résussite </span> ne dépend plus du hasard
+              Votre <span class="span"> résussite </span> ne doit plus dépendre du hasard.
             </h1>
 
             <p class="hero-text">
-              Apprentissage, Orientation et Entraide : la première plateforme tout-en-un conçue pour les élèves et étudiants du Gabon.
+              Apprentissage, Communauté et Orientation : Nous connectons étudiants et universités en quelques clics.
             </p>
 
             <a href="<?= url('auth/connexion') ?>" class="btn has-before">
@@ -135,8 +144,8 @@
 
           <figure class="hero-banner">
 
-            <div class="img-holder one" style="--width: 270; --height: 300;">
-              <img src="<?= BASE_URL ?>/assets/images/header1.PNG" width="270" height="300" alt="hero banner" class="img-cover">
+            <div class="img-holder one" style="--width: 270; --height: 340;">
+              <img src="<?= BASE_URL ?>/assets/images/header1.PNG" width="270" height="340" alt="hero banner" class="img-cover">
             </div>
 
             <div class="img-holder two" style="--width: 240; --height: 370;">
@@ -155,8 +164,8 @@
             <img src="<?= BASE_URL ?>/assets/images/garcon1.png" alt="Étudiant 2">
             <img src="<?= BASE_URL ?>/assets/images/garcon2.png" alt="Étudiant 3">
             <img src="<?= BASE_URL ?>/assets/images/fille2.png" alt="Étudiant 4">
-            <img src="<?= BASE_URL ?>/assets/images/a2ea34ec-c161-4f51-a70c-1d804a323a54.undefined" alt="Étudiant 5">
-            <img src="<?= BASE_URL ?>/assets/images/697a000c7cf303ed467c4ccc_icon-hero-h1.avif." alt="Étudiant 6">
+            <img src="<?= BASE_URL ?>/assets/images/fille3.png" alt="Étudiant 5">
+            
           </div>
           <span class="proof-text">Rejoint par +1000 étudiants</span>
         </div>
@@ -189,7 +198,7 @@
           <div class="video-card">
 
             <div class="video-banner img-holder has-after" style="--width: 1000; --height: 580;">
-              <img src="<?= BASE_URL ?>/assets/images/Images en 5343x3000 - Image Communauté.png" width="970" height="550" loading="lazy" alt="video banner"
+              <img src="<?= BASE_URL ?>/assets/images/image-communate2.png" width="970" height="550" loading="lazy" alt="video banner"
                 class="img-cover">
 
               <button class="play-btn" aria-label="play video">
@@ -197,7 +206,7 @@
               </button>
 
               <video class="video-player" controls style="display: none;">
-                <source src="<?= BASE_URL ?>/assets/images/video-presntation.MOV" type="video/mp4">
+                <source src="<?= BASE_URL ?>/assets/images/video-presentation.mp4" type="video/mp4">
                 Votre navigateur ne supporte pas la lecture de vidéos.
               </video>
             </div>
@@ -350,7 +359,7 @@
           <div class="feature-card">
             <div class="feature-content">
               <div class="feature-image">
-                <img src="<?= BASE_URL ?>/assets/images/Images en 5343x3000 - Image Apprentissage.png" alt="Les Entreprises">
+                <img src="<?= BASE_URL ?>/assets/images/image-communauter.png" alt="Les Entreprises">
               </div>
               <div class="feature-text">
                 <h3>Apprentissage</h3>
@@ -366,7 +375,7 @@
           <div class="feature-card">
             <div class="feature-content reverse">
               <div class="feature-image">
-                <img src="<?= BASE_URL ?>/assets/images/Images en 5343x3000 - Image Orientation 1.png" alt="Les Freelances">
+                <img src="<?= BASE_URL ?>/assets/images/image-orientation1.png" alt="Les Freelances">
               </div>
               <div class="feature-text">
                 <h3>Orientation</h3>
@@ -382,7 +391,7 @@
           <div class="feature-card">
             <div class="feature-content">
               <div class="feature-image">
-                <img src="<?= BASE_URL ?>/assets/images/Images en 5343x3000 - Image Communauté.png" alt="Les Plateformes">
+                <img src="<?= BASE_URL ?>/assets/images/image-communate2.png" alt="Les Plateformes">
               </div>
               <div class="feature-text">
                 <h3>Rejoindre le réseau</h3>
@@ -411,7 +420,7 @@
             <div class="system-pill">
               <span class="dot-blue"></span> Catégories
             </div>
-            <h2>Une bibliothèque de savoir à portée de main .</h2>
+            <h2>Une bibliothèque de savoir à portée de main </h2>
             <p class="subtitle">Tout ce dont vous avez besoin pour réussir, centralisé au même endroit.</p>
           </div>
 
@@ -501,8 +510,8 @@
 
           <figure class="about-banner">
 
-            <div class="img-holder" style="--width: 520; --height: 370;">
-              <img src="<?= BASE_URL ?>/assets/images/IMG_1775.png" width="600" height="400" loading="lazy" alt="about banner"
+            <div class="img-holder" style="--width: 520; --height: 450;">
+              <img src="<?= BASE_URL ?>/assets/images/IMG_1775.png" width="600" height="450" loading="lazy" alt="about banner"
                 class="img-cover">
             </div>
 
@@ -568,7 +577,7 @@
           </h1>
 
           <div class="cta-action-group">
-            <p class="cta-sub-text">3 jours d'essai. Aucune carte requise.</p>
+            <p class="cta-sub-text">1 jours d'essai. Aucune carte requise.</p>
           </div>
 
           <div class="mockup-clipping-area">
@@ -578,43 +587,7 @@
       </section>
 
 
-      <section class="section stats" aria-label="stats">
-        <div class="container">
-
-          <ul class="grid-list">
-
-            <li>
-              <div class="stats-card" style="--color: 170, 75%, 41%">
-                <h3 class="card-title">+1000</h3>
-                <p class="card-text">Utilisateurs</p>
-              </div>
-            </li>
-
-            <li>
-              <div class="stats-card" style="--color: 351, 83%, 61%">
-                <h3 class="card-title">32.4K</h3>
-                <p class="card-text">Class Completed</p>
-              </div>
-            </li>
-
-            <li>
-              <div class="stats-card" style="--color: 260, 100%, 67%">
-                <h3 class="card-title">100%</h3>
-                <p class="card-text">Satisfaction </p>
-              </div>
-            </li>
-
-            <li>
-              <div class="stats-card" style="--color: 42, 94%, 55%">
-                <h3 class="card-title">1</h3>
-                <p class="card-text">Numero</p>
-              </div>
-            </li>
-
-          </ul>
-
-        </div>
-      </section>
+      
 
 
       <section class="social-media-section" id="social-media">
@@ -782,7 +755,7 @@
               <div class="main-glow"></div>
               <div class="target-icon">
                 <div class="central-logo-wrap">
-                  <img src="<?= BASE_URL ?>/assets/images/Logo 1 CA COMPLET.svg" alt="Connect'Academia">
+                  <img src="<?= BASE_URL ?>/assets/images/logo-officiel.png" alt="Connect'Academia">
                 </div>
               </div>
             </div>
@@ -881,7 +854,7 @@
 
       <section class="testimonials-container">
         <div class="testimonials-header">
-          <h2>Ils ont essayé <span class="product-badge">Connect'Academia</span>, <br> voici leurs impressions</h2>
+          <h2>Ils ont essayé <span class="product-badge">Connect'Academia</span> <br> voici leurs impressions</h2>
           <p class="subtitle">Rejoins nos +1000 utilisateurs qui ont déjà essayé Connect'Academia gratuitement.</p>
         </div>
 
@@ -1042,22 +1015,19 @@
           </a>
 
           <p class="footer-brand-text">
-            Lorem ipsum dolor amet consecto adi pisicing elit sed eiusm tempor incidid unt labore dolore.
+            La première plateforme dédiée à l'orientation des élèves et étudiants au Gabon.
           </p>
 
-          <div class="wrapper">
-            <span class="span">Add:</span>
-            <address class="address">70-80 Upper St Norwich NR2</address>
-          </div>
+          
 
           <div class="wrapper">
             <span class="span">Call:</span>
-            <a href="tel:+011234567890" class="footer-link">+01 123 4567 890</a>
+            <a href="tel:+241077980375" class="footer-link">+241 077 98 03 75</a>
           </div>
 
           <div class="wrapper">
             <span class="span">Email:</span>
-            <a href="mailto:info@eduweb.com" class="footer-link">info@eduweb.com</a>
+            <a href="mailto:contact@connectacademia.io" class="footer-link">contact@connectacademia.io</a>
           </div>
 
         </div>
@@ -1065,63 +1035,54 @@
         <ul class="footer-list">
 
           <li>
-            <p class="footer-list-title">Online Platform</p>
+            <p class="footer-list-title"> Platforme</p>
           </li>
 
           <li>
-            <a href="#about" class="footer-link">About</a>
+            <a href="#about" class="footer-link">À propos</a>
           </li>
 
           <li>
-            <a href="<?= url('auth/inscription') ?>" class="footer-link">Courses</a>
+            <a href="<?= url('auth/inscription') ?>" class="footer-link">Inscription</a>
           </li>
 
-          <li>
-            <a href="<?= url('auth/inscription') ?>" class="footer-link">Instructor</a>
-          </li>
+          
 
           <li>
-            <a href="#" class="footer-link">Events</a>
+            <a href="#" class="footer-link">Accueil</a>
           </li>
 
-          <li>
-            <a href="<?= url('auth/inscription') ?>" class="footer-link">Instructor Profile</a>
-          </li>
 
           <li>
-            <a href="<?= BASE_URL ?>/assets/lib/tarifs.html" class="footer-link">Purchase Guide</a>
+            <a href="<?= BASE_URL ?>/assets/lib/tarifs.html" class="footer-link">Tarifs</a>
           </li>
+
+           
 
         </ul>
 
         <ul class="footer-list">
 
           <li>
-            <p class="footer-list-title">Links</p>
+            <p class="footer-list-title">Liens</p>
           </li>
 
           <li>
-            <a href="<?= BASE_URL ?>/assets/lib/contact.html" class="footer-link">Contact Us</a>
+            <a href="<?= BASE_URL ?>/assets/lib/contact.html" class="footer-link">Contact </a>
+          </li>
+
+          
+
+          <li>
+            <a href="#social-media" class="footer-link">Médias sociaux</a>
           </li>
 
           <li>
-            <a href="#" class="footer-link">Gallery</a>
+            <a href="<?= url('auth/connexion') ?>" class="footer-link">Connexion</a>
           </li>
 
           <li>
-            <a href="#" class="footer-link">News & Articles</a>
-          </li>
-
-          <li>
-            <a href="#social-media" class="footer-link">FAQ's</a>
-          </li>
-
-          <li>
-            <a href="<?= url('auth/connexion') ?>" class="footer-link">Sign In/Registration</a>
-          </li>
-
-          <li>
-            <a href="#" class="footer-link">Coming Soon</a>
+            <a href="<?= BASE_URL ?>/assets/lib/mentions-legales.html" class="footer-link">Mentions légales</a>
           </li>
 
         </ul>
@@ -1131,14 +1092,14 @@
           <p class="footer-list-title">Contacts</p>
 
           <p class="footer-list-text">
-            Enter your email address to register to our newsletter subscription
+            Saisissez votre adresse e-mail pour vous inscrire à notre newsletter.
           </p>
 
           <form action="" class="newsletter-form">
             <input type="email" name="email_address" placeholder="Your email" required class="input-field">
 
             <button type="submit" class="btn has-before">
-              <span class="span">Subscribe</span>
+              <span class="span">s'abonner</span>
               <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
             </button>
           </form>
@@ -1169,6 +1130,12 @@
               </a>
             </li>
 
+            <li>
+              <a href="https://www.linkedin.com/company/connect-academia-ga/" class="social-link">
+                <ion-icon name="logo-linkedin"></ion-icon>
+              </a>
+            </li>
+
           </ul>
 
         </div>
@@ -1179,7 +1146,7 @@
     <div class="footer-bottom">
       <div class="container">
         <p class="copyright">
-          Copyright 2026 All Rights Reserved by <a href="https://www.instagram.com/500_vault" class="copyright-link">500_vault</a>
+          Copyright 2026 All Rights Reserved by <a href="https://www.instagram.com/connectacademia.ga" class="copyright-link">Connect'Academia</a>
         </p>
       </div>
     </div>
@@ -1239,6 +1206,18 @@
       .footer-top .container { flex-direction: column !important; }
       #cookie-card { left: 10px; right: 10px; max-width: none; }
     }
+
+    /* Scroll Reveal */
+    [data-reveal] {
+      opacity: 0;
+      transform: translateY(50px);
+      transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    [data-reveal].revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 
   <div id="cookie-card">
@@ -1247,7 +1226,7 @@
     <button class="btn-accept-pro" onclick="acceptCookies()">Accepter & Fermer</button>
   </div>
 
-  <a href="https://wa.me/24100000000" class="whatsapp-pro" target="_blank">
+  <a href="https://wa.me/24107980375" class="whatsapp-pro" target="_blank">
     <ion-icon name="logo-whatsapp"></ion-icon>
   </a>
 
@@ -1304,7 +1283,53 @@
   <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
 
   <script>
+  (function () {
+    var lili = document.querySelector('.lili');
+    if (!lili) return;
+
+    var targets = [];
+    var el = lili;
+    while (el) {
+      targets.push(el);
+      el = el.nextElementSibling;
+    }
+
+    targets.forEach(function (t) { t.setAttribute('data-reveal', ''); });
+
+    if (!('IntersectionObserver' in window)) {
+      targets.forEach(function (t) { t.classList.add('revealed'); });
+      return;
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('revealed');
+        if (entry.target.querySelector('#real-map-gabon')) {
+          setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 700);
+        }
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.08 });
+
+    targets.forEach(function (t) { observer.observe(t); });
+  })();
+  </script>
+
+  <script>
 (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="GCRCfFG4ahJN6GlIIbvyC";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+  </script>
+
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('<?= BASE_URL ?>/sw.js', {
+        scope: '<?= BASE_URL ?>/'
+      }).catch(function (err) {
+        console.warn('[PWA] SW registration failed:', err);
+      });
+    });
+  }
   </script>
 
 </body>

@@ -43,6 +43,7 @@ class FeedController
             'suggestions'      => $suggestions,
             'trendingHashtags' => $trendingHashtags,
             'unreadNotifs'     => $unreadNotifs,
+            'hideFooter'       => true,
         ]);
     }
 

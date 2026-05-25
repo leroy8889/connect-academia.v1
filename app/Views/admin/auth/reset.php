@@ -25,7 +25,7 @@
             </div>
         <?php endif; ?>
 
-        <form action="<?= url('/admin/reset-password') ?>" method="POST">
+        <form action="<?= url('/Administratorconnect/reset-password') ?>" method="POST">
             <input type="hidden" name="_csrf_token" value="<?= \Core\Session::getCsrfToken() ?>">
             
             <input type="hidden" name="token" value="<?= isset($token) ? e($token) : '' ?>">
@@ -59,7 +59,7 @@
         </form>
 
         <div style="margin-top: 20px; text-align: center;">
-            <a href="<?= url('/admin/login') ?>" style="color: rgba(255,255,255,0.6); text-decoration: none; font-size: 13px;">
+            <a href="<?= url('/Administratorconnect/login') ?>" style="color: rgba(255,255,255,0.6); text-decoration: none; font-size: 13px;">
                 Retour à la connexion
             </a>
         </div>

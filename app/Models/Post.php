@@ -43,7 +43,7 @@ class Post extends BaseModel
 
         $sql = "
             SELECT p.*,
-                   u.nom, u.prenom, u.photo_profil, u.role AS user_role, u.serie_id AS user_serie_id,
+                   u.nom, u.prenom, u.photo_profil, u.role AS user_role, u.serie_id AS user_serie_id, u.uuid AS user_uuid,
                    EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = ?) AS is_liked_by_me,
                    EXISTS(SELECT 1 FROM bookmarks WHERE post_id = p.id AND user_id = ?) AS is_bookmarked_by_me,
                    (
@@ -79,7 +79,7 @@ class Post extends BaseModel
     public function getNewPosts(int $afterId, int $limit = 10): array
     {
         $posts = $this->query(
-            "SELECT p.*, u.nom, u.prenom, u.photo_profil, u.role AS user_role, u.serie_id AS user_serie_id
+            "SELECT p.*, u.nom, u.prenom, u.photo_profil, u.role AS user_role, u.serie_id AS user_serie_id, u.uuid AS user_uuid
              FROM posts p
              INNER JOIN users u ON p.user_id = u.id
              WHERE p.id > ? AND p.is_deleted = 0
@@ -100,7 +100,7 @@ class Post extends BaseModel
     {
         $sql = "
             SELECT p.*,
-                   u.nom, u.prenom, u.photo_profil, u.role AS user_role, u.serie_id AS user_serie_id,
+                   u.nom, u.prenom, u.photo_profil, u.role AS user_role, u.serie_id AS user_serie_id, u.uuid AS user_uuid,
                    EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = ?) AS is_liked_by_me,
                    EXISTS(SELECT 1 FROM bookmarks WHERE post_id = p.id AND user_id = ?) AS is_bookmarked_by_me
             FROM posts p
@@ -158,7 +158,7 @@ class Post extends BaseModel
     public function getByUser(int $userId, int $limit = 20, int $offset = 0): array
     {
         $posts = $this->query(
-            "SELECT p.*, u.nom, u.prenom, u.photo_profil, u.role AS user_role
+            "SELECT p.*, u.nom, u.prenom, u.photo_profil, u.role AS user_role, u.uuid AS user_uuid
              FROM posts p
              INNER JOIN users u ON p.user_id = u.id
              WHERE p.user_id = ? AND p.is_deleted = 0
@@ -221,7 +221,7 @@ class Post extends BaseModel
     {
         $like  = "%{$q}%";
         $posts = $this->query(
-            "SELECT p.*, u.nom, u.prenom, u.photo_profil, u.role AS user_role
+            "SELECT p.*, u.nom, u.prenom, u.photo_profil, u.role AS user_role, u.uuid AS user_uuid
              FROM posts p INNER JOIN users u ON p.user_id = u.id
              WHERE p.is_deleted = 0 AND (p.contenu LIKE ? OR p.hashtags LIKE ? OR p.matiere_tag LIKE ?)
              ORDER BY p.created_at DESC LIMIT ?",

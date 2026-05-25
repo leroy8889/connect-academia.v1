@@ -38,7 +38,14 @@ class Database
         }
 
         $dsn = "mysql:host={$host};port={$port};dbname={$name};charset={$charset}";
-        $this->connection = new PDO($dsn, $user, $pass, $options);
+        try {
+            $this->connection = new PDO($dsn, $user, $pass, $options);
+        } catch (\PDOException $e) {
+            $hint = str_contains($e->getMessage(), '2002')
+                ? " — MySQL refus TCP sur {$host}:{$port}. Vérifiez MAMP et DB_SOCKET dans .env."
+                : '';
+            throw new \RuntimeException('[Database] Connexion échouée : ' . $e->getMessage() . $hint, 0, $e);
+        }
     }
 
     public static function getInstance(): self

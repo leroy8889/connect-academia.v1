@@ -21,13 +21,14 @@ $userRole     = \Core\Session::userRole() ?? 'eleve';
         </svg>
         Explorer
       </a>
-      <a href="<?= url('/communaute/profil/' . $userId) ?>" class="sidebar__nav-item">
+      <a href="<?= url('/communaute/mon-profil') ?>" class="sidebar__nav-item">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
         </svg>
         Mon profil
       </a>
-      <a href="<?= url('/communaute/chat') ?>" class="sidebar__nav-item">
+      
+      <a href="<?= url('#') ?>" class="sidebar__nav-item">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
         </svg>
@@ -191,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const users = data.data?.users || [];
                 if (!users.length) { userResults.innerHTML = '<p style="font-size:13px;color:var(--color-gray-500)">Aucun résultat</p>'; return; }
                 userResults.innerHTML = users.map(u => `
-                    <a href="${window.CA.baseUrl}/communaute/profil/${u.id}" style="display:flex;align-items:center;gap:8px;padding:6px 0;text-decoration:none">
+                    <a href="${window.CA.baseUrl}/communaute/profil/${u.uuid}" style="display:flex;align-items:center;gap:8px;padding:6px 0;text-decoration:none">
                         <img src="${u.photo_profil ? window.CA.baseUrl + u.photo_profil : window.CA.baseUrl + '/public/assets/images/default-avatar.svg'}"
                              style="width:32px;height:32px;border-radius:50%;object-fit:cover" onerror="this.onerror=null;this.src=window.CA.baseUrl+'/public/assets/images/default-avatar.svg'">
                         <div>

@@ -10,6 +10,19 @@ Options -MultiViews
         Header always set X-Frame-Options "SAMEORIGIN"
         Header always set X-XSS-Protection "1; mode=block"
         Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+        # PWA : manifest
+        <FilesMatch "^manifest\.json$">
+            Header set Content-Type "application/manifest+json; charset=utf-8"
+            Header set Cache-Control "public, max-age=86400"
+        </FilesMatch>
+
+        # PWA : Service Worker — pas de cache navigateur, scope autorisé à la racine
+        <FilesMatch "^sw\.js$">
+            Header set Content-Type "application/javascript; charset=utf-8"
+            Header set Cache-Control "no-cache, no-store, must-revalidate"
+            Header set Service-Worker-Allowed "/"
+        </FilesMatch>
     </IfModule>
 
     # ── Bloquer l'accès aux fichiers sensibles ──────────────────────────────
@@ -34,6 +47,23 @@ Options -MultiViews
     RewriteRule ^ index.php [L]
 </IfModule>
 
+# ── MIME types médias (critique : évite que le navigateur navigue vers le fichier)
+<IfModule mod_mime.c>
+    AddType video/mp4        .mp4 .m4v
+    AddType video/webm       .webm
+    AddType video/ogg        .ogv .ogg
+    AddType audio/mpeg       .mp3
+    AddType audio/ogg        .oga
+</IfModule>
+
+# ── Range requests pour la lecture vidéo progressive ────────────────────────
+<IfModule mod_headers.c>
+    <FilesMatch "\.(mp4|m4v|webm|ogv|ogg|mp3)$">
+        Header set Accept-Ranges "bytes"
+        Header set Cache-Control "public, max-age=3600"
+    </FilesMatch>
+</IfModule>
+
 # ── Cache des assets statiques ──────────────────────────────────────────────
 <IfModule mod_expires.c>
     ExpiresActive On
@@ -43,6 +73,8 @@ Options -MultiViews
     ExpiresByType image/jpeg "access plus 1 year"
     ExpiresByType image/svg+xml "access plus 1 year"
     ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType video/mp4 "access plus 1 week"
+    ExpiresByType video/webm "access plus 1 week"
 </IfModule>
 
 # ── Compression ─────────────────────────────────────────────────────────────
