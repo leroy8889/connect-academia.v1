@@ -177,39 +177,45 @@ class Post extends BaseModel
 
     public function getTopQuestions(int $limit = 3): array
     {
-        return $this->query(
-            "SELECT p.id, p.contenu, p.likes_count, p.comments_count
-             FROM posts p
-             WHERE p.type = 'question' AND p.is_deleted = 0
-               AND p.created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)
-             ORDER BY (p.likes_count * 2 + p.comments_count * 3) DESC
-             LIMIT ?",
-            [$limit]
-        )->fetchAll(PDO::FETCH_ASSOC);
+        $cacheKey = 'top_questions_' . $limit;
+        return \Core\Cache::remember($cacheKey, 300, function () use ($limit) {
+            return $this->query(
+                "SELECT p.id, p.contenu, p.likes_count, p.comments_count
+                 FROM posts p
+                 WHERE p.type = 'question' AND p.is_deleted = 0
+                   AND p.created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)
+                 ORDER BY (p.likes_count * 2 + p.comments_count * 3) DESC
+                 LIMIT ?",
+                [$limit]
+            )->fetchAll(PDO::FETCH_ASSOC);
+        });
     }
 
     public function getTrendingHashtags(int $limit = 8): array
     {
-        $rows = $this->query(
-            "SELECT hashtags FROM posts
-             WHERE is_deleted = 0 AND hashtags IS NOT NULL AND hashtags != ''
-               AND created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)
-             ORDER BY created_at DESC LIMIT 100"
-        )->fetchAll(PDO::FETCH_ASSOC);
+        $cacheKey = 'trending_hashtags_' . $limit;
+        return \Core\Cache::remember($cacheKey, 300, function () use ($limit) {
+            $rows = $this->query(
+                "SELECT hashtags FROM posts
+                 WHERE is_deleted = 0 AND hashtags IS NOT NULL AND hashtags != ''
+                   AND created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)
+                 ORDER BY created_at DESC LIMIT 100"
+            )->fetchAll(PDO::FETCH_ASSOC);
 
-        $counts = [];
-        foreach ($rows as $row) {
-            foreach (array_map('trim', explode(',', $row['hashtags'])) as $tag) {
-                $tag = ltrim($tag, '#');
-                if (!empty($tag)) $counts[$tag] = ($counts[$tag] ?? 0) + 1;
+            $counts = [];
+            foreach ($rows as $row) {
+                foreach (array_map('trim', explode(',', $row['hashtags'])) as $tag) {
+                    $tag = ltrim($tag, '#');
+                    if (!empty($tag)) $counts[$tag] = ($counts[$tag] ?? 0) + 1;
+                }
             }
-        }
-        arsort($counts);
-        $result = [];
-        foreach (array_slice($counts, 0, $limit, true) as $tag => $count) {
-            $result[] = ['tag' => $tag, 'count' => $count];
-        }
-        return $result;
+            arsort($counts);
+            $result = [];
+            foreach (array_slice($counts, 0, $limit, true) as $tag => $count) {
+                $result[] = ['tag' => $tag, 'count' => $count];
+            }
+            return $result;
+        });
     }
 
     public function markResolved(int $id): void

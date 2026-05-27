@@ -112,12 +112,7 @@ const PostComposer = (() => {
             const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
             const files = Array.from(e.dataTransfer.files).filter(f => allowedTypes.includes(f.type));
             if (files.length > 0) {
-                const file = files[0];
-                if (file.size > 10 * 1024 * 1024) {
-                    App.toast.warning('Cette image est trop lourde, veuillez la changer (max 10 Mo).');
-                    return;
-                }
-                showImagePreview(file);
+                showImagePreview(files[0]);
             }
         });
 
@@ -167,16 +162,10 @@ const PostComposer = (() => {
         const file = e.target.files[0];
         if (!file) return;
 
-        const maxSize = 10 * 1024 * 1024; // 10MB
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
         if (!allowedTypes.includes(file.type)) {
             App.toast.warning('Format non supporté. Utilisez JPEG, PNG, GIF ou WebP');
-            return;
-        }
-        if (file.size > maxSize) {
-            App.toast.warning('Cette image est trop lourde, veuillez la changer (max 10 Mo).');
-            e.target.value = '';
             return;
         }
 

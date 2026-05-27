@@ -13,14 +13,18 @@ class Uploader
     // Qualité JPEG pour les avatars (0-100)
     private const AVATAR_QUALITY = 85;
 
-    public function handleImage(array $file, string $dir): string
+    /**
+     * @param int|null $maxBytes null = pas de limite applicative (seules les limites PHP serveur s'appliquent)
+     */
+    public function handleImage(array $file, string $dir, ?int $maxBytes = null): string
     {
-        return $this->handle($file, $dir, self::ALLOWED_IMAGE_MIME);
+        return $this->handle($file, $dir, self::ALLOWED_IMAGE_MIME, $maxBytes);
     }
 
     public function handleDocument(array $file, string $dir): string
     {
-        return $this->handle($file, $dir, self::ALLOWED_DOC_MIME);
+        $maxMb = (int) ($_ENV['MAX_UPLOAD_MB'] ?? 50);
+        return $this->handle($file, $dir, self::ALLOWED_DOC_MIME, $maxMb * 1024 * 1024);
     }
 
     /**
@@ -40,9 +44,9 @@ class Uploader
             throw new \RuntimeException("Fichier temporaire introuvable.");
         }
 
-        $maxBytes = 8 * 1024 * 1024;
+        $maxBytes = 15 * 1024 * 1024;
         if ((int) $file['size'] > $maxBytes) {
-            throw new \RuntimeException("Cette image est trop lourde, veuillez en mettre une autre (max 8 Mo).");
+            throw new \RuntimeException("Cette image est trop lourde, veuillez en mettre une autre (max 15 Mo).");
         }
 
         // Vérification du type MIME réel
@@ -119,7 +123,7 @@ class Uploader
         return '/public/uploads/avatars/' . $filename;
     }
 
-    private function handle(array $file, string $dir, array $allowedMimes): string
+    private function handle(array $file, string $dir, array $allowedMimes, ?int $maxBytes = null): string
     {
         if ((int) $file['error'] !== UPLOAD_ERR_OK) {
             throw new \RuntimeException($this->uploadErrorMessage((int) $file['error']));
@@ -129,8 +133,8 @@ class Uploader
             throw new \RuntimeException("Fichier temporaire introuvable.");
         }
 
-        $maxMb = (int) ($_ENV['MAX_UPLOAD_MB'] ?? 50);
-        if ((int) $file['size'] > $maxMb * 1024 * 1024) {
+        if ($maxBytes !== null && (int) $file['size'] > $maxBytes) {
+            $maxMb = (int) round($maxBytes / 1024 / 1024);
             throw new \RuntimeException("Fichier trop volumineux (max {$maxMb} Mo)");
         }
 

@@ -20,7 +20,7 @@ public/uploads/
 **/.DS_Store
 
 # IDE / Claude
-.claude/settings.local.json
+.claude/
 
 # Dépendances
 vendor/

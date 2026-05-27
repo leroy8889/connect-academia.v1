@@ -238,9 +238,9 @@ $csrfToken  = \Core\Session::getCsrfToken();
 
   <!-- Email notice -->
   <div class="email-notice">
-    ⚠️ Lors du paiement sur MoneyFusion, utilisez obligatoirement votre adresse email :
+    ⚠️ Lors du paiement sur MoneyFusion, après le paiement patientez une une minute avant de cliquer sur le "Vérifier votre paiement" :
     <br><strong><?= $userEmail ?></strong>
-    <br><small style="color:#6b7280;margin-top:4px;display:block;">C'est ainsi que nous lierons votre paiement à votre compte.</small>
+   
   </div>
 
   <!-- Cards -->

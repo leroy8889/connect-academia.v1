@@ -70,14 +70,17 @@ class AuthController
         $this->setUserSession($user);
         $userModel->updateLastLogin((int) $user['id']);
 
-        // Redirect vers la page demandée (paiement confirmé, etc.)
+        // Redirect vers la page demandée — whitelist stricte + protection open redirect
         $allowed = ['/abonnement/confirmation', '/abonnement/choisir', '/hub'];
         $dest    = '/hub';
         if ($redirectAfter) {
-            foreach ($allowed as $prefix) {
-                if (str_starts_with($redirectAfter, $prefix)) {
-                    $dest = $redirectAfter;
-                    break;
+            // Refuser toute URL externe ou protocol-relative
+            if (str_starts_with($redirectAfter, '/') && !str_starts_with($redirectAfter, '//')) {
+                foreach ($allowed as $prefix) {
+                    if ($redirectAfter === $prefix || str_starts_with($redirectAfter, $prefix . '/') || str_starts_with($redirectAfter, $prefix . '?')) {
+                        $dest = $redirectAfter;
+                        break;
+                    }
                 }
             }
         }

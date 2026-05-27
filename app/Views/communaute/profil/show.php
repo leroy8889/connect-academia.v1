@@ -470,9 +470,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const file = this.files[0];
             if (!file) return;
 
-            if (file.size > 8 * 1024 * 1024) {
-                if (typeof App !== 'undefined') App.toast.warning('Cette image est trop lourde, veuillez en mettre une autre (max 8 Mo).');
-                else alert('Cette image est trop lourde, veuillez en mettre une autre (max 8 Mo).');
+            if (file.size > 15 * 1024 * 1024) {
+                if (typeof App !== 'undefined') App.toast.warning('Cette image est trop lourde, veuillez en mettre une autre (max 15 Mo).');
+                else alert('Cette image est trop lourde, veuillez en mettre une autre (max 15 Mo).');
                 this.value = '';
                 return;
             }

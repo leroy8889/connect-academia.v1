@@ -159,16 +159,17 @@ class Admin extends BaseModel
     public function getCroissanceInscriptions(int $months = 6): array
     {
         $months = max(1, min(24, $months));
-        $db = Database::getInstance()->getConnection();
-        return $db->query(
+        $stmt = $this->db->prepare(
             "SELECT DATE_FORMAT(created_at, '%b %Y') AS mois,
                     DATE_FORMAT(created_at, '%Y-%m') AS mois_key,
                     COUNT(*) AS nb
              FROM users
-             WHERE created_at >= DATE_SUB(NOW(), INTERVAL {$months} MONTH) AND is_deleted = 0
+             WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? MONTH) AND is_deleted = 0
              GROUP BY DATE_FORMAT(created_at, '%Y-%m'), DATE_FORMAT(created_at, '%b %Y')
              ORDER BY mois_key ASC"
-        )->fetchAll(PDO::FETCH_ASSOC);
+        );
+        $stmt->execute([$months]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getRepartitionSeries(): array
@@ -186,22 +187,24 @@ class Admin extends BaseModel
 
     public function getDernieresInscriptions(int $limit = 5): array
     {
-        $db = Database::getInstance()->getConnection();
-        return $db->query(
+        $limit = max(1, min(100, $limit));
+        $stmt = $this->db->prepare(
             "SELECT u.id, u.nom, u.prenom, u.email, u.role, u.photo_profil,
                     s.nom AS serie, u.created_at, u.is_active
              FROM users u
              LEFT JOIN series s ON s.id = u.serie_id
              WHERE u.is_deleted = 0
              ORDER BY u.created_at DESC
-             LIMIT {$limit}"
-        )->fetchAll(PDO::FETCH_ASSOC);
+             LIMIT ?"
+        );
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getActiviteParMatiere(int $limit = 5): array
     {
-        $db = Database::getInstance()->getConnection();
-        return $db->query(
+        $limit = max(1, min(100, $limit));
+        $stmt = $this->db->prepare(
             "SELECT m.nom, m.icone,
                     COUNT(DISTINCT p.ressource_id) AS nb_consultations,
                     COALESCE(AVG(p.pourcentage), 0) AS progression_moyenne
@@ -211,14 +214,16 @@ class Admin extends BaseModel
              WHERE m.is_active = 1
              GROUP BY m.id
              ORDER BY nb_consultations DESC
-             LIMIT {$limit}"
-        )->fetchAll(PDO::FETCH_ASSOC);
+             LIMIT ?"
+        );
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getActiviteRecente(int $limit = 5): array
     {
-        $db = Database::getInstance()->getConnection();
-        return $db->query(
+        $limit = max(1, min(100, $limit));
+        $stmt = $this->db->prepare(
             "SELECT u.id, u.nom, u.prenom, u.photo_profil, u.role,
                     p.updated_at AS action_at,
                     'consultation' AS action_type,
@@ -230,8 +235,10 @@ class Admin extends BaseModel
              JOIN matieres m ON m.id = r.matiere_id
              WHERE u.is_deleted = 0
              ORDER BY p.updated_at DESC
-             LIMIT {$limit}"
-        )->fetchAll(PDO::FETCH_ASSOC);
+             LIMIT ?"
+        );
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     // ── Gestion utilisateurs ─────────────────────────────────────────────
@@ -370,15 +377,17 @@ class Admin extends BaseModel
 
     public function getTopRessources(int $limit = 7): array
     {
-        $db = Database::getInstance()->getConnection();
-        return $db->query(
+        $limit = max(1, min(100, $limit));
+        $stmt = $this->db->prepare(
             "SELECT r.titre, r.nb_vues, m.nom AS matiere
              FROM ressources r
              JOIN matieres m ON m.id = r.matiere_id
              WHERE r.is_deleted = 0
              ORDER BY r.nb_vues DESC
-             LIMIT {$limit}"
-        )->fetchAll(PDO::FETCH_ASSOC);
+             LIMIT ?"
+        );
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getFunnelData(): array

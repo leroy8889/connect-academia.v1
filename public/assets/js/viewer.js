@@ -201,7 +201,6 @@ const IaChat = (() => {
             panel.classList.add('mobile-open');
             if (mobileOverlay) mobileOverlay.style.display = 'block';
             if (closeBtn) closeBtn.style.display = 'flex';
-            setTimeout(() => textarea?.focus(), 300);
         }
 
         function closeMobile() {

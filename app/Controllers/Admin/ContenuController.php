@@ -183,10 +183,10 @@ class ContenuController
             }
 
         } catch (Exception $e) {
-            // Capture l'erreur réelle pour éviter le message "Réponse invalide" générique
+            error_log('[ContenuController] storeRessource error: ' . $e->getMessage());
             Response::json([
                 'success' => false,
-                'message' => 'Erreur base de données : ' . $e->getMessage()
+                'message' => 'Une erreur serveur est survenue. Veuillez réessayer.'
             ], 500);
         }
     }

@@ -256,7 +256,12 @@ Réponds aux questions de l'élève de manière pédagogique, bienveillante et a
             return null;
         }
 
-        $absPath = BASE_PATH . '/public/' . ltrim($path, '/');
+        $candidate   = BASE_PATH . '/public/' . ltrim($path, '/');
+        $absPath     = realpath($candidate);
+        $allowedBase = realpath(BASE_PATH . '/public/');
+        if (!$absPath || !$allowedBase || !str_starts_with($absPath, $allowedBase . DIRECTORY_SEPARATOR)) {
+            return null;
+        }
         if (!file_exists($absPath)) {
             return null;
         }

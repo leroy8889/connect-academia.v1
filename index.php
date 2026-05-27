@@ -106,20 +106,21 @@ if (extension_loaded('redis')) {
     $redisPass = $_ENV['REDIS_PASSWORD'] ?? '';
     $redisDb   = (int)($_ENV['REDIS_DB'] ?? 0);
 
+    // persistent=1 : le session handler réutilise les connexions persistantes (pconnect)
     $savePath = 'tcp://' . $redisHost . ':' . $redisPort
         . '?database=' . $redisDb
         . '&lifetime=' . $sessionLifetime
-        . '&persistent=0'
+        . '&persistent=1'
         . '&prefix=ca:sess:';
 
     if (!empty($redisPass)) {
         $savePath .= '&auth=' . rawurlencode($redisPass);
     }
 
-    // Test silencieux : on ne bascule que si Redis répond
+    // Test silencieux via pconnect — la connexion est réutilisée ensuite par le singleton Redis
     try {
         $testRedis = new \Redis();
-        if (@$testRedis->connect($redisHost, (int)$redisPort, 1.0)) {
+        if (@$testRedis->pconnect($redisHost, (int)$redisPort, 1.0, 'ca_sess')) {
             if (!empty($redisPass)) {
                 $testRedis->auth($redisPass);
             }
@@ -143,6 +144,43 @@ if (session_status() === PHP_SESSION_NONE) {
 // Générer le token CSRF si absent
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// ── Headers de sécurité HTTP ───────────────────────────────────────────────
+if (!headers_sent()) {
+    // Protection clickjacking
+    header('X-Frame-Options: SAMEORIGIN');
+    // Empêche le MIME-sniffing
+    header('X-Content-Type-Options: nosniff');
+    // Politique de référent stricte
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    // Permissions navigateur désactivées
+    header('Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()');
+    // HSTS — activer uniquement en HTTPS production
+    if (($_ENV['APP_ENV'] ?? 'production') === 'production' && isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+        header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
+    }
+    // Session cookie sécurisé en HTTPS
+    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+        ini_set('session.cookie_secure', '1');
+    }
+    // Content-Security-Policy — toutes les ressources tierces préservées
+    $csp = implode('; ', [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.tailwindcss.com https://code.iconify.design https://www.chatbase.co https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
+        "style-src 'self' 'unsafe-inline' https://cdn.boxicons.com https://unpkg.com https://fonts.googleapis.com https://fonts.cdnfonts.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
+        "img-src 'self' data: https: blob:",
+        "font-src 'self' https://fonts.gstatic.com https://cdn.boxicons.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.cdnfonts.com",
+        "connect-src 'self' https://generativelanguage.googleapis.com https://pay.moneyfusion.net https://www.pay.moneyfusion.net https://unpkg.com https://www.chatbase.co https://api.iconify.design https://*.tile.openstreetmap.org",
+        "media-src 'self' blob:",
+        "object-src 'none'",
+        "frame-src 'self' https://www.chatbase.co https://www.youtube.com https://player.vimeo.com",
+        "frame-ancestors 'self'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "worker-src 'self' blob: https://cdnjs.cloudflare.com",
+    ]);
+    header('Content-Security-Policy: ' . $csp);
 }
 
 // ── Dispatcher ─────────────────────────────────────────────────────────────

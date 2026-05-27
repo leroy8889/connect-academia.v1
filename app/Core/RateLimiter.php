@@ -4,11 +4,12 @@ declare(strict_types=1);
 namespace Core;
 
 /**
- * Rate limiter basé sur Redis (compteur avec TTL = fenêtre glissante).
+ * Rate limiter basé sur Redis.
  *
  * Fonctionnement :
  *   - Chaque "action" (ex: login) est identifiée par une clé unique (ip + action).
- *   - INCR incrémente le compteur. Sur le premier hit, un TTL est posé (= durée de la fenêtre).
+ *   - hit() utilise un script Lua atomique INCR + EXPIRE → élimine la race condition.
+ *     L'EXPIRE n'est posé qu'au 1er hit, donc la fenêtre ne se réinitialise pas en cours.
  *   - Si le compteur >= maxAttempts avant expiration du TTL → bloqué.
  *   - Fail-open : si Redis est indisponible, aucune tentative n'est comptée.
  *
@@ -20,49 +21,33 @@ class RateLimiter
 
     // ── API principale ───────────────────────────────────────────────────────
 
-    /**
-     * Vérifie si l'action est bloquée. Retourne true si l'action est autorisée.
-     * NE consomme PAS une tentative — appeler hit() séparément.
-     */
     public static function allow(string $key, int $maxAttempts): bool
     {
         return self::attempts($key) < $maxAttempts;
     }
 
-    /**
-     * Alias sémantique négatif.
-     */
     public static function tooManyAttempts(string $key, int $maxAttempts): bool
     {
         return self::attempts($key) >= $maxAttempts;
     }
 
     /**
-     * Enregistre une tentative. Retourne le nombre total de tentatives.
-     * Définit le TTL uniquement au premier hit (fenêtre glissante ancrée au début).
+     * Enregistre une tentative de façon atomique (Lua INCR + EXPIRE).
+     * Le TTL n'est posé qu'au 1er hit — la fenêtre ne glisse pas.
      */
     public static function hit(string $key, int $decaySeconds): int
     {
-        $redis = Redis::getInstance();
+        $redis   = Redis::getInstance();
         if (!$redis->isAvailable()) {
             return 0;
         }
 
         $fullKey = self::NS . $key;
-        $count   = $redis->incr($fullKey);
+        $count   = $redis->incrWithExpire($fullKey, $decaySeconds);
 
-        if ($count === 1 || $count === false) {
-            // Premier hit ou incr a échoué — on pose/repose le TTL
-            $redis->expire($fullKey, $decaySeconds);
-            $count = max(1, (int)$count);
-        }
-
-        return $count;
+        return $count !== false ? (int)$count : 0;
     }
 
-    /**
-     * Réinitialise le compteur (ex: après une connexion réussie).
-     */
     public static function clear(string $key): void
     {
         $redis = Redis::getInstance();
@@ -87,9 +72,6 @@ class RateLimiter
         return max(0, $maxAttempts - self::attempts($key));
     }
 
-    /**
-     * Secondes restantes avant réinitialisation de la fenêtre.
-     */
     public static function availableIn(string $key): int
     {
         $redis = Redis::getInstance();
@@ -101,19 +83,12 @@ class RateLimiter
 
     // ── Générateurs de clés standardisés ────────────────────────────────────
 
-    /**
-     * Clé par IP pour une action donnée.
-     * Ex: RateLimiter::ipKey('login') → 'login:a1b2c3...'
-     */
     public static function ipKey(string $action, ?string $ip = null): string
     {
         $ip = $ip ?? ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
         return $action . ':ip:' . md5($ip);
     }
 
-    /**
-     * Clé par email pour une action donnée (utile pour brute-force ciblé).
-     */
     public static function emailKey(string $action, string $email): string
     {
         return $action . ':email:' . md5(strtolower(trim($email)));

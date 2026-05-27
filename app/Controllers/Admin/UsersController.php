@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Controllers\Admin;
 
-use Core\{Response, Session, Database, AdminPermissions};
+use Core\{Response, Session, Database, AdminPermissions, Cache};
 use Models\Admin;
 use Models\User;
 use PDO;
@@ -66,19 +66,24 @@ class UsersController
     // ── GET /admin/api/utilisateurs/statuts ──────────────────────────────
     public function statuts(): void
     {
-        $threshold = 300; // 5 minutes
-        $now       = time();
+        $now     = time();
+        $statuts = Cache::get('admin:user:statuts');
 
-        $rows = $this->db->query(
-            "SELECT id, UNIX_TIMESTAMP(last_activity) AS last_activity_ts FROM users WHERE is_deleted = 0"
-        )->fetchAll(PDO::FETCH_ASSOC);
+        if ($statuts === null) {
+            $threshold = 300; // 5 minutes = en ligne
+            $rows = $this->db->query(
+                "SELECT id, UNIX_TIMESTAMP(last_activity) AS last_activity_ts FROM users WHERE is_deleted = 0"
+            )->fetchAll(PDO::FETCH_ASSOC);
 
-        $statuts = [];
-        foreach ($rows as $row) {
-            $ts = (int) $row['last_activity_ts'];
-            $statuts[(int) $row['id']] = [
-                'is_online' => $ts > 0 && ($now - $ts) < $threshold,
-            ];
+            $statuts = [];
+            foreach ($rows as $row) {
+                $ts = (int) $row['last_activity_ts'];
+                $statuts[(int) $row['id']] = [
+                    'is_online' => $ts > 0 && ($now - $ts) < $threshold,
+                ];
+            }
+            // Cache 60s — scan complet de la table, inutile de le refaire à chaque appel admin
+            Cache::set('admin:user:statuts', $statuts, 60);
         }
 
         Response::json(['success' => true, 'statuts' => $statuts, 'ts' => $now]);

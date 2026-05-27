@@ -6,7 +6,7 @@ namespace Core;
 /**
  * Service de cache Redis.
  * Toutes les méthodes échouent silencieusement si Redis est indisponible.
- * Les clés sont préfixées par 'cache:' (en plus du prefix global Redis).
+ * Clés préfixées par 'cache:' (en plus du prefix global Redis).
  */
 class Cache
 {
@@ -20,8 +20,8 @@ class Cache
         if (!$redis->isAvailable()) {
             return $default;
         }
-
         $value = $redis->get(self::NS . $key);
+        // false = clé absente en Redis ; toute autre valeur (y compris null) = hit
         return $value !== false ? $value : $default;
     }
 
@@ -33,9 +33,6 @@ class Cache
 
     // ── Écriture ─────────────────────────────────────────────────────────────
 
-    /**
-     * @param int $ttl Durée en secondes (0 = pas d'expiration)
-     */
     public static function set(string $key, mixed $value, int $ttl = 3600): bool
     {
         $redis = Redis::getInstance();
@@ -49,35 +46,85 @@ class Cache
 
     /**
      * Retourne la valeur en cache ou l'hydrate via $callback puis la met en cache.
+     *
+     * CORRECTION : utilise false (clé absente en Redis) comme sentinelle de miss,
+     * pas null — permet de cacher légitimement une valeur null sans relancer le callback.
      */
     public static function remember(string $key, int $ttl, callable $callback): mixed
     {
-        $cached = self::get($key);
-        if ($cached !== null) {
-            return $cached;
+        $redis = Redis::getInstance();
+        if ($redis->isAvailable()) {
+            $value = $redis->get(self::NS . $key);
+            if ($value !== false) {
+                return $value;
+            }
         }
-
         $value = $callback();
         self::set($key, $value, $ttl);
         return $value;
     }
 
     /**
-     * Même comportement que remember() mais invalide le cache si $callback
-     * retourne false ou null.
+     * Cache sans expiration. Même logique false-as-miss que remember().
      */
     public static function rememberForever(string $key, callable $callback): mixed
     {
-        $cached = self::get($key);
-        if ($cached !== null) {
-            return $cached;
+        $redis = Redis::getInstance();
+        if ($redis->isAvailable()) {
+            $value = $redis->get(self::NS . $key);
+            if ($value !== false) {
+                return $value;
+            }
+        }
+        $value = $callback();
+        self::set($key, $value, 0);
+        return $value;
+    }
+
+    // ── Multi-get (un seul round-trip) ────────────────────────────────────────
+
+    /**
+     * Récupère plusieurs clés en une seule commande MGET.
+     * Retourne [key => value] — $default pour les clés absentes.
+     */
+    public static function getMultiple(array $keys, mixed $default = null): array
+    {
+        $redis = Redis::getInstance();
+        if (!$redis->isAvailable() || empty($keys)) {
+            return array_fill_keys($keys, $default);
         }
 
-        $value = $callback();
-        if ($value !== null && $value !== false) {
-            self::set($key, $value, 0);
+        $nsKeys = array_map(fn(string $k) => self::NS . $k, $keys);
+        $raw    = $redis->mGet($nsKeys); // [nsKey => value|false]
+
+        $result = [];
+        foreach ($keys as $k) {
+            $v          = $raw[self::NS . $k] ?? false;
+            $result[$k] = $v !== false ? $v : $default;
         }
-        return $value;
+        return $result;
+    }
+
+    // ── Compteurs ────────────────────────────────────────────────────────────
+
+    public static function increment(string $key, int $by = 1): int
+    {
+        $redis = Redis::getInstance();
+        if (!$redis->isAvailable()) {
+            return 0;
+        }
+        $result = $redis->incrBy(self::NS . $key, $by);
+        return $result !== false ? (int)$result : 0;
+    }
+
+    public static function decrement(string $key, int $by = 1): int
+    {
+        $redis = Redis::getInstance();
+        if (!$redis->isAvailable()) {
+            return 0;
+        }
+        $result = $redis->decrBy(self::NS . $key, $by);
+        return $result !== false ? (int)$result : 0;
     }
 
     // ── Suppression ──────────────────────────────────────────────────────────
@@ -92,7 +139,8 @@ class Cache
     }
 
     /**
-     * Supprime toutes les clés correspondant au pattern (ex: 'dashboard:*').
+     * Supprime toutes les clés correspondant au pattern (ex: 'admin:dashboard:*').
+     * Utilise SCAN (non-bloquant) + DEL batch via le client natif.
      */
     public static function flush(string $pattern = '*'): void
     {
@@ -102,14 +150,22 @@ class Cache
         }
 
         $keys = $redis->keys(self::NS . $pattern);
-        foreach ($keys as $fullKey) {
-            // Les clés retournées par keys() sont déjà préfixées par Redis::prefix()
-            // On utilise delRaw() car le prefix global est déjà présent
-            $redis->delRaw($fullKey);
+        if (empty($keys)) {
+            return;
+        }
+
+        $client = $redis->client();
+        if ($client === null) {
+            return;
+        }
+
+        // DEL accepte plusieurs clés — suppression en batches de 500 (un round-trip par batch)
+        foreach (array_chunk($keys, 500) as $chunk) {
+            $client->del($chunk);
         }
     }
 
-    // ── Helpers TTL standards ────────────────────────────────────────────────
+    // ── Helpers TTL ──────────────────────────────────────────────────────────
 
     public static function ttl(string $key): int
     {

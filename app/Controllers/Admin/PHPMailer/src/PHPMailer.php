@@ -3034,13 +3034,24 @@ class PHPMailer
                     throw new Exception($this->lang('extension_missing') . 'openssl');
                 }
 
+                $tmpDir = realpath(sys_get_temp_dir());
                 $file = tempnam(sys_get_temp_dir(), 'srcsign');
                 $signed = tempnam(sys_get_temp_dir(), 'mailsign');
+
+                // Validate temp files stay within sys_get_temp_dir (path traversal guard)
+                if (!$file || !$signed
+                    || !$tmpDir
+                    || strpos(realpath($file), $tmpDir) !== 0
+                    || strpos(realpath($signed), $tmpDir) !== 0
+                ) {
+                    throw new Exception($this->lang('signing') . 'Temp file creation failed');
+                }
+
                 file_put_contents($file, $body);
 
                 //Workaround for PHP bug https://bugs.php.net/bug.php?id=69197
                 if (empty($this->sign_extracerts_file)) {
-                    $sign = @openssl_pkcs7_sign(
+                    $sign = openssl_pkcs7_sign(
                         $file,
                         $signed,
                         'file://' . realpath($this->sign_cert_file),
@@ -3048,7 +3059,7 @@ class PHPMailer
                         []
                     );
                 } else {
-                    $sign = @openssl_pkcs7_sign(
+                    $sign = openssl_pkcs7_sign(
                         $file,
                         $signed,
                         'file://' . realpath($this->sign_cert_file),
@@ -3059,16 +3070,22 @@ class PHPMailer
                     );
                 }
 
-                @unlink($file);
+                if (file_exists($file)) {
+                    unlink($file);
+                }
                 if ($sign) {
                     $body = file_get_contents($signed);
-                    @unlink($signed);
+                    if (file_exists($signed)) {
+                        unlink($signed);
+                    }
                     //The message returned by openssl contains both headers and body, so need to split them up
                     $parts = explode("\n\n", $body, 2);
                     $this->MIMEHeader .= $parts[0] . static::$LE . static::$LE;
                     $body = $parts[1];
                 } else {
-                    @unlink($signed);
+                    if (file_exists($signed)) {
+                        unlink($signed);
+                    }
                     throw new Exception($this->lang('signing') . openssl_error_string());
                 }
             } catch (Exception $exc) {

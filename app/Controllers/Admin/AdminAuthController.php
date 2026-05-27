@@ -98,7 +98,7 @@ class AdminAuthController
         RateLimiter::clear($rlKey);
 
         // --- LOGIQUE 2FA EMAIL AJOUTÉE ---
-        $otp = (string)rand(100000, 999999);
+        $otp = (string)random_int(100000, 999999);
         
         // Stockage temporaire des infos admin en session
         Session::set('admin_2fa_pending', [
@@ -169,15 +169,18 @@ class AdminAuthController
         $mail = new PHPMailer(true);
         try {
             $mail->isSMTP();
-            $mail->Host       = 'smtp.gmail.com';
+            $mail->Host       = $_ENV['MAIL_HOST'] ?? 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'connectacademiaheb@gmail.com'; 
-            $mail->Password   = 'fxbucacvmlldmsik'; 
+            $mail->Username   = $_ENV['MAIL_USERNAME'] ?? '';
+            $mail->Password   = $_ENV['MAIL_PASSWORD'] ?? '';
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-            $mail->Port       = 465;
+            $mail->Port       = (int)($_ENV['MAIL_PORT'] ?? 465);
             $mail->CharSet    = 'UTF-8';
 
-            $mail->setFrom('security@connectacademia.com', 'Sécurité Connect Academia');
+            $mail->setFrom(
+                $_ENV['MAIL_FROM_ADDRESS'] ?? 'security@connectacademia.com',
+                $_ENV['MAIL_FROM_NAME'] ?? 'Sécurité Connect Academia'
+            );
             $mail->addAddress($email);
             $mail->isHTML(true);
             $mail->Subject = "Code d'accès Administrateur - $otp";
@@ -281,21 +284,24 @@ class AdminAuthController
             $mail = new PHPMailer(true);
             try {
                 $mail->isSMTP();
-                $mail->Host       = 'smtp.gmail.com';
+                $mail->Host       = $_ENV['MAIL_HOST'] ?? 'smtp.gmail.com';
                 $mail->SMTPAuth   = true;
-                $mail->Username   = 'connectacademiaheb@gmail.com'; 
-                $mail->Password   = 'fxbucacvmlldmsik'; 
+                $mail->Username   = $_ENV['MAIL_USERNAME'] ?? '';
+                $mail->Password   = $_ENV['MAIL_PASSWORD'] ?? '';
                 $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-                $mail->Port       = 465;
+                $mail->Port       = (int)($_ENV['MAIL_PORT'] ?? 465);
                 $mail->CharSet    = 'UTF-8';
 
-                $mail->setFrom('security@connectacademia.com', 'Connect Académie');
+                $mail->setFrom(
+                    $_ENV['MAIL_FROM_ADDRESS'] ?? 'security@connectacademia.com',
+                    'Connect Académie'
+                );
                 $mail->addAddress($email);
                 $mail->isHTML(true);
                 $mail->Subject = "Réinitialisation de votre mot de passe";
 
                 // Modification de l'URL pour pointer vers localhost en développement
-                $resetLink = "http://localhost:8000/Administratorconnect/reset-password?token=" . $token;
+                $resetLink = rtrim($_ENV['APP_URL'] ?? '', '/') . '/Administratorconnect/reset-password?token=' . urlencode($token);
 
                 $mail->Body = "
                 <div style='background-color: #f4f4f9; padding: 40px; font-family: sans-serif;'>
