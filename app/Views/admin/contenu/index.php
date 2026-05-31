@@ -189,18 +189,8 @@ $typeBg = [
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
           <div class="form-group">
             <label class="form-label">Matière *</label>
-            <select name="matiere_id" class="form-select" required>
-              <option value="">Choisir la matière</option>
-              <option value="Mathématiques">Mathématiques</option>
-              <option value="Physique-Chimie">Physique-Chimie</option>
-              <option value="SVT">SVT</option>
-              <option value="Français">Français</option>
-              <option value="Anglais">Anglais</option>
-              <option value="Historique-Géographie">Historique-Géographie</option>
-              <option value="Philosophie">Philosophie</option>
-              <option value="Espagnol">Espagnol</option>
-              <option value="Economie">Economie</option>
-
+            <select name="matiere_id" class="form-select" id="modal-matiere-select" required disabled>
+              <option value="">← Sélectionnez d'abord une série</option>
             </select>
           </div>
           <div class="form-group">

@@ -271,7 +271,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Charger matières selon série (endpoint admin)
     const serieSelect   = uploadForm.querySelector('[name="serie_id"]');
     const matiereSelect = uploadForm.querySelector('[name="matiere_id"]');
-    serieSelect?.addEventListener('change', () => loadMatieres(serieSelect.value, matiereSelect, 'Choisir une matière'));
+    serieSelect?.addEventListener('change', () => {
+      if (serieSelect.value) {
+        matiereSelect.disabled = false;
+        loadMatieres(serieSelect.value, matiereSelect, 'Choisir une matière');
+      } else {
+        matiereSelect.disabled = true;
+        matiereSelect.innerHTML = '<option value="">← Sélectionnez d\'abord une série</option>';
+      }
+    });
 
     uploadForm.addEventListener('submit', async e => {
       e.preventDefault();

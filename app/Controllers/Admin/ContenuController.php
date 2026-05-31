@@ -126,15 +126,28 @@ class ContenuController
 
             // 2. Gestion de l'upload
             $upload = $_FILES['fichier'] ?? null;
-            if (!$upload || $upload['error'] !== UPLOAD_ERR_OK) {
-                Response::json(['success' => false, 'message' => 'Erreur lors du téléchargement du fichier.'], 422);
+            if (!$upload) {
+                Response::json(['success' => false, 'message' => 'Aucun fichier reçu par le serveur.'], 422);
+                return;
+            }
+            if ((int)$upload['error'] !== UPLOAD_ERR_OK) {
+                $uploadErrors = [
+                    UPLOAD_ERR_INI_SIZE   => 'Fichier trop lourd (limite serveur : ' . ini_get('upload_max_filesize') . ')',
+                    UPLOAD_ERR_FORM_SIZE  => 'Fichier trop lourd (limite formulaire)',
+                    UPLOAD_ERR_PARTIAL    => 'Transfert incomplet, veuillez réessayer',
+                    UPLOAD_ERR_NO_FILE    => 'Aucun fichier sélectionné',
+                    UPLOAD_ERR_NO_TMP_DIR => 'Dossier temporaire manquant sur le serveur',
+                    UPLOAD_ERR_CANT_WRITE => 'Impossible d\'écrire le fichier temporaire',
+                ];
+                $msg = $uploadErrors[(int)$upload['error']] ?? 'Erreur upload (code ' . $upload['error'] . ')';
+                error_log('[ContenuController] Erreur upload: code=' . $upload['error'] . ' msg=' . $msg);
+                Response::json(['success' => false, 'message' => $msg], 422);
                 return;
             }
 
             // Vérification du type MIME (PDF uniquement)
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mime  = finfo_file($finfo, $upload['tmp_name']);
-            finfo_close($finfo);
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $mime  = $finfo->file($upload['tmp_name']);
             if ($mime !== 'application/pdf') {
                 Response::json(['success' => false, 'message' => 'Seuls les fichiers PDF sont acceptés.'], 415);
                 return;
@@ -143,14 +156,47 @@ class ContenuController
             // 3. Préparation du dossier de destination
             $uploadDir = BASE_PATH . '/public/uploads/ressources/';
             if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
+                if (!mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+                    error_log('[ContenuController] Impossible de créer le dossier: ' . $uploadDir);
+                    Response::json(['success' => false, 'message' => 'Erreur de configuration du serveur.'], 500);
+                    return;
+                }
             }
 
-            $filename = uniqid('res_', true) . '.pdf';
-            $destPath = $uploadDir . $filename;
+            if (!is_writable($uploadDir)) {
+                error_log('[ContenuController] Dossier non accessible en écriture: ' . $uploadDir . ' owner=' . fileowner($uploadDir) . ' perms=' . decoct(fileperms($uploadDir)));
+                Response::json(['success' => false, 'message' => 'Dossier de destination non accessible.'], 500);
+                return;
+            }
 
-            // 4. Déplacement du fichier et insertion en base
-            if (move_uploaded_file($upload['tmp_name'], $destPath)) {
+            $filename = bin2hex(random_bytes(12)) . '.pdf';
+            $destPath = $uploadDir . $filename;
+            $tmpPath  = $upload['tmp_name'];
+
+            // 4. Déplacement du fichier — move_uploaded_file avec fallback copy
+            $moved = move_uploaded_file($tmpPath, $destPath);
+
+            if (!$moved) {
+                $phpErr = error_get_last();
+                error_log('[ContenuController] move_uploaded_file échoué.'
+                    . ' tmp=' . $tmpPath
+                    . ' tmp_exists=' . (is_file($tmpPath) ? 'oui' : 'non')
+                    . ' dest=' . $destPath
+                    . ' err=' . json_encode($phpErr));
+
+                // Fallback : copy() si le fichier est accessible mais non considéré comme upload
+                if (is_file($tmpPath)) {
+                    $moved = copy($tmpPath, $destPath);
+                    if ($moved) {
+                        @unlink($tmpPath);
+                        error_log('[ContenuController] Fallback copy() réussi pour: ' . $destPath);
+                    } else {
+                        error_log('[ContenuController] copy() aussi échoué. ' . json_encode(error_get_last()));
+                    }
+                }
+            }
+
+            if ($moved) {
                 $filePath    = 'uploads/ressources/' . $filename;
                 $fileNom     = $upload['name'] ?? $filename;
                 $tailleOctet = $upload['size'] ?? 0;
