@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hors ligne — Connect'Academia</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #8B52FA;
+      --primary-light: #F0EBFF;
+      --text-main: #1A1A2E;
+      --text-sub: #6B7280;
+      --bg: #FFFFFF;
+      --border: #E5E7EB;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      margin: 0 auto 28px;
+      display: block;
+      object-fit: contain;
+    }
+
+    .icon-wrap {
+      width: 72px;
+      height: 72px;
+      background: var(--primary-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+
+    .icon-wrap svg {
+      width: 32px;
+      height: 32px;
+      color: var(--primary);
+      stroke: var(--primary);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    p {
+      font-size: 0.9375rem;
+      color: var(--text-sub);
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn:hover { background: #7440E0; }
+    .btn:active { transform: scale(0.97); }
+
+    .divider {
+      width: 40px;
+      height: 2px;
+      background: var(--border);
+      margin: 28px auto;
+      border-radius: 2px;
+    }
+
+    .status {
+      font-size: 0.8125rem;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #EF4444;
+      flex-shrink: 0;
+    }
+
+    .dot.online { background: #10B981; }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0F0F1A;
+        --text-main: #F9FAFB;
+        --text-sub: #9CA3AF;
+        --border: #1F2937;
+        --primary-light: #1E1130;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="./assets/images/logo-officiel.png"
+         alt="Connect'Academia"
+         class="logo"
+         onerror="this.style.display='none'">
+
+    <div class="icon-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="1" y1="1" x2="23" y2="23"/>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+        <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+        <line x1="12" y1="20" x2="12.01" y2="20"/>
+      </svg>
+    </div>
+
+    <h1>Vous êtes hors ligne</h1>
+    <p>
+      Vérifiez votre connexion internet et réessayez.<br>
+      Les pages visitées récemment restent disponibles.
+    </p>
+
+    <button class="btn" onclick="tryReconnect()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <polyline points="23 4 23 10 17 10"/>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+      </svg>
+      Réessayer
+    </button>
+
+    <div class="divider"></div>
+
+    <div class="status">
+      <div class="dot" id="status-dot"></div>
+      <span id="status-text">Vérification de la connexion…</span>
+    </div>
+  </div>
+
+  <script>
+    function updateStatus() {
+      const dot  = document.getElementById('status-dot');
+      const text = document.getElementById('status-text');
+      if (navigator.onLine) {
+        dot.classList.add('online');
+        text.textContent = 'Connexion rétablie — chargement…';
+        setTimeout(() => window.location.reload(), 800);
+      } else {
+        dot.classList.remove('online');
+        text.textContent = 'Aucune connexion détectée';
+      }
+    }
+
+    function tryReconnect() {
+      updateStatus();
+      if (navigator.onLine) window.location.reload();
+    }
+
+    window.addEventListener('online', () => {
+      updateStatus();
+      setTimeout(() => window.location.reload(), 600);
+    });
+
+    window.addEventListener('offline', updateStatus);
+
+    updateStatus();
+  </script>
+</body>
+</html>

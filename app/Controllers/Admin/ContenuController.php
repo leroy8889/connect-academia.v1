@@ -1,0 +1,296 @@
+<?php
+declare(strict_types=1);
+
+namespace Controllers\Admin;
+
+use Core\{Response, Session};
+use Core\Database;
+use PDO;
+use Exception;
+
+class ContenuController
+{
+    private PDO $db;
+
+    public function __construct()
+    {
+        $this->db = Database::getInstance()->getConnection();
+    }
+
+    /**
+     * Affiche la bibliothèque des ressources
+     */
+    public function index(): void
+    {
+        // Récupération des séries pour les filtres
+        $series = $this->db->query(
+            "SELECT id, nom FROM series WHERE is_active = 1 ORDER BY nom"
+        )->fetchAll(PDO::FETCH_ASSOC);
+
+        // Récupération des matières groupées par série
+        $matieresBySerie = [];
+        $matiStmt = $this->db->query(
+            "SELECT id, nom, serie_id FROM matieres WHERE is_active = 1 ORDER BY serie_id, ordre, nom"
+        );
+        foreach ($matiStmt->fetchAll(PDO::FETCH_ASSOC) as $m) {
+            $matieresBySerie[(int)$m['serie_id']][] = ['id' => (int)$m['id'], 'nom' => $m['nom']];
+        }
+
+        // Construction des filtres de recherche
+        $where  = ['r.is_deleted = 0'];
+        $params = [];
+
+        if (!empty($_GET['serie_id'])) {
+            $where[]  = 'r.serie_id = ?';
+            $params[] = (int) $_GET['serie_id'];
+        }
+        if (!empty($_GET['matiere_id'])) {
+            $where[]  = 'r.matiere_id = ?';
+            $params[] = (int) $_GET['matiere_id'];
+        }
+        if (!empty($_GET['type'])) {
+            $where[]  = 'r.type = ?';
+            $params[] = $_GET['type'];
+        }
+
+        // Requête principale avec récupération du chemin du fichier
+        $stmt = $this->db->prepare(
+            "SELECT r.id, r.titre, r.type, r.nb_vues, r.created_at, r.fichier_path,
+                    m.nom AS matiere, s.nom AS serie
+             FROM ressources r
+             JOIN matieres m ON m.id = r.matiere_id
+             JOIN series s ON s.id = r.serie_id
+             WHERE " . implode(' AND ', $where) . "
+             ORDER BY r.created_at DESC
+             LIMIT 100"
+        );
+        $stmt->execute($params);
+        $ressources = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Normalisation URLs — fichier_path stocké comme "uploads/ressources/xxx.pdf"
+        // url() helper ajoute BASE_URL, public/ est accessible depuis la racine web
+        foreach ($ressources as &$res) {
+            $path = $res['fichier_path'] ?? '';
+            $res['file_url'] = !empty($path) ? url('public/' . ltrim($path, '/')) : '#';
+        }
+
+        // Statistiques du mois
+        $totalRessources = (int) $this->db->query(
+            "SELECT COUNT(*) FROM ressources WHERE is_deleted = 0"
+        )->fetchColumn();
+
+        $totalVues = (int) $this->db->query(
+            "SELECT COALESCE(SUM(nb_vues), 0) FROM ressources
+             WHERE is_deleted = 0 AND created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')"
+        )->fetchColumn();
+
+        Response::view('admin/contenu/index', [
+            'pageTitle'         => 'Ressources — Admin',
+            'breadcrumbSection' => 'Apprentissage',
+            'breadcrumbPage'    => 'Bibliothèque',
+            'ressources'        => $ressources,
+            'series'            => $series,
+            'matieresBySerie'   => $matieresBySerie,
+            'totalRessources'   => $totalRessources,
+            'totalVues'         => $totalVues,
+            'totalPdf'          => $totalRessources,
+        ], 'admin');
+    }
+
+    /**
+     * Enregistre une nouvelle ressource (Upload PDF)
+     */
+    public function storeRessource(): void
+    {
+        try {
+            $titre     = trim($_POST['titre'] ?? '');
+            $matiereId = (int) ($_POST['matiere_id'] ?? 0);
+            $type      = $_POST['type'] ?? 'cours';
+            $serieId   = (int) ($_POST['serie_id'] ?? 0);
+            $annee     = !empty($_POST['annee']) ? (int) $_POST['annee'] : null;
+            $desc      = trim($_POST['description'] ?? '');
+
+            // 1. Validation des champs
+            if (!$titre || !$matiereId) {
+                Response::json(['success' => false, 'message' => 'Titre et matière requis.'], 422);
+                return;
+            }
+
+            // 2. Gestion de l'upload
+            $upload = $_FILES['fichier'] ?? null;
+            if (!$upload) {
+                Response::json(['success' => false, 'message' => 'Aucun fichier reçu par le serveur.'], 422);
+                return;
+            }
+            if ((int)$upload['error'] !== UPLOAD_ERR_OK) {
+                $uploadErrors = [
+                    UPLOAD_ERR_INI_SIZE   => 'Fichier trop lourd (limite serveur : ' . ini_get('upload_max_filesize') . ')',
+                    UPLOAD_ERR_FORM_SIZE  => 'Fichier trop lourd (limite formulaire)',
+                    UPLOAD_ERR_PARTIAL    => 'Transfert incomplet, veuillez réessayer',
+                    UPLOAD_ERR_NO_FILE    => 'Aucun fichier sélectionné',
+                    UPLOAD_ERR_NO_TMP_DIR => 'Dossier temporaire manquant sur le serveur',
+                    UPLOAD_ERR_CANT_WRITE => 'Impossible d\'écrire le fichier temporaire',
+                ];
+                $msg = $uploadErrors[(int)$upload['error']] ?? 'Erreur upload (code ' . $upload['error'] . ')';
+                error_log('[ContenuController] Erreur upload: code=' . $upload['error'] . ' msg=' . $msg);
+                Response::json(['success' => false, 'message' => $msg], 422);
+                return;
+            }
+
+            // Vérification taille max (MAX_UPLOAD_MB depuis .env)
+            $maxMb    = (int) ($_ENV['MAX_UPLOAD_MB'] ?? 50);
+            $maxBytes = $maxMb * 1024 * 1024;
+            if (($upload['size'] ?? 0) > $maxBytes) {
+                Response::json(['success' => false, 'message' => "Fichier trop lourd. Maximum autorisé : {$maxMb} Mo."], 422);
+                return;
+            }
+
+            // Vérification du type MIME (PDF uniquement)
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $mime  = $finfo->file($upload['tmp_name']);
+            if ($mime !== 'application/pdf') {
+                Response::json(['success' => false, 'message' => 'Seuls les fichiers PDF sont acceptés.'], 415);
+                return;
+            }
+
+            // 3. Préparation du dossier de destination
+            $uploadDir = BASE_PATH . '/public/uploads/ressources/';
+            if (!is_dir($uploadDir)) {
+                if (!mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+                    error_log('[ContenuController] Impossible de créer le dossier: ' . $uploadDir);
+                    Response::json(['success' => false, 'message' => 'Erreur de configuration du serveur.'], 500);
+                    return;
+                }
+            }
+
+            if (!is_writable($uploadDir)) {
+                error_log('[ContenuController] Dossier non accessible en écriture: ' . $uploadDir . ' owner=' . fileowner($uploadDir) . ' perms=' . decoct(fileperms($uploadDir)));
+                Response::json(['success' => false, 'message' => 'Dossier de destination non accessible.'], 500);
+                return;
+            }
+
+            $filename = bin2hex(random_bytes(12)) . '.pdf';
+            $destPath = $uploadDir . $filename;
+            $tmpPath  = $upload['tmp_name'];
+
+            // 4. Déplacement du fichier — move_uploaded_file avec fallback copy
+            $moved = move_uploaded_file($tmpPath, $destPath);
+
+            if (!$moved) {
+                $phpErr = error_get_last();
+                error_log('[ContenuController] move_uploaded_file échoué.'
+                    . ' tmp=' . $tmpPath
+                    . ' tmp_exists=' . (is_file($tmpPath) ? 'oui' : 'non')
+                    . ' dest=' . $destPath
+                    . ' err=' . json_encode($phpErr));
+
+                // Fallback : copy() si le fichier est accessible mais non considéré comme upload
+                if (is_file($tmpPath)) {
+                    $moved = copy($tmpPath, $destPath);
+                    if ($moved) {
+                        @unlink($tmpPath);
+                        error_log('[ContenuController] Fallback copy() réussi pour: ' . $destPath);
+                    } else {
+                        error_log('[ContenuController] copy() aussi échoué. ' . json_encode(error_get_last()));
+                    }
+                }
+            }
+
+            if ($moved) {
+                $filePath    = 'uploads/ressources/' . $filename;
+                $fileNom     = $upload['name'] ?? $filename;
+                $tailleOctet = $upload['size'] ?? 0;
+
+                // Récupération automatique du serie_id si manquant
+                if ($serieId === 0) {
+                    $mStmt = $this->db->prepare("SELECT serie_id FROM matieres WHERE id = ?");
+                    $mStmt->execute([$matiereId]);
+                    $serieId = (int) ($mStmt->fetchColumn() ?: 0);
+                }
+
+                $stmt = $this->db->prepare(
+                    "INSERT INTO ressources (titre, description, type, matiere_id, serie_id, annee,
+                                             fichier_path, fichier_nom, taille_fichier, admin_id, created_at)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())"
+                );
+
+                $stmt->execute([
+                    $titre, $desc, $type, $matiereId, $serieId, $annee,
+                    $filePath, $fileNom, $tailleOctet, Session::adminId()
+                ]);
+
+                Response::json([
+                    'success' => true,
+                    'message' => "La ressource « {$titre} » a été publiée avec succès.",
+                    'id'      => (int) $this->db->lastInsertId()
+                ]);
+            } else {
+                Response::json(['success' => false, 'message' => 'Échec du déplacement du fichier sur le serveur.'], 500);
+            }
+
+        } catch (Exception $e) {
+            error_log('[ContenuController] storeRessource error: ' . $e->getMessage());
+            Response::json([
+                'success' => false,
+                'message' => 'Une erreur serveur est survenue. Veuillez réessayer.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Supprime une ressource (Soft delete)
+     */
+    public function deleteRessource(array $params): void
+    {
+        $id = (int) ($params['id'] ?? 0);
+        $this->db->prepare("UPDATE ressources SET is_deleted = 1, updated_at = NOW() WHERE id = ?")->execute([$id]);
+        Response::json(['success' => true, 'message' => 'Ressource supprimée avec succès.']);
+    }
+
+    /**
+     * Met à jour les informations d'une ressource
+     */
+    public function updateRessource(array $params): void
+    {
+        $id    = (int) ($params['id'] ?? 0);
+        $titre = trim($_POST['titre'] ?? '');
+        $desc  = trim($_POST['description'] ?? '');
+        $type  = $_POST['type'] ?? 'cours';
+        $annee = !empty($_POST['annee']) ? (int) $_POST['annee'] : null;
+
+        if (!$id || !$titre) {
+            Response::json(['success' => false, 'message' => 'Le titre est obligatoire.'], 422);
+            return;
+        }
+
+        $this->db->prepare(
+            "UPDATE ressources SET titre=?, description=?, type=?, annee=?, updated_at=NOW() WHERE id=?"
+        )->execute([$titre, $desc, $type, $annee, $id]);
+
+        Response::json(['success' => true, 'message' => 'Ressource mise à jour.']);
+    }
+
+    /**
+     * API pour charger les matières dynamiquement selon la série
+     */
+    public function getMatieres(): void
+    {
+        $serieId = (int) ($_GET['serie_id'] ?? 0);
+        $matieres = $this->db->prepare(
+            "SELECT id, nom FROM matieres WHERE serie_id = ? AND is_active = 1 ORDER BY ordre, nom"
+        );
+        $matieres->execute([$serieId]);
+        Response::json(['success' => true, 'matieres' => $matieres->fetchAll(PDO::FETCH_ASSOC)]);
+    }
+
+    /**
+     * Récupère un réglage système
+     */
+    private function getSetting(string $key): ?string
+    {
+        $stmt = $this->db->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
+        $stmt->execute([$key]);
+        $val = $stmt->fetchColumn();
+        return $val !== false ? (string)$val : null;
+    }
+}

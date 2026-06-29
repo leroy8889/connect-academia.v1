@@ -1,0 +1,27 @@
+
+# Gros fichiers media
+*.MOV
+*.mov
+*.mp4
+*.MP4
+
+# Environnement & secrets
+.env
+
+# Logs
+storage/logs/
+*.log
+
+# Uploads utilisateurs
+public/uploads/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# IDE / Claude
+.claude/
+
+# Dépendances
+vendor/
+node_modules/

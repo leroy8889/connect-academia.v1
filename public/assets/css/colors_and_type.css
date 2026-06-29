@@ -1,0 +1,200 @@
+/* =============================================================
+   Connect'Academia — Design Tokens
+   Colors + Typography (Light Mode default, Dark Mode opt-in)
+   ============================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* === Brand (mode-invariant) === */
+  --purple-neon: #8B52FA;
+  --purple-neon-rgb: 139, 82, 250;
+  --purple-tint: #F3EFFF;        /* charte 02 — very light purple */
+  --purple-glow-30: rgba(139, 82, 250, 0.30);
+  --purple-glow-20: rgba(139, 82, 250, 0.20);
+  --purple-press: #7440D9;       /* darker for press states */
+  --purple-hover: #9D6EFB;       /* lighter for hover states */
+
+  /* === Semantic feedback === */
+  --success: #00C853;
+  --error:   #FF5252;
+  --warning: #FFAB00;
+
+  /* === Backgrounds — Light Mode (default) === */
+  --bg-main:    #FFFFFF;
+  --bg-surface: #F5F5F7;
+  --bg-input:   #EEEEEE;
+
+  /* === Text — Light Mode === */
+  --text-primary:   #1A1A1A;
+  --text-secondary: #4A4A4A;
+  --text-muted:     #9E9E9E;
+  --text-on-purple: #FFFFFF;
+
+  /* === Borders === */
+  --border-subtle:  rgba(26, 26, 26, 0.08);
+  --border-strong:  rgba(26, 26, 26, 0.16);
+  --border-focus:   var(--purple-neon);
+
+  /* === Elevation (Light Mode = stronger drop shadows) === */
+  --shadow-sm: 0 1px 2px rgba(26, 26, 26, 0.06), 0 1px 3px rgba(26, 26, 26, 0.04);
+  --shadow-md: 0 4px 12px rgba(26, 26, 26, 0.08), 0 2px 4px rgba(26, 26, 26, 0.04);
+  --shadow-lg: 0 12px 32px rgba(26, 26, 26, 0.12), 0 4px 8px rgba(26, 26, 26, 0.06);
+  --shadow-glow: 0 8px 24px var(--purple-glow-30);
+
+  /* === Glass surface === */
+  --glass-bg:     rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(26, 26, 26, 0.08);
+  --glass-shadow: 0 8px 32px rgba(26, 26, 26, 0.10);
+
+  /* === Radii === */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* === Spacing scale (4-pt grid) === */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* === Type === */
+  --font-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --fs-h1: 28px;
+  --fs-h2: 20px;
+  --fs-h3: 18px;
+  --fs-body-lg: 16px;
+  --fs-body: 14px;
+  --fs-button: 16px;
+  --fs-caption: 12px;
+
+  --fw-light: 300;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-black: 800;
+
+  --lh-tight: 1.2;
+  --lh-snug: 1.4;
+  --lh-normal: 1.55;
+}
+
+/* === Dark Mode === */
+[data-theme="dark"] {
+  --bg-main:    #1A1A1A;
+  --bg-surface: #2D2D2D;
+  --bg-input:   #121212;
+
+  --text-primary:   #FFFFFF;
+  --text-secondary: #E0E0E0;
+  --text-muted:     #A0A0A0;
+
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.30);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55), 0 4px 8px rgba(0, 0, 0, 0.35);
+  --shadow-glow: 0 8px 32px var(--purple-glow-30);
+
+  --glass-bg:     rgba(45, 45, 45, 0.60);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+}
+
+/* Auto dark mode if user prefers it AND no explicit theme attr */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-main:    #1A1A1A;
+    --bg-surface: #2D2D2D;
+    --bg-input:   #121212;
+    --text-primary:   #FFFFFF;
+    --text-secondary: #E0E0E0;
+    --text-muted:     #A0A0A0;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.16);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.40);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.30);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55), 0 4px 8px rgba(0, 0, 0, 0.35);
+    --shadow-glow: 0 8px 32px var(--purple-glow-30);
+    --glass-bg:     rgba(45, 45, 45, 0.60);
+    --glass-border: rgba(255, 255, 255, 0.10);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+  }
+}
+
+/* =============================================================
+   Base type primitives
+   ============================================================= */
+.ca-h1 {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-h1);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+.ca-h2 {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-h2);
+  line-height: var(--lh-snug);
+  color: var(--text-primary);
+}
+.ca-h3 {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-h3);
+  line-height: var(--lh-snug);
+  color: var(--text-primary);
+}
+.ca-body {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  color: var(--text-secondary);
+}
+.ca-body-lg {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-body-lg);
+  line-height: var(--lh-normal);
+  color: var(--text-secondary);
+}
+.ca-button-text {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-button);
+  letter-spacing: 0.01em;
+}
+.ca-caption {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-light);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-normal);
+  color: var(--text-muted);
+}
+
+/* =============================================================
+   Glass card primitive
+   ============================================================= */
+.ca-glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+}
