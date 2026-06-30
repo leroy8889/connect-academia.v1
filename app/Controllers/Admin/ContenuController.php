@@ -67,19 +67,11 @@ class ContenuController
         $stmt->execute($params);
         $ressources = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // --- NORMALISATION DES URLS POUR LA VISUALISATION ---
+        // Normalisation URLs — fichier_path stocké comme "uploads/ressources/xxx.pdf"
+        // url() helper ajoute BASE_URL, public/ est accessible depuis la racine web
         foreach ($ressources as &$res) {
             $path = $res['fichier_path'] ?? '';
-            if (!empty($path)) {
-                // Nettoyage du chemin pour pointer vers le dossier public
-                if (!str_starts_with($path, '/public/') && !str_starts_with($path, 'public/')) {
-                    $path = '/public/' . ltrim($path, '/');
-                }
-                if (!str_starts_with($path, '/')) $path = '/' . $path;
-                $res['file_url'] = (defined('BASE_URL') && BASE_URL !== '') ? BASE_URL . $path : $path;
-            } else {
-                $res['file_url'] = '#';
-            }
+            $res['file_url'] = !empty($path) ? url('public/' . ltrim($path, '/')) : '#';
         }
 
         // Statistiques du mois
@@ -142,6 +134,14 @@ class ContenuController
                 $msg = $uploadErrors[(int)$upload['error']] ?? 'Erreur upload (code ' . $upload['error'] . ')';
                 error_log('[ContenuController] Erreur upload: code=' . $upload['error'] . ' msg=' . $msg);
                 Response::json(['success' => false, 'message' => $msg], 422);
+                return;
+            }
+
+            // Vérification taille max (MAX_UPLOAD_MB depuis .env)
+            $maxMb    = (int) ($_ENV['MAX_UPLOAD_MB'] ?? 50);
+            $maxBytes = $maxMb * 1024 * 1024;
+            if (($upload['size'] ?? 0) > $maxBytes) {
+                Response::json(['success' => false, 'message' => "Fichier trop lourd. Maximum autorisé : {$maxMb} Mo."], 422);
                 return;
             }
 

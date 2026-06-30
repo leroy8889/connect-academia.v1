@@ -13,7 +13,7 @@ class Database
     private function __construct()
     {
         $host    = $_ENV['DB_HOST']    ?? '127.0.0.1';
-        $port    = $_ENV['DB_PORT']    ?? '3306';
+        $port    = $_ENV['DB_PORT']    ?? '8889';
         $name    = $_ENV['DB_NAME']    ?? 'connect_academia1';
         $user    = $_ENV['DB_USER']    ?? 'root';
         $pass    = $_ENV['DB_PASS']    ?? 'root';

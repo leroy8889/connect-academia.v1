@@ -9,6 +9,8 @@
   <title>Connect'Academia - L'orientation éducative du Gabon</title>
   <meta name="title" content="Connect'Academia - L'orientation éducative du Gabon">
   <meta name="description" content="Apprentissage, Orientation et Entraide : la première plateforme tout-en-un conçue pour les élèves et étudiants du Gabon.">
+  <meta name="description" content="Connect'Academia, l'orientation éducative au Gabon ">
+
 
   <link rel="shortcut icon" href="<?= BASE_URL ?>/assets/images/Logo 1 CA COMPLET.svg" type="image/svg+xml">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -1331,6 +1333,7 @@
     });
   }
   </script>
+
 
 </body>
 

@@ -11,13 +11,16 @@ use PHPMailer\PHPMailer\Exception;
 
 class AdminAuthController
 {
-    private Admin $model;
+    private ?Admin $model = null;
     private const MAX_ATTEMPTS    = 5;
     private const LOCKOUT_SECONDS = 900; // 15 min
 
-    public function __construct()
+    private function model(): Admin
     {
-        $this->model = new Admin();
+        if ($this->model === null) {
+            $this->model = new Admin();
+        }
+        return $this->model;
     }
 
     public function showLogin(): void
@@ -65,11 +68,11 @@ class AdminAuthController
             Response::redirect('/Administratorconnect/login');
         }
 
-        $admin = $this->model->findByEmail($email);
+        $admin = $this->model()->findByEmail($email);
 
-        if (!$admin || !$this->model->verifyPassword($password, $admin['password_hash'])) {
+        if (!$admin || !$this->model()->verifyPassword($password, $admin['password_hash'])) {
             RateLimiter::hit($rlKey, self::LOCKOUT_SECONDS);
-            $this->model->logConnection($admin['id'] ?? null, $email, $ip, $agent, 'echec');
+            $this->model()->logConnection($admin['id'] ?? null, $email, $ip, $agent, 'echec');
 
             // Compteur session : incrémente et vérifie le seuil
             $attempts  = (int) Session::get('admin_login_attempts', 0) + 1;
@@ -136,7 +139,7 @@ class AdminAuthController
 
         // Vérification de l'OTP, de la correspondance et de l'expiration
         if ($code === (string)$pending['otp'] && time() < $pending['expires']) {
-            $admin = $this->model->findById((int) $pending['id']);
+            $admin = $this->model()->findById((int) $pending['id']);
             
             if (!$admin) {
                 Session::remove('admin_2fa_pending');
@@ -147,7 +150,7 @@ class AdminAuthController
             Session::remove('admin_2fa_pending');
             $this->startAdminSession($admin);
 
-            $this->model->logConnection(
+            $this->model()->logConnection(
                 $admin['id'],
                 $admin['email'],
                 $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
@@ -264,7 +267,7 @@ class AdminAuthController
             return;
         }
 
-        $admin = $this->model->findByEmail($email);
+        $admin = $this->model()->findByEmail($email);
 
         // --- AJOUT : Si l'email n'existe pas dans la base ---
         if (!$admin) {
@@ -279,7 +282,7 @@ class AdminAuthController
             // pour stocker ce token en base de données avec une expiration.
             
             // --- AJOUT : Sauvegarde réelle du token ---
-            $this->model->setResetToken((int)$admin['id'], $token);
+            $this->model()->setResetToken((int)$admin['id'], $token);
 
             $mail = new PHPMailer(true);
             try {
@@ -337,7 +340,7 @@ class AdminAuthController
         }
 
         // --- RÉCUPÉRATION DE L'EMAIL VIA LE TOKEN ---
-        $admin = $this->model->findByResetToken($token);
+        $admin = $this->model()->findByResetToken($token);
 
         Response::view('admin/auth/reset', [
             'pageTitle' => "Nouveau mot de passe — Connect'Academia",
@@ -364,7 +367,7 @@ class AdminAuthController
         // et de mise à jour du hash dans votre modèle Admin.
         
         // --- VÉRIFICATION ET MISE À JOUR ---
-        $admin = $this->model->findByResetToken($token);
+        $admin = $this->model()->findByResetToken($token);
 
         if (!$admin) {
             Session::flash('error', 'Ce lien de réinitialisation est invalide ou a expiré.');
@@ -374,9 +377,9 @@ class AdminAuthController
 
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
         
-        if ($this->model->updatePassword((int)$admin['id'], $hashedPassword)) {
+        if ($this->model()->updatePassword((int)$admin['id'], $hashedPassword)) {
             // Suppression du token après usage pour la sécurité
-            $this->model->deleteResetToken($token);
+            $this->model()->deleteResetToken($token);
 
             Session::flash('success', 'Votre mot de passe a été mis à jour avec succès.');
             Response::redirect('/Administratorconnect/login');

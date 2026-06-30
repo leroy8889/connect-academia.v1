@@ -5,6 +5,23 @@
  */
 declare(strict_types=1);
 
+// ── Protection inspection du code (côté client) ───────────────────────────
+ob_start(function (string $html): string {
+    if (stripos($html, '</body>') === false) {
+        return $html;
+    }
+    $script = '<script>(function(){'
+        . 'document.addEventListener("contextmenu",function(e){e.preventDefault();});'
+        . 'document.addEventListener("keydown",function(e){'
+        . 'if(e.key==="F12"'
+        . '||(e.ctrlKey&&e.shiftKey&&["I","J","C"].indexOf(e.key.toUpperCase())>-1)'
+        . '||(e.ctrlKey&&["U","S"].indexOf(e.key.toUpperCase())>-1))'
+        . '{e.preventDefault();e.stopPropagation();return false;}'
+        . '});'
+        . '}());</script>';
+    return str_ireplace('</body>', $script . '</body>', $html);
+});
+
 // ── CHARGEMENT DE COMPOSER (PHPMailer, etc.) ──────────────────────────────
 if (file_exists(__DIR__ . '/vendor/autoload.php')) {
     require_once __DIR__ . '/vendor/autoload.php';
@@ -182,6 +199,47 @@ if (!headers_sent()) {
     ]);
     header('Content-Security-Policy: ' . $csp);
 }
+
+// ── Handler d'exceptions global ────────────────────────────────────────────
+set_exception_handler(function (\Throwable $e): void {
+    error_log('[Uncaught] ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+
+    if (!headers_sent()) {
+        http_response_code(503);
+    }
+
+    $isDbError = str_contains($e->getMessage(), '[Database]')
+        || str_contains($e->getMessage(), 'SQLSTATE')
+        || str_contains($e->getMessage(), 'Connection refused')
+        || str_contains($e->getMessage(), 'PDOException');
+
+    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
+        && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
+    if ($isAjax) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'error'   => ['code' => 'SERVICE_UNAVAILABLE', 'message' => 'Service temporairement indisponible.'],
+        ]);
+        exit;
+    }
+
+    if ($isDbError) {
+        require BASE_PATH . '/app/Views/errors/db-down.php';
+    } else {
+        http_response_code(500);
+        if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
+            echo '<pre style="background:#1a1a2e;color:#e2e8f0;padding:2rem;font-size:13px;line-height:1.6;">';
+            echo '<strong style="color:#f87171">Erreur : </strong>' . htmlspecialchars($e->getMessage()) . "\n\n";
+            echo htmlspecialchars($e->getTraceAsString());
+            echo '</pre>';
+        } else {
+            require BASE_PATH . '/app/Views/errors/503.php';
+        }
+    }
+    exit;
+});
 
 // ── Dispatcher ─────────────────────────────────────────────────────────────
 require BASE_PATH . '/config/routes.php';
