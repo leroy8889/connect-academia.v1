@@ -187,3 +187,52 @@ $typeLabel = fn(string $t) => $types[$t] ?? ucfirst(str_replace('_', ' ', $t));
   <?php endif; ?>
 
 </div>
+
+<style>
+/* ── AJOUT RESPONSIVE GRILLE ET TITRES LONGS ── */
+.appr-page {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  padding: 12px !important;
+  box-sizing: border-box !important;
+}
+
+/* Rendre la barre d'onglets de filtrage défilable horizontalement sur mobile si trop d'éléments */
+.filter-tabs {
+  display: flex !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  white-space: nowrap !important;
+  padding-bottom: 8px !important;
+  -webkit-overflow-scrolling: touch;
+}
+.filter-tab {
+  flex-shrink: 0 !important;
+}
+
+/* Sécurité d'affichage pour la structure des cartes */
+.grid-cards {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  gap: 16px !important;
+  width: 100% !important;
+}
+
+.resource-card {
+  min-width: 0 !important; /* Très important pour empêcher la carte de pousser la grille */
+  word-wrap: break-word !important;
+}
+
+.resource-card__meta {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+}
+
+/* Ajustement sur petit écran */
+@media (max-width: 480px) {
+  .grid-cards {
+    grid-template-columns: 1fr !important; /* Une seule colonne propre sur mobile */
+  }
+}
+</style>

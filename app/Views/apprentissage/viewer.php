@@ -297,6 +297,21 @@ $typeLabels = [
   width: 100%;
   height: auto;
 }
+
+/* Fix text truncation / overflow in resource list items */
+.viewer-sidebar__list-title {
+  white-space: normal;
+  word-break: break-word;
+  overflow: hidden;
+}
+
+/* Fix responsive wrapping in chat messages (prevent breaking out layout) */
+.ia-msg__bubble {
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
+}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous"></script>

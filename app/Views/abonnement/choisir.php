@@ -238,7 +238,7 @@ $csrfToken  = \Core\Session::getCsrfToken();
 
   <!-- Email notice -->
   <div class="email-notice">
-    ⚠️ Lors du paiement sur MoneyFusion, après le paiement patientez une une minute avant de cliquer sur le "Vérifier votre paiement" :
+    ⚠️ Lors du paiement sur MoneyFusion, après le paiement patientez une minute avant de cliquer sur le bouton "Vérifier votre paiement" :
     <br><strong><?= $userEmail ?></strong>
    
   </div>

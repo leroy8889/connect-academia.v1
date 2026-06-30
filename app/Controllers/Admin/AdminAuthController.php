@@ -206,6 +206,7 @@ class AdminAuthController
 
             return $mail->send();
         } catch (Exception $e) {
+            error_log("Erreur PHPMailer SMTP : " . $mail->ErrorInfo);
             return false;
         }
     }

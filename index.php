@@ -179,7 +179,9 @@ if (!headers_sent()) {
     }
     // Session cookie sécurisé en HTTPS
     if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
-        ini_set('session.cookie_secure', '1');
+        if (session_status() === PHP_SESSION_NONE) {
+            ini_set('session.cookie_secure', '1');
+        }
     }
     // Content-Security-Policy — toutes les ressources tierces préservées
     $csp = implode('; ', [
@@ -188,7 +190,7 @@ if (!headers_sent()) {
         "style-src 'self' 'unsafe-inline' https://cdn.boxicons.com https://unpkg.com https://fonts.googleapis.com https://fonts.cdnfonts.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
         "img-src 'self' data: https: blob:",
         "font-src 'self' https://fonts.gstatic.com https://cdn.boxicons.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.cdnfonts.com",
-        "connect-src 'self' https://generativelanguage.googleapis.com https://pay.moneyfusion.net https://www.pay.moneyfusion.net https://unpkg.com https://www.chatbase.co https://api.iconify.design https://*.tile.openstreetmap.org",
+        "connect-src 'self' https://generativelanguage.googleapis.com https://pay.moneyfusion.net https://www.pay.moneyfusion.net https://unpkg.com https://www.chatbase.co https://api.iconify.design https://*.tile.openstreetmap.org https://cdnjs.cloudflare.com",
         "media-src 'self' blob:",
         "object-src 'none'",
         "frame-src 'self' https://www.chatbase.co https://www.youtube.com https://player.vimeo.com",

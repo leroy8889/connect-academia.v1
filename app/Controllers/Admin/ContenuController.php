@@ -41,7 +41,7 @@ class ContenuController
         $params = [];
 
         if (!empty($_GET['serie_id'])) {
-            $where[]  = 'm.serie_id = ?';
+            $where[]  = 'r.serie_id = ?';
             $params[] = (int) $_GET['serie_id'];
         }
         if (!empty($_GET['matiere_id'])) {
@@ -59,7 +59,7 @@ class ContenuController
                     m.nom AS matiere, s.nom AS serie
              FROM ressources r
              JOIN matieres m ON m.id = r.matiere_id
-             JOIN series s ON s.id = m.serie_id
+             JOIN series s ON s.id = r.serie_id
              WHERE " . implode(' AND ', $where) . "
              ORDER BY r.created_at DESC
              LIMIT 100"

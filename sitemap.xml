@@ -25,6 +25,13 @@
     <priority>0.8</priority>
   </url>
 
+  <url>
+    <loc>https://connectacademia.io/auth/mot-de-passe-oublie</loc>
+    <lastmod>2026-06-08</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
   <!-- Abonnement / Tarifs -->
   <url>
     <loc>https://connectacademia.io/abonnement/choisir</loc>

@@ -10,7 +10,7 @@ namespace Core;
 class MoneyFusion
 {
     public const FEE_RATE = 1.08;
-    private const DEFAULT_CHECK_URL = "https://www.pay.moneyfusion.net/paiementNotif";
+    private const DEFAULT_CHECK_URL = "https://pay.moneyfusion.net/paiementNotif";
 
     private static function getApiUrl(): string
     {

@@ -1004,6 +1004,29 @@
   <!-- 
     - #HEADER
   -->
+  <style>
+  /* Force le fond blanc sur tout le menu mobile et la liste pour éviter la transparence */
+  @media (max-width: 991px) {
+    .navbar,
+    [data-navbar],
+    .navbar-list {
+      background-color: #ffffff !important;
+    }
+
+    /* Force le texte et les éléments de liste en sombre pour une lisibilité parfaite */
+    .navbar-link,
+    .navbar-item {
+      color: #1a1a1a !important;
+      background-color: #ffffff !important;
+    }
+
+    /* Optionnel : ajoute une fine ligne de séparation entre les rubriques */
+    .navbar-item {
+      border-bottom: 1px solid #f0f0f0;
+    }
+  }
+</style>
+
   <header class="header" data-header>
     <div class="container">
 
@@ -1067,7 +1090,6 @@
 
     </div>
   </header>
-
 
   <section class="hero-orientation">
     <div class="hero-overlay"></div>

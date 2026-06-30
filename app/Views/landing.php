@@ -10,7 +10,7 @@
   <meta name="title" content="Connect'Academia - L'orientation éducative du Gabon">
   <meta name="description" content="Apprentissage, Orientation et Entraide : la première plateforme tout-en-un conçue pour les élèves et étudiants du Gabon.">
   <meta name="description" content="Connect'Academia, l'orientation éducative au Gabon ">
-
+  <meta name="google-site-verification" content="fmg3ovN0W_D8zpCW2jRSdQEyneO4Psc9H5rDLs05lPw" />
 
   <link rel="shortcut icon" href="<?= BASE_URL ?>/assets/images/Logo 1 CA COMPLET.svg" type="image/svg+xml">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -49,6 +49,29 @@
 </head>
 
 <body id="top">
+
+  <style>
+  /* Cible la navbar entière ET la liste des liens en mode mobile pour tout peindre en blanc */
+  @media (max-width: 991px) {
+    .navbar,
+    [data-navbar],
+    .navbar-list {
+      background-color: #ffffff !important;
+    }
+
+    /* Assure que tous les liens et éléments de texte restent bien sombres et visibles */
+    .navbar-link,
+    .navbar-item {
+      color: #1a1a1a !important;
+      background-color: #ffffff !important;
+    }
+
+    /* Optionnel : ajoute une bordure légère sous chaque lien si tu veux mieux les séparer */
+    .navbar-item {
+      border-bottom: 1px solid #f0f0f0;
+    }
+  }
+</style>
 
   <header class="header" data-header>
     <div class="container">
@@ -125,7 +148,7 @@
           <div class="hero-content">
 
             <h1 class="h1 section-title">
-              Votre <span class="span"> résussite </span> ne doit plus dépendre du hasard.
+              Votre <span class="span"> réussite </span> ne doit plus dépendre du hasard.
             </h1>
 
             <p class="hero-text">
@@ -383,7 +406,7 @@
                 <h3>Orientation</h3>
                 <p>Compare, explore et choisis l'école qui correspond à ton projet de vie.</p>
               </div>
-              <a href="<?= url('auth/inscription') ?>" class="btn has-before">
+              <a href="<?= url('../../public/orientation/orientation.html') ?>" class="btn has-before">
                 <span class="span">Commencer</span>
                 <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
               </a>
@@ -1333,7 +1356,6 @@
     });
   }
   </script>
-
 
 </body>
 

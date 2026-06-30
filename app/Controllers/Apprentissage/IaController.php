@@ -141,6 +141,7 @@ class IaController
                 CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
                 CURLOPT_TIMEOUT        => 60,
                 CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_IPRESOLVE      => CURL_IPRESOLVE_V4, // évite les blocages de plages IPv6 chez Google
             ]);
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
