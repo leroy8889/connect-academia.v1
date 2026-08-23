@@ -208,6 +208,7 @@ $router->post('/webhook/orientation/payin',                             'Orienta
 $router->post('/webhook/orientation/payout',                            'Orientation\PaiementOrientationController@webhookPayout');
 
 $router->get('/orientation/{slug}/actualite/{id}',             'Orientation\PublicController@actualite');
+$router->get('/orientation/{slug}/formations/{id}',            'Orientation\PublicController@formationDetail');
 $router->get('/orientation/{slug}',                             'Orientation\PublicController@show');
 
 // ── Orientation — Établissements ─────────────────────────────────────────────
