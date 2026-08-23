@@ -13,9 +13,11 @@
             <p class="auth-desc">Choisissez un mot de passe robuste pour votre compte.</p>
         <?php endif; ?>
 
-        <?php 
-        $flashError = \Core\Session::flash('error');
-        if ($flashError): 
+        <?php
+        // Le flash est lu par le contrôleur (Session::flash() est un setter) et
+        // transmis à la vue : le relire ici lèverait une ArgumentCountError.
+        $flashError = $flashError ?? null;
+        if ($flashError):
         ?>
             <div style="background: rgba(255, 69, 58, 0.1); border: 1px solid #ff453a; color: #ff453a; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; display: flex; align-items: center; gap: 10px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

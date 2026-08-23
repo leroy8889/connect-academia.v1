@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /Administratorconnect
+Disallow: /gestionnaire
+Disallow: /hub
+Disallow: /communaute
+Disallow: /apprentissage
+Disallow: /api/
+Disallow: /verifier/
+Disallow: /orientation/recherche
+
+Sitemap: https://connectacademia.io/sitemap.xml

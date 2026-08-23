@@ -11,15 +11,11 @@ $pct   = (int) ($ressource['pourcentage'] ?? 0);
 $isVideo = preg_match('#\.(mp4|webm|ogg)$#i', $path) || preg_match('#(youtube|youtu\.be|vimeo)#i', $path);
 $isPdf   = !$isVideo && !empty($path);
 
-$fileUrl = '';
-if (!empty($path)) {
-    if (preg_match('#^https?://#i', $path)) {
-        $fileUrl = $path; // URL absolue (YouTube, Vimeo, etc.)
-    } else {
-        // Chemin relatif ou absolu → toujours sous /public/
-        $fileUrl = url('/public/' . ltrim($path, '/'));
-    }
-}
+// URL absolue (YouTube, Vimeo…), fichier public, ou fichier rangé dans storage/
+// et servi par /ressources/fichier/{id} : RessourceStorage tranche les trois cas.
+$fileUrl = !empty($path)
+    ? \Core\RessourceStorage::url((int) ($ressource['id'] ?? 0), $path)
+    : '';
 
 $typeLabels = [
     'cours'            => 'Cours',
@@ -182,7 +178,7 @@ $typeLabels = [
       </div>
       <div>
         <div class="ia-panel__title">Assistant Connect'Academia</div>
-        <div class="ia-panel__sub">Posez vos questions sur cette ressource</div>
+        <div class="ia-panel__sub">Pose tes questions sur cette ressource</div>
       </div>
       <div class="ia-panel__header-actions">
         <button id="ia-new-chat" class="ia-new-chat-btn" title="Nouvelle conversation">
@@ -203,8 +199,8 @@ $typeLabels = [
           <img src="<?= asset('images/logo-officiel.png') ?>" alt="BACY" style="width:22px;height:22px;object-fit:contain;">
         </div>
         <div class="ia-msg__bubble">
-          Bonjour ! Je suis l'assistant Connect'Academia, votre assistant IA pour <strong><?= e($titre) ?></strong>.
-          Posez-moi vos questions, je suis là pour vous aider à comprendre le cours.
+          Bonjour ! Je suis l'assistant Connect'Academia, ton assistant IA pour <strong><?= e($titre) ?></strong>.
+          Pose-moi tes questions, je suis là pour t'aider à comprendre le cours.
         </div>
       </div>
     </div>
@@ -223,7 +219,7 @@ $typeLabels = [
         <button type="button" id="ia-image-btn" class="ia-image-btn" title="Joindre une image (JPG, PNG, GIF, WEBP…)">
           <i data-lucide="image" style="width:16px;height:16px;"></i>
         </button>
-        <textarea id="ia-textarea" placeholder="Posez votre question…" rows="1"></textarea>
+        <textarea id="ia-textarea" placeholder="Pose ta question…" rows="1"></textarea>
         <button id="ia-send" disabled title="Envoyer (Entrée)">
           <i data-lucide="send" style="width:15px;height:15px;"></i>
         </button>

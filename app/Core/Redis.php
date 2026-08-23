@@ -480,16 +480,20 @@ LUA;
         if (!$this->available) return [];
         try {
             $result  = [];
-            $cursor  = null;
             $fullPat = $this->prefix . $pattern;
-            do {
-                [$cursor, $batch] = $this->client->scan($cursor, ['match' => $fullPat, 'count' => 200]);
-                if (is_array($batch)) {
+            $cursor  = null;
+            // phpredis : signature POSITIONNELLE scan(&$cursor, $pattern, $count).
+            // Le curseur est muté par référence ; scan renvoie le lot de clés
+            // (déjà préfixées, aucun OPT_PREFIX n'est posé) ou false à la fin.
+            // SCAN_RETRY empêche les lots vides prématurés qui casseraient la boucle.
+            $this->client->setOption(PhpRedis::OPT_SCAN, PhpRedis::SCAN_RETRY);
+            while (($batch = $this->client->scan($cursor, $fullPat, 200)) !== false) {
+                if (is_array($batch) && $batch !== []) {
                     $result = array_merge($result, $batch);
                 }
-            } while ($cursor !== 0);
+            }
             return $result;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return [];
         }
     }

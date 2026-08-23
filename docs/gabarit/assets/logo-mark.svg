@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <rect width="120" height="120" rx="20" fill="#1F4E79"/>
+  <g fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M60 28 34 40 60 52 86 40 60 28Z"/>
+    <path d="M42 48v24c0 6 9 12 18 12s18-6 18-12V48"/>
+    <path d="M86 40v20"/>
+  </g>
+  <text x="60" y="100" text-anchor="middle" font-family="Montserrat, sans-serif" font-weight="800" font-size="13" fill="rgba(255,255,255,0.85)" letter-spacing="2">BBS</text>
+</svg>

@@ -22,15 +22,15 @@ $inscrits = max(1, (int)($funnel['inscrits'] ?? 1));
 $maxVues = max(1, max(array_column($topRessources, 'nb_vues') ?: [1]));
 
 // Répartition donut labels
-$roles = ['Élèves' => '#8B52FA', 'Enseignants' => '#B06400', 'Admins' => '#1A1A2E'];
+$roles = ['Élèves' => '#8B52FA', 'Gestionnaires' => '#B06400', 'Admins' => '#1A1A2E'];
 $roleLabels = json_encode(array_keys($roles));
 $roleColors = json_encode(array_values($roles));
 $roleData   = json_encode([
     (int)($repartition['eleve'] ?? 0),
-    (int)($repartition['enseignant'] ?? 0),
+    (int)($repartition['gestionnaire'] ?? 0),
     (int)($repartition['admin'] ?? 0),
 ]);
-$totalMembers = ($repartition['eleve'] ?? 0) + ($repartition['enseignant'] ?? 0) + ($repartition['admin'] ?? 0);
+$totalMembers = ($repartition['eleve'] ?? 0) + ($repartition['gestionnaire'] ?? 0) + ($repartition['admin'] ?? 0);
 ?>
 
 <!-- Header -->
@@ -113,10 +113,10 @@ $totalMembers = ($repartition['eleve'] ?? 0) + ($repartition['enseignant'] ?? 0)
         </div>
       </div>
       <div style="width:100%;">
-        <?php foreach ($repartition as $role => $nb): if (!in_array($role, ['eleve','enseignant','admin'])) continue;
+        <?php foreach ($repartition as $role => $nb): if (!in_array($role, ['eleve','gestionnaire','admin'])) continue;
           $pct = $totalMembers > 0 ? round($nb / $totalMembers * 100, 1) : 0;
-          $colors = ['eleve' => '#8B52FA', 'enseignant' => '#B06400', 'admin' => '#1A1A2E'];
-          $labels = ['eleve' => 'Élèves', 'enseignant' => 'Enseignants', 'admin' => 'Admins'];
+          $colors = ['eleve' => '#8B52FA', 'gestionnaire' => '#B06400', 'admin' => '#1A1A2E'];
+          $labels = ['eleve' => 'Élèves', 'gestionnaire' => 'Gestionnaires', 'admin' => 'Admins'];
         ?>
         <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
           <span style="width:10px;height:10px;border-radius:50%;background:<?= $colors[$role] ?>;flex-shrink:0;display:inline-block;"></span>

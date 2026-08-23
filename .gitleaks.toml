@@ -1,0 +1,16 @@
+# Configuration gitleaks — Connect'Academia
+# Étend le jeu de règles par défaut et exclut le bruit tiers (faux positifs
+# des schémas d'API embarqués dans les dépendances), afin que `gitleaks detect`
+# ne signale que des secrets réellement introduits par le projet.
+# Même logique que l'exclusion PHPMailer côté Psalm (WEB-10).
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Chemins tiers / générés — hors périmètre applicatif"
+paths = [
+  '''vendor/''',            # dépendances Composer (ex. schémas AWS SDK = faux positifs)
+  '''node_modules/''',      # dépendances npm
+  '''public/uploads/''',    # fichiers uploadés par les utilisateurs
+]

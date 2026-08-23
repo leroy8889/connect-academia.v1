@@ -12,10 +12,6 @@ $totalPages          = (int)($totalPages    ?? 1);
 $total               = (int)($total         ?? 0);
 $csrfToken           = \Core\Session::getCsrfToken();
 
-function fmtXAF(float $v): string {
-    return number_format($v, 0, ',', ' ') . ' XAF';
-}
-
 function statutBadgePay(string $statut): string {
     return match($statut) {
         'succes'     => '<span class="badge-pay badge-pay--success"><span class="badge-dot"></span>Succès</span>',
@@ -34,554 +30,285 @@ function paiUrl(array $filters, int $page): string {
 ?>
 
 <style>
-/* ────────────────────────────────────────────────────────────
-   PAIEMENTS — styles spécifiques
-   ──────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   PAIEMENTS — conception Claude / couleurs Connect'Academia
+   Surfaces pleines, hairlines neutres, aucune ombre portée décorative.
+   La typographie porte la hiérarchie ; le violet ne sert qu'aux accents.
+   ══════════════════════════════════════════════════════════════════════ */
 
-/* Revenue grid */
-.pay-revenue-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 16px;
+/* ── En-tête ─────────────────────────────────────────────────────── */
+.pay-head { margin-bottom: 28px; }
+.pay-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--txt-l); margin-bottom: 10px;
 }
+.pay-head-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.pay-head h1 {
+  font-family: var(--font-head); font-size: 26px; font-weight: 800;
+  letter-spacing: -0.02em; color: var(--txt); margin: 0;
+}
+.pay-head p { font-size: 14px; line-height: 1.5; color: var(--txt-m); margin: 6px 0 0; max-width: 560px; }
+.pay-head p b { color: var(--txt); font-weight: 700; font-variant-numeric: tabular-nums; }
+.pay-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-/* Hero card — CA Total */
-.pay-hero-card {
-  grid-column: span 2;
-  background: linear-gradient(135deg, var(--ap) 0%, #6B32DA 100%);
-  border-radius: var(--r);
-  padding: 26px 28px;
-  position: relative;
-  overflow: hidden;
-  color: #fff;
-  box-shadow: 0 10px 40px rgba(139,82,250,0.32);
-  min-height: 140px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+/* Boutons de la barre d'actions — pilules hairline, un seul plein */
+.pay-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 36px; padding: 0 15px; border-radius: var(--r-pill);
+  border: 1px solid var(--border-strong); background: var(--card);
+  font-family: var(--font-body); font-size: 12.5px; font-weight: 600;
+  color: var(--txt-m); text-decoration: none; cursor: pointer; white-space: nowrap;
+  transition: border-color .14s ease, color .14s ease, background .14s ease;
 }
-.pay-hero-card::before {
-  content: '';
-  position: absolute;
-  top: -50px; right: -50px;
-  width: 200px; height: 200px;
-  background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 65%);
-  border-radius: 50%;
-  pointer-events: none;
-}
-.pay-hero-card::after {
-  content: '';
-  position: absolute;
-  bottom: -30px; left: -10px;
-  width: 120px; height: 120px;
-  background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
-}
-.pay-hero-eyebrow {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.72);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-.pay-hero-value {
-  font-family: var(--font-head);
-  font-size: 30px;
-  font-weight: 800;
-  color: #fff;
-  line-height: 1;
-  position: relative; z-index: 1;
-}
-.pay-hero-sub {
-  font-size: 12px;
-  color: rgba(255,255,255,0.65);
-  margin-top: 6px;
-  position: relative; z-index: 1;
-}
-.pay-hero-bg-icon {
-  position: absolute;
-  right: 24px;
-  top: 50%;
-  transform: translateY(-50%);
-  opacity: 0.12;
-  pointer-events: none;
+.pay-btn svg { flex: none; }
+.pay-btn:hover { border-color: var(--ap); color: var(--ap); background: var(--ap-lt); }
+.pay-btn[disabled] { opacity: .55; cursor: default; }
+.pay-btn--solid { background: var(--txt); border-color: var(--txt); color: #fff; }
+.pay-btn--solid:hover { background: #000; border-color: #000; color: #fff; }
+.pay-btn--alert { border-color: #F0C98B; color: #92600A; background: var(--amber-bg); }
+.pay-btn--alert:hover { border-color: #D9930F; color: #92600A; background: #FFE9BE; }
+.pay-btn-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 19px; height: 19px; padding: 0 6px; border-radius: 999px;
+  background: #B45309; color: #fff; font-size: 10.5px; font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Metric cards */
-.pay-metric-card {
-  background: var(--card);
-  border-radius: var(--r);
-  padding: 20px 22px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-  transition: box-shadow 0.2s, transform 0.2s;
+/* ── Statistiques — bloc soudé, séparateurs 1px ──────────────────── */
+.pay-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+  background: var(--border); border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden; margin-bottom: 16px;
 }
-.pay-metric-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+.pay-stats--sub { grid-template-columns: repeat(4, 1fr); margin-bottom: 28px; }
+.pay-stat { background: var(--card); padding: 20px 22px; transition: background .14s ease; }
+.pay-stat:hover { background: var(--ap-xl); }
+.pay-stat--wide { grid-column: span 2; }
+.pay-stat-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--txt-l); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 7px;
 }
-.pay-metric-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 12px;
+.pay-stat-label svg { color: var(--txt-l); flex: none; }
+.pay-stat-val {
+  font-family: var(--font-head); font-size: 28px; font-weight: 800;
+  line-height: 1; letter-spacing: -0.025em; color: var(--txt);
+  font-variant-numeric: tabular-nums;
 }
-.pay-metric-icon {
-  width: 34px; height: 34px;
-  border-radius: 8px;
-  display: grid; place-items: center;
-  flex-shrink: 0;
-}
-.pay-metric-label {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--txt-m);
-  margin-bottom: 4px;
-}
-.pay-metric-value {
-  font-family: var(--font-head);
-  font-size: 22px;
-  font-weight: 800;
-  line-height: 1;
-  color: var(--txt);
-}
-.pay-metric-sub {
-  font-size: 11px;
-  color: var(--txt-l);
-  margin-top: 4px;
-}
+.pay-stat--wide .pay-stat-val { font-size: 34px; }
+.pay-stat-val .u { font-size: 12px; font-weight: 700; color: var(--txt-l); letter-spacing: 0; margin-left: 4px; }
+.pay-stat-val.accent { color: var(--ap); }
+.pay-stat-val.pos    { color: #0F8A43; }
+.pay-stat-val.warn   { color: #B45309; }
+.pay-stat-sub { font-size: 11.5px; color: var(--txt-l); margin-top: 10px; font-weight: 500; }
+.pay-stat-sub b { color: var(--txt-m); font-weight: 700; }
 
-/* Metrics strip */
-.pay-metrics-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-}
+/* Jauge de conversion — barre 4px, jamais un camembert pour 2 valeurs */
+.pay-meter { height: 4px; border-radius: 999px; background: var(--border); overflow: hidden; margin-top: 14px; }
+.pay-meter i { display: block; height: 100%; background: var(--ap); border-radius: 999px; }
+.pay-meter i.pos { background: #0F8A43; }
 
-/* Badges */
+/* ── Badges statut ───────────────────────────────────────────────── */
 .badge-pay {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.15px;
-  white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: .15px; white-space: nowrap;
 }
-.badge-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  display: inline-block;
-  flex-shrink: 0;
-}
-.badge-pay--success { background: rgba(34,197,94,0.12);  color: #15803D; }
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.badge-pay--success { background: var(--green-bg); color: #15803D; }
 .badge-pay--success .badge-dot { background: #22C55E; }
-.badge-pay--pending { background: rgba(245,158,11,0.13); color: #B45309; }
+.badge-pay--pending { background: var(--amber-bg); color: #92600A; }
 .badge-pay--pending .badge-dot { background: #F59E0B; }
-.badge-pay--error   { background: rgba(239,68,68,0.12);  color: #B91C1C; }
+.badge-pay--error   { background: var(--red-bg);   color: #B91C1C; }
 .badge-pay--error   .badge-dot { background: #EF4444; }
-.badge-pay--refund  { background: rgba(59,130,246,0.12); color: #1D4ED8; }
+.badge-pay--refund  { background: var(--blue-bg);  color: #1D4ED8; }
 .badge-pay--refund  .badge-dot { background: #3B82F6; }
-.badge-pay--muted   { background: var(--bg); color: var(--txt-m); }
+.badge-pay--muted   { background: var(--bg-2, #F3F1EA); color: var(--txt-m); }
 
-/* Plan badges */
+/* ── Badges plan ─────────────────────────────────────────────────── */
 .pay-plan-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
+  display: inline-flex; align-items: center; padding: 3px 10px;
+  border-radius: 999px; font-size: 11px; font-weight: 700;
 }
 .pay-plan-mensuel { background: var(--ap-lt); color: var(--ap); }
-.pay-plan-annuel  { background: #1A1A2E; color: #fff; }
+.pay-plan-annuel  { background: var(--txt); color: #fff; }
 
-/* Filter bar */
+/* ── Carte tableau ───────────────────────────────────────────────── */
+.pay-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+.pay-table-hd {
+  padding: 18px 22px; display: flex; align-items: center;
+  justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border);
+}
+.pay-table-hd-left h2 { font-family: var(--font-head); font-size: 15px; font-weight: 800; color: var(--txt); letter-spacing: -0.01em; }
+.pay-table-hd-left p  { font-size: 12px; color: var(--txt-l); margin-top: 3px; }
+.pay-reset-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12.5px; font-weight: 600; color: var(--txt-l);
+  text-decoration: none; border-bottom: 1.5px solid transparent;
+  transition: color .13s, border-color .13s; background: none; border-radius: 0;
+  padding: 0 0 1px;
+}
+.pay-reset-btn:hover { color: var(--ap); border-bottom-color: var(--ap); }
+
+/* ── Barre de filtres ────────────────────────────────────────────── */
 .pay-filter-bar {
-  padding: 13px 20px;
-  border-bottom: 1px solid var(--border);
-  background: #FAFAFE;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  padding: 14px 22px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
 }
 .pay-filter-bar select,
 .pay-filter-bar input[type="date"] {
-  height: 36px;
-  padding: 0 11px;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  font-family: var(--font-body);
-  font-size: 13px;
-  background: #fff;
-  color: var(--txt);
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  cursor: pointer;
+  height: 36px; padding: 0 12px;
+  border: 1px solid var(--border-strong); border-radius: 8px;
+  font-family: var(--font-body); font-size: 13px;
+  background: var(--card); color: var(--txt); outline: none; cursor: pointer;
+  transition: border-color .13s, box-shadow .13s;
 }
+.pay-filter-bar select:hover,
+.pay-filter-bar input[type="date"]:hover { border-color: var(--txt-l); }
 .pay-filter-bar select:focus,
-.pay-filter-bar input[type="date"]:focus {
-  border-color: var(--ap);
-  box-shadow: 0 0 0 3px rgba(139,82,250,0.10);
-}
-.pay-search-wrap {
-  position: relative;
-  flex: 1;
-  min-width: 200px;
-  max-width: 280px;
-}
-.pay-search-wrap svg {
-  position: absolute;
-  left: 10px; top: 50%;
-  transform: translateY(-50%);
-  color: var(--txt-l);
-  pointer-events: none;
-}
+.pay-filter-bar input[type="date"]:focus { border-color: var(--ap); box-shadow: 0 0 0 3px var(--ap-glow-20); }
+.pay-search-wrap { position: relative; flex: 1; min-width: 200px; max-width: 300px; }
+.pay-search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--txt-l); pointer-events: none; }
 .pay-search-input {
-  width: 100%;
-  height: 36px;
-  padding: 0 12px 0 34px;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  font-family: var(--font-body);
-  font-size: 13px;
-  background: #fff;
-  color: var(--txt);
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%; height: 36px; padding: 0 12px 0 34px;
+  border: 1px solid var(--border-strong); border-radius: 8px;
+  font-family: var(--font-body); font-size: 13px;
+  background: var(--card); color: var(--txt); outline: none;
+  transition: border-color .13s, box-shadow .13s;
 }
-.pay-search-input:focus {
-  border-color: var(--ap);
-  box-shadow: 0 0 0 3px rgba(139,82,250,0.10);
-}
+.pay-search-input:hover { border-color: var(--txt-l); }
+.pay-search-input:focus { border-color: var(--ap); box-shadow: 0 0 0 3px var(--ap-glow-20); }
 .pay-search-input::placeholder { color: var(--txt-l); }
 
-/* Table header inside wrap */
-.pay-table-hd {
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-bottom: 1px solid var(--border);
-}
-.pay-table-hd-left h2 {
-  font-family: var(--font-mid);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--txt);
-}
-.pay-table-hd-left p {
-  font-size: 12px;
-  color: var(--txt-m);
-  margin-top: 2px;
-}
-.pay-reset-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
-  border-radius: 7px;
-  border: 1.5px solid var(--border);
-  background: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--txt-m);
-  text-decoration: none;
-  transition: all 0.15s;
-  font-family: var(--font-body);
-}
-.pay-reset-btn:hover {
-  border-color: var(--red);
-  color: var(--red);
-  background: var(--red-bg);
-}
-
-/* Reference cell */
+/* ── Cellules ────────────────────────────────────────────────────── */
 .pay-ref-cell {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-family: 'Courier New', 'Cascadia Code', monospace;
-  font-size: 11px;
-  color: var(--txt-m);
-  background: var(--bg);
-  border-radius: 6px;
-  padding: 4px 8px;
-  max-width: 160px;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: ui-monospace, 'Cascadia Code', 'Courier New', monospace;
+  font-size: 11px; color: var(--txt-m);
+  background: var(--bg-2, #F3F1EA); border-radius: 6px; padding: 4px 8px; max-width: 170px;
 }
-.pay-ref-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1;
-}
+.pay-ref-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 .pay-copy-btn {
-  cursor: pointer;
-  background: none;
-  border: none;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  color: var(--txt-l);
-  transition: color 0.15s;
-  flex-shrink: 0;
+  cursor: pointer; background: none; border: none; padding: 0;
+  display: flex; align-items: center; color: var(--txt-l);
+  transition: color .13s; flex-shrink: 0;
 }
 .pay-copy-btn:hover { color: var(--ap); }
-
-/* Payload button */
 .pay-payload-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 9px;
-  background: none;
-  border: 1.5px solid var(--border);
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--txt-m);
-  cursor: pointer;
-  transition: all 0.15s;
-  font-family: var(--font-body);
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 10px; background: none;
+  border: 1px solid var(--border-strong); border-radius: 7px;
+  font-size: 11.5px; font-weight: 600; color: var(--txt-m);
+  cursor: pointer; font-family: var(--font-body);
+  transition: border-color .13s, color .13s;
 }
-.pay-payload-btn:hover {
-  border-color: var(--ap);
-  color: var(--ap);
-  background: var(--ap-lt);
-}
+.pay-payload-btn:hover { border-color: var(--ap); color: var(--ap); }
+.pay-amount { display: inline-flex; align-items: baseline; gap: 3px; font-variant-numeric: tabular-nums; }
+.pay-amount strong { font-family: var(--font-head); font-size: 14px; font-weight: 800; color: var(--txt); }
+.pay-amount span   { font-size: 10px; font-weight: 700; color: var(--txt-l); }
+.pay-cell-date  { font-size: 12px; font-weight: 600; color: var(--txt); font-variant-numeric: tabular-nums; }
+.pay-cell-time  { font-size: 11px; color: var(--txt-l); margin-top: 1px; font-variant-numeric: tabular-nums; }
+.pay-cell-mute  { color: var(--txt-l); font-size: 12px; }
+.pay-method { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--txt-m); }
 
-/* Modal */
-.pay-modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(20,20,43,0.52);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  animation: pov-in 180ms ease;
-}
-@keyframes pov-in { from { opacity:0; } to { opacity:1; } }
-.pay-modal {
-  background: var(--card);
-  border-radius: 16px;
-  width: 100%;
-  max-width: 680px;
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 24px 64px rgba(20,20,43,0.22);
-  animation: pm-in 280ms cubic-bezier(0.2,0.8,0.2,1);
-}
-@keyframes pm-in {
-  from { opacity:0; transform: translateY(14px) scale(0.98); }
-  to   { opacity:1; transform: translateY(0)    scale(1);    }
-}
-.pay-modal-head {
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-shrink: 0;
-}
-.pay-modal-head-left {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-}
-.pay-modal-icon {
-  width: 36px; height: 36px;
-  background: var(--ap-lt);
-  border-radius: 9px;
-  display: grid; place-items: center;
-  color: var(--ap);
-  flex-shrink: 0;
-}
-.pay-modal-head h3 {
-  font-family: var(--font-mid);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--txt);
-}
-.pay-modal-head p {
-  font-size: 11px;
-  color: var(--txt-m);
-  margin-top: 1px;
-}
-.pay-modal-x {
-  width: 32px; height: 32px;
-  border-radius: 8px;
-  background: none;
-  border: 1.5px solid var(--border);
-  cursor: pointer;
-  display: grid; place-items: center;
-  color: var(--txt-m);
-  transition: all 0.15s;
-}
-.pay-modal-x:hover { background: var(--bg); border-color: var(--txt-m); color: var(--txt); }
-.pay-modal-body {
-  padding: 20px 22px;
-  overflow-y: auto;
-  flex: 1;
-}
-.pay-modal-body pre {
-  background: #0D0D1A;
-  color: #A9B1D6;
-  padding: 18px 20px;
-  border-radius: 10px;
-  font-size: 12px;
-  line-height: 1.7;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  word-break: break-all;
-  font-family: 'Courier New', monospace;
-  border: 1px solid rgba(255,255,255,0.05);
-}
+/* ── État vide ───────────────────────────────────────────────────── */
+.pay-empty { padding: 64px 24px; text-align: center; }
+.pay-empty-icon { color: var(--txt-l); opacity: .4; margin: 0 auto 14px; display: block; }
+.pay-empty h4 { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--txt); margin-bottom: 5px; }
+.pay-empty p  { font-size: 13px; color: var(--txt-m); }
 
-/* Pagination */
+/* ── Pagination ──────────────────────────────────────────────────── */
 .pay-pager {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 16px 20px;
-  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 16px 22px; border-top: 1px solid var(--border);
 }
 .pay-pager-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 7px 14px;
-  border-radius: 8px;
-  border: 1.5px solid var(--border);
-  background: var(--card);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--txt);
-  text-decoration: none;
-  font-family: var(--font-body);
-  transition: all 0.15s;
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 34px; padding: 0 14px; border-radius: var(--r-pill);
+  border: 1px solid var(--border-strong); background: var(--card);
+  font-size: 12.5px; font-weight: 600; color: var(--txt-m);
+  text-decoration: none; font-family: var(--font-body);
+  transition: border-color .13s, color .13s, background .13s;
 }
-.pay-pager-btn:hover {
-  border-color: var(--ap);
-  color: var(--ap);
-  background: var(--ap-lt);
+.pay-pager-btn:hover { border-color: var(--ap); color: var(--ap); background: var(--ap-lt); }
+.pay-pager-info { padding: 0 12px; font-size: 12.5px; font-weight: 600; color: var(--txt-l); font-variant-numeric: tabular-nums; }
+
+/* ── Modale payload ──────────────────────────────────────────────── */
+.pay-modal-overlay {
+  position: fixed; inset: 0; background: rgba(26,26,26,.42);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  z-index: 1000; display: flex; align-items: center; justify-content: center;
+  padding: 20px; animation: pov-in 160ms ease;
 }
-.pay-pager-info {
-  padding: 7px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--txt-m);
-  background: var(--bg);
-  border-radius: 7px;
+@keyframes pov-in { from { opacity: 0; } to { opacity: 1; } }
+.pay-modal {
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+  width: 100%; max-width: 680px; max-height: 85vh;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 24px 64px rgba(26,26,26,.18);
+  animation: pm-in 240ms cubic-bezier(.2,.8,.2,1);
+}
+@keyframes pm-in {
+  from { opacity: 0; transform: translateY(10px) scale(.99); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);   }
+}
+.pay-modal-head {
+  padding: 18px 22px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0;
+}
+.pay-modal-head-left { display: flex; align-items: center; gap: 12px; }
+.pay-modal-icon {
+  width: 36px; height: 36px; background: var(--ap-lt); border-radius: 10px;
+  display: grid; place-items: center; color: var(--ap); flex-shrink: 0;
+}
+.pay-modal-head h3 { font-family: var(--font-head); font-size: 14px; font-weight: 800; color: var(--txt); }
+.pay-modal-head p  { font-size: 11.5px; color: var(--txt-l); margin-top: 2px; }
+.pay-modal-x {
+  width: 32px; height: 32px; border-radius: 999px; background: none;
+  border: 1px solid var(--border-strong); cursor: pointer;
+  display: grid; place-items: center; color: var(--txt-m); transition: all .13s;
+}
+.pay-modal-x:hover { background: var(--bg-2, #F3F1EA); border-color: var(--txt-l); color: var(--txt); }
+.pay-modal-body { padding: 20px 22px; overflow-y: auto; flex: 1; }
+.pay-modal-body pre {
+  background: #1A1A1A; color: #E8E5DE; padding: 18px 20px; border-radius: 12px;
+  font-size: 12px; line-height: 1.7; overflow-x: auto;
+  white-space: pre-wrap; word-break: break-all;
+  font-family: ui-monospace, 'Cascadia Code', 'Courier New', monospace;
+  border: 1px solid rgba(255,255,255,.06);
 }
 
-/* Copy toast */
+/* ── Toast copie ─────────────────────────────────────────────────── */
 .pay-copy-toast {
-  position: fixed;
-  bottom: 28px;
-  left: 50%;
+  position: fixed; bottom: 28px; left: 50%;
   transform: translateX(-50%) translateY(8px);
-  background: #1A1A2E;
-  color: #fff;
-  padding: 9px 18px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: var(--font-body);
-  z-index: 9999;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s, transform 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
+  background: var(--txt); color: #fff; padding: 10px 18px; border-radius: 999px;
+  font-size: 12.5px; font-weight: 600; font-family: var(--font-body);
+  z-index: 9999; pointer-events: none; opacity: 0;
+  transition: opacity .2s, transform .2s;
+  display: flex; align-items: center; gap: 7px; white-space: nowrap;
+  box-shadow: 0 12px 32px rgba(26,26,26,.22);
 }
-.pay-copy-toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-/* Empty state */
-.pay-empty {
-  padding: 56px 20px;
-  text-align: center;
-}
-.pay-empty-icon {
-  width: 52px; height: 52px;
-  background: var(--bg);
-  border-radius: 14px;
-  display: grid; place-items: center;
-  margin: 0 auto 14px;
-  color: var(--txt-l);
-}
-.pay-empty h4 {
-  font-family: var(--font-mid);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--txt);
-  margin-bottom: 5px;
-}
-.pay-empty p {
-  font-size: 12px;
-  color: var(--txt-m);
-}
-
-/* Amount */
-.pay-amount {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 3px;
-}
-.pay-amount strong {
-  font-family: var(--font-head);
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--txt);
-}
-.pay-amount span {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--txt-m);
-}
+.pay-copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-/* Responsive */
-@media (max-width: 960px) {
-  .pay-revenue-grid { grid-template-columns: repeat(2, 1fr); }
-  .pay-hero-card { grid-column: span 2; }
-  .pay-metrics-strip { grid-template-columns: repeat(2, 1fr); }
+/* ── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .pay-stats, .pay-stats--sub { grid-template-columns: repeat(2, 1fr); }
+  .pay-stat--wide { grid-column: span 2; }
 }
-@media (max-width: 600px) {
-  .pay-revenue-grid { grid-template-columns: 1fr; }
-  .pay-hero-card { grid-column: 1; }
-  .pay-metrics-strip { grid-template-columns: 1fr 1fr; }
+@media (max-width: 640px) {
+  .pay-head-row { align-items: flex-start; }
+  .pay-actions { width: 100%; }
+  .pay-stats, .pay-stats--sub { grid-template-columns: 1fr 1fr; }
+  .pay-stat--wide { grid-column: 1 / -1; }
+  .pay-stat { padding: 16px 18px; }
+  .pay-stat-val { font-size: 23px; }
+  .pay-stat--wide .pay-stat-val { font-size: 27px; }
   .pay-filter-bar { gap: 8px; }
   .pay-search-wrap { max-width: 100%; }
+  .pay-filter-bar select, .pay-filter-bar input[type="date"] { flex: 1; min-width: 130px; }
 }
 </style>
 
@@ -593,204 +320,139 @@ function paiUrl(array $filters, int $page): string {
   Référence copiée
 </div>
 
-<!-- ── Header ──────────────────────────────────────────────── -->
-<div class="admin-page-header-row">
-  <div>
-    <h1 style="font-family:var(--font-head);font-size:22px;font-weight:800;color:var(--txt);letter-spacing:-0.3px;">
-      Paiements &amp; Abonnements
-    </h1>
-    <p style="font-size:13px;color:var(--txt-m);margin-top:4px;">
-      <strong style="color:var(--txt);"><?= number_format($counts['total']) ?></strong> transactions ·
-      <strong style="color:#15803D;"><?= number_format($counts['succes']) ?></strong> réussies
-    </p>
-  </div>
-  <div style="display:flex;gap:8px;align-items:center;">
-    <button id="sync-btn"
-            onclick="syncTransactions()"
-            class="btn-outline"
-            style="height:36px;padding:0 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;border-color:#F59E0B;color:#B45309;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <polyline points="23 4 23 10 17 10"/>
-        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-      </svg>
-      Sync MF
-      <?php if ($counts['en_attente'] > 0): ?>
-      <span style="background:#F59E0B;color:#fff;border-radius:999px;padding:1px 7px;font-size:10px;font-weight:800;margin-left:2px;">
-        <?= $counts['en_attente'] ?>
-      </span>
-      <?php endif; ?>
-    </button>
-    <a href="<?= url('/admin/paiement') ?>"
-       class="btn-outline"
-       style="height:36px;padding:0 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <polyline points="23 4 23 10 17 10"/>
-        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-      </svg>
-      Actualiser
-    </a>
-    <button onclick="window.print()"
-            class="btn-primary"
-            style="height:36px;padding:0 16px;font-size:13px;display:inline-flex;align-items:center;gap:6px;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="7 10 12 15 17 10"/>
-        <line x1="12" y1="15" x2="12" y2="3"/>
-      </svg>
-      Exporter
-    </button>
-  </div>
-</div>
+<?php
+  // Taux de réussite — jauge plutôt qu'un camembert à deux parts
+  $txTotal   = (int) $counts['total'];
+  $txSucces  = (int) $counts['succes'];
+  $tauxSucces = $txTotal > 0 ? round($txSucces / $txTotal * 100) : 0;
+?>
 
-<!-- ── Revenue Section ─────────────────────────────────────── -->
-<div class="pay-revenue-grid">
-
-  <!-- Hero — CA Total -->
-  <div class="pay-hero-card">
+<!-- ── En-tête ─────────────────────────────────────────────── -->
+<div class="pay-head">
+  <div class="pay-eyebrow">Finance · Plateforme</div>
+  <div class="pay-head-row">
     <div>
-      <div class="pay-hero-eyebrow">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-          <rect x="2" y="5" width="20" height="14" rx="2"/>
-          <line x1="2" y1="10" x2="22" y2="10"/>
+      <h1>Paiements &amp; abonnements</h1>
+      <p>
+        Transactions encaissées via MoneyFusion sur la plateforme —
+        <b><?= number_format($txTotal) ?></b> au total, <b><?= number_format($txSucces) ?></b> réussies.
+      </p>
+    </div>
+    <div class="pay-actions">
+      <button id="sync-btn"
+              onclick="syncTransactions()"
+              class="pay-btn<?= $counts['en_attente'] > 0 ? ' pay-btn--alert' : '' ?>"
+              title="Vérifier auprès de MoneyFusion les paiements restés en attente">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
         </svg>
-        Chiffre d'affaires total
-      </div>
-      <div class="pay-hero-value"><?= fmtXAF($caTotal) ?></div>
-      <div class="pay-hero-sub">Depuis le lancement · Toutes périodes</div>
+        Sync MF
+        <?php if ($counts['en_attente'] > 0): ?>
+        <span class="pay-btn-count"><?= (int)$counts['en_attente'] ?></span>
+        <?php endif; ?>
+      </button>
+      <a href="<?= url('/admin/paiement') ?>" class="pay-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        Actualiser
+      </a>
+      <button onclick="window.print()" class="pay-btn pay-btn--solid">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Exporter
+      </button>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;margin-top:16px;position:relative;z-index:1;">
-      <div style="background:rgba(255,255,255,0.18);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.90);">
-        <?= number_format($counts['succes']) ?> tx réussies
-      </div>
-      <?php if ($abonnementsActifs > 0): ?>
-      <div style="background:rgba(255,255,255,0.18);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.90);">
-        <?= number_format($abonnementsActifs) ?> abonnés actifs
-      </div>
-      <?php endif; ?>
-    </div>
-    <div class="pay-hero-bg-icon">
-      <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="0.8" stroke-linecap="round">
-        <rect x="2" y="5" width="20" height="14" rx="2"/>
-        <line x1="2" y1="10" x2="22" y2="10"/>
-        <line x1="6" y1="14" x2="9" y2="14"/>
-        <line x1="11" y1="14" x2="16" y2="14"/>
+  </div>
+</div>
+
+<!-- ── Revenus ─────────────────────────────────────────────── -->
+<div class="pay-stats">
+
+  <div class="pay-stat pay-stat--wide">
+    <div class="pay-stat-label">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
       </svg>
+      Chiffre d'affaires total
+    </div>
+    <div class="pay-stat-val accent"><?= number_format($caTotal, 0, ',', ' ') ?><span class="u">XAF</span></div>
+    <div class="pay-stat-sub">
+      Depuis le lancement · <b><?= number_format($counts['succes']) ?></b> transaction<?= $counts['succes'] > 1 ? 's' : '' ?> réussie<?= $counts['succes'] > 1 ? 's' : '' ?>
+      <?php if ($abonnementsActifs > 0): ?> · <b><?= number_format($abonnementsActifs) ?></b> abonné<?= $abonnementsActifs > 1 ? 's' : '' ?> actif<?= $abonnementsActifs > 1 ? 's' : '' ?><?php endif; ?>
     </div>
   </div>
 
-  <!-- CA 30j -->
-  <div class="pay-metric-card">
-    <div class="pay-metric-top">
-      <div class="pay-metric-label">CA 30 jours</div>
-      <div class="pay-metric-icon" style="background:var(--ap-lt);color:var(--ap);">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <rect x="3" y="4" width="18" height="18" rx="2"/>
-          <line x1="16" y1="2" x2="16" y2="6"/>
-          <line x1="8" y1="2" x2="8" y2="6"/>
-          <line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-      </div>
+  <div class="pay-stat">
+    <div class="pay-stat-label">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      CA 30 jours
     </div>
-    <div class="pay-metric-value"><?= fmtXAF($ca30j) ?></div>
-    <div class="pay-metric-sub">Dernier mois glissant</div>
+    <div class="pay-stat-val"><?= number_format($ca30j, 0, ',', ' ') ?><span class="u">XAF</span></div>
+    <div class="pay-stat-sub">Dernier mois glissant</div>
   </div>
 
-  <!-- CA 7j -->
-  <div class="pay-metric-card">
-    <div class="pay-metric-top">
-      <div class="pay-metric-label">CA 7 jours</div>
-      <div class="pay-metric-icon" style="background:#F0FDF4;color:#16A34A;">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
-      </div>
+  <div class="pay-stat">
+    <div class="pay-stat-label">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      CA 7 jours
     </div>
-    <div class="pay-metric-value"><?= fmtXAF($ca7j) ?></div>
-    <div class="pay-metric-sub">Dernière semaine</div>
+    <div class="pay-stat-val"><?= number_format($ca7j, 0, ',', ' ') ?><span class="u">XAF</span></div>
+    <div class="pay-stat-sub">Dernière semaine</div>
   </div>
 
 </div>
 
-<!-- ── Metrics Strip ───────────────────────────────────────── -->
-<div class="pay-metrics-strip">
+<!-- ── Volumes ─────────────────────────────────────────────── -->
+<div class="pay-stats pay-stats--sub">
 
-  <!-- Transactions -->
-  <div class="pay-metric-card">
-    <div class="pay-metric-top">
-      <div class="pay-metric-label">Transactions</div>
-      <div class="pay-metric-icon" style="background:var(--bg);color:var(--txt-m);">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <line x1="8" y1="6" x2="21" y2="6"/>
-          <line x1="8" y1="12" x2="21" y2="12"/>
-          <line x1="8" y1="18" x2="21" y2="18"/>
-          <line x1="3" y1="6" x2="3.01" y2="6"/>
-          <line x1="3" y1="12" x2="3.01" y2="12"/>
-          <line x1="3" y1="18" x2="3.01" y2="18"/>
-        </svg>
-      </div>
-    </div>
-    <div class="pay-metric-value" style="font-size:20px;"><?= number_format($counts['total']) ?></div>
-    <div class="pay-metric-sub">au total</div>
+  <div class="pay-stat">
+    <div class="pay-stat-label">Transactions</div>
+    <div class="pay-stat-val"><?= number_format($txTotal) ?></div>
+    <div class="pay-stat-sub">toutes périodes confondues</div>
   </div>
 
-  <!-- Réussies -->
-  <div class="pay-metric-card">
-    <div class="pay-metric-top">
-      <div class="pay-metric-label">Réussies</div>
-      <div class="pay-metric-icon" style="background:var(--green-bg);color:#16A34A;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-          <polyline points="22 4 12 14.01 9 11.01"/>
-        </svg>
-      </div>
-    </div>
-    <div class="pay-metric-value" style="font-size:20px;color:#15803D;"><?= number_format($counts['succes']) ?></div>
-    <div class="pay-metric-sub">validées</div>
+  <div class="pay-stat">
+    <div class="pay-stat-label">Réussies</div>
+    <div class="pay-stat-val pos"><?= number_format($txSucces) ?></div>
+    <div class="pay-meter"><i class="pos" style="width:<?= $tauxSucces ?>%"></i></div>
+    <div class="pay-stat-sub"><b><?= $tauxSucces ?> %</b> de taux de réussite</div>
   </div>
 
-  <!-- Abonnements actifs -->
-  <div class="pay-metric-card">
-    <div class="pay-metric-top">
-      <div class="pay-metric-label">Abonnés actifs</div>
-      <div class="pay-metric-icon" style="background:var(--ap-lt);color:var(--ap);">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-      </div>
+  <div class="pay-stat">
+    <div class="pay-stat-label">Abonnés actifs</div>
+    <div class="pay-stat-val accent"><?= number_format($abonnementsActifs) ?></div>
+    <div class="pay-stat-sub">
+      <?= $abonnementsExpiresM > 0
+            ? '<b>' . number_format($abonnementsExpiresM) . '</b> expiré' . ($abonnementsExpiresM > 1 ? 's' : '') . ' ce mois-ci'
+            : 'aucune expiration ce mois-ci' ?>
     </div>
-    <div class="pay-metric-value" style="font-size:20px;color:var(--ap);"><?= number_format($abonnementsActifs) ?></div>
-    <div class="pay-metric-sub">en cours</div>
   </div>
 
-  <!-- En attente + Expirés -->
-  <div class="pay-metric-card">
-    <div class="pay-metric-top">
-      <div class="pay-metric-label">En attente</div>
-      <div class="pay-metric-icon" style="background:var(--amber-bg);color:#B45309;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-      </div>
+  <div class="pay-stat">
+    <div class="pay-stat-label">En attente</div>
+    <div class="pay-stat-val <?= $counts['en_attente'] > 0 ? 'warn' : '' ?>"><?= number_format($counts['en_attente']) ?></div>
+    <div class="pay-stat-sub">
+      <?= $counts['en_attente'] > 0
+            ? 'webhooks non reçus — lancer « Sync MF »'
+            : 'aucun webhook manquant' ?>
     </div>
-    <div class="pay-metric-value" style="font-size:20px;color:#B45309;"><?= number_format($counts['en_attente']) ?></div>
-    <div class="pay-metric-sub">webhooks non reçus</div>
-    <?php if ($abonnementsExpiresM > 0): ?>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:11px;color:var(--txt-m);">Expirés ce mois</span>
-      <span style="font-size:12px;font-weight:800;color:#B91C1C;"><?= number_format($abonnementsExpiresM) ?></span>
-    </div>
-    <?php endif; ?>
   </div>
 
 </div>
 
 <!-- ── Table Section ───────────────────────────────────────── -->
-<div class="admin-table-wrap">
+<div class="pay-card">
 
   <!-- Header -->
   <div class="pay-table-hd">
@@ -851,9 +513,7 @@ function paiUrl(array $filters, int $page): string {
              value="<?= e($filters['date_fin']) ?>"
              title="Date de fin">
 
-      <button type="submit"
-              class="btn-primary"
-              style="height:36px;padding:0 16px;font-size:13px;display:inline-flex;align-items:center;gap:6px;margin-left:auto;">
+      <button type="submit" class="pay-btn pay-btn--solid" style="margin-left:auto;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
         </svg>
@@ -883,14 +543,12 @@ function paiUrl(array $filters, int $page): string {
       <tr>
         <td colspan="8">
           <div class="pay-empty">
-            <div class="pay-empty-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                <rect x="2" y="5" width="20" height="14" rx="2"/>
-                <line x1="2" y1="10" x2="22" y2="10"/>
-              </svg>
-            </div>
-            <h4>Aucune transaction trouvée</h4>
-            <p>Modifie les filtres ou attends les premiers paiements.</p>
+            <svg class="pay-empty-icon" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+            <h4>Aucune transaction</h4>
+            <p><?= array_filter($filters) ? 'Aucun résultat pour ces filtres.' : 'Les transactions apparaîtront ici dès le premier paiement.' ?></p>
           </div>
         </td>
       </tr>
@@ -944,7 +602,7 @@ function paiUrl(array $filters, int $page): string {
           <?php elseif (($tx['plan'] ?? '') === 'annuel'): ?>
             <span class="pay-plan-badge pay-plan-annuel">Annuel</span>
           <?php else: ?>
-            <span style="color:var(--txt-l);font-size:12px;">—</span>
+            <span class="pay-cell-mute">—</span>
           <?php endif; ?>
         </td>
 
@@ -962,7 +620,7 @@ function paiUrl(array $filters, int $page): string {
         <!-- Méthode -->
         <td>
           <?php if (!empty($tx['methode_paiement'])): ?>
-            <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--txt-m);">
+            <span class="pay-method">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                 <rect x="2" y="5" width="20" height="14" rx="2"/>
                 <line x1="2" y1="10" x2="22" y2="10"/>
@@ -970,17 +628,17 @@ function paiUrl(array $filters, int $page): string {
               <?= e($tx['methode_paiement']) ?>
             </span>
           <?php else: ?>
-            <span style="color:var(--txt-l);font-size:12px;">—</span>
+            <span class="pay-cell-mute">—</span>
           <?php endif; ?>
         </td>
 
         <!-- Date -->
         <td>
           <?php if (!empty($tx['created_at'])): ?>
-            <div style="font-size:12px;font-weight:600;color:var(--txt);"><?= date('d/m/Y', strtotime($tx['created_at'])) ?></div>
-            <div style="font-size:11px;color:var(--txt-m);margin-top:1px;"><?= date('H:i', strtotime($tx['created_at'])) ?></div>
+            <div class="pay-cell-date"><?= date('d/m/Y', strtotime($tx['created_at'])) ?></div>
+            <div class="pay-cell-time"><?= date('H:i', strtotime($tx['created_at'])) ?></div>
           <?php else: ?>
-            <span style="color:var(--txt-l);font-size:12px;">—</span>
+            <span class="pay-cell-mute">—</span>
           <?php endif; ?>
         </td>
 
@@ -1030,7 +688,7 @@ function paiUrl(array $filters, int $page): string {
   </div>
   <?php endif; ?>
 
-</div><!-- /.admin-table-wrap -->
+</div><!-- /.pay-card -->
 
 <!-- ── Modal webhook payload ──────────────────────────────── -->
 <div id="pay-modal-ov"

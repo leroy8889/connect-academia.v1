@@ -1,0 +1,59 @@
+# ════════════════════════════════════════════════════════════════════════════
+#  Connect'Academia — Unité systemd du worker de file de jobs
+#  Traite en arrière-plan : e-mails SMTP + génération reçus PDF + upload B2.
+#
+#  INSTALLATION (sur le VPS, en root) :
+#    1. Adapter ci-dessous : WorkingDirectory, ExecStart (chemin projet + php),
+#       User/Group (utilisateur du pool PHP-FPM, souvent www-data).
+#    2. sudo cp deploy/connect-academia-worker.service /etc/systemd/system/
+#    3. sudo systemctl daemon-reload
+#    4. sudo systemctl enable --now connect-academia-worker
+#    5. sudo systemctl status connect-academia-worker      # doit être "active (running)"
+#    6. journalctl -u connect-academia-worker -f           # suivre les logs
+#
+#  Le worker s'auto-termine après MAX_JOBS (500) ou 256 Mo (anti-fuite mémoire
+#  dompdf) ; Restart=always demande à systemd de relancer un process neuf.
+# ════════════════════════════════════════════════════════════════════════════
+
+[Unit]
+Description=Connect'Academia — Worker file de jobs (e-mails + recus PDF)
+Documentation=file:///var/www/connectacademia.io/worker.php
+After=network-online.target redis-server.service
+Wants=network-online.target redis-server.service
+# Redémarrages fréquents (après 500 jobs) : ne pas déclencher le rate-limit systemd.
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+
+# ⚠️ ADAPTER : racine réelle du projet + binaire PHP CLI (which php).
+WorkingDirectory=/var/www/connectacademia.io
+ExecStart=/usr/bin/php /var/www/connectacademia.io/worker.php
+
+# Relance systématique (le worker sort volontairement pour repartir propre).
+Restart=always
+RestartSec=2
+
+# Arrêt gracieux : SIGTERM → le worker finit le job en cours puis sort (voir
+# pcntl_signal dans worker.php). Délai avant SIGKILL si blocage.
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# ── Journalisation (journalctl -u connect-academia-worker) ──────────────────
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ca-worker
+
+# ── Durcissement (le worker a besoin du réseau SMTP/B2/Redis + /tmp pour dompdf) ─
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

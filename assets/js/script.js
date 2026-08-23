@@ -7,12 +7,13 @@
  */
 
 const addEventOnElem = function (elem, type, callback) {
-  if (elem.length > 1) {
-    for (let i = 0; i < elem.length; i++) {
-      elem[i].addEventListener(type, callback);
-    }
-  } else {
+  if (!elem) return;
+  if (typeof elem.addEventListener === "function") {
     elem.addEventListener(type, callback);
+    return;
+  }
+  for (let i = 0; i < elem.length; i++) {
+    elem[i].addEventListener(type, callback);
   }
 }
 
@@ -28,15 +29,17 @@ const navLinks = document.querySelectorAll("[data-nav-link]");
 const overlay = document.querySelector("[data-overlay]");
 
 const toggleNavbar = function () {
+  if (!navbar) return;
   navbar.classList.toggle("active");
-  overlay.classList.toggle("active");
+  if (overlay) overlay.classList.toggle("active");
 }
 
 addEventOnElem(navTogglers, "click", toggleNavbar);
 
 const closeNavbar = function () {
+  if (!navbar) return;
   navbar.classList.remove("active");
-  overlay.classList.remove("active");
+  if (overlay) overlay.classList.remove("active");
 }
 
 addEventOnElem(navLinks, "click", closeNavbar);
@@ -51,13 +54,9 @@ const header = document.querySelector("[data-header]");
 const backTopBtn = document.querySelector("[data-back-top-btn]");
 
 const activeElem = function () {
-  if (window.scrollY > 100) {
-    header.classList.add("active");
-    backTopBtn.classList.add("active");
-  } else {
-    header.classList.remove("active");
-    backTopBtn.classList.remove("active");
-  }
+  const active = window.scrollY > 100;
+  if (header) header.classList.toggle("active", active);
+  if (backTopBtn) backTopBtn.classList.toggle("active", active);
 }
 
 addEventOnElem(window, "scroll", activeElem);

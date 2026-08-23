@@ -80,10 +80,10 @@ class Router
     private function runMiddleware(array $list): void
     {
         $map = [
-            'auth'    => \Middleware\AuthMiddleware::class,
-            'csrf'    => \Middleware\CsrfMiddleware::class,
-            'admin'   => \Middleware\AdminMiddleware::class,
-            'abonne'  => \Middleware\AbonneMiddleware::class,
+            'auth'          => \Middleware\AuthMiddleware::class,
+            'csrf'          => \Middleware\CsrfMiddleware::class,
+            'admin'         => \Middleware\AdminMiddleware::class,
+            'gestionnaire'  => \Middleware\GestionnaireMiddleware::class,
         ];
 
         foreach ($list as $name) {
@@ -126,8 +126,18 @@ class Router
             // Contrôleurs Admin : method(array $params) — passer le tableau associatif nommé
             $controller->$method($params);
         } else {
-            // Contrôleurs standard : method(string $id, ...) — dépaqueter les valeurs
-            call_user_func_array([$controller, $method], array_values($params));
+            // Contrôleurs standard : method(string|int $id, ...) — dépaqueter les valeurs
+            // Cast chaque param au type déclaré (strict_types=1 sinon TypeError sur int $id)
+            $refParams = $ref->getParameters();
+            $values    = array_values($params);
+            foreach ($refParams as $i => $p) {
+                if (!isset($values[$i])) break;
+                $t = $p->getType();
+                if ($t instanceof \ReflectionNamedType && $t->getName() === 'int') {
+                    $values[$i] = (int) $values[$i];
+                }
+            }
+            call_user_func_array([$controller, $method], $values);
         }
     }
 

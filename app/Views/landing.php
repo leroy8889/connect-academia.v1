@@ -15,7 +15,14 @@
   <link rel="shortcut icon" href="<?= BASE_URL ?>/assets/images/Logo 1 CA COMPLET.svg" type="image/svg+xml">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
+  <!-- Botpress Webchat v3 — ouverture uniquement au clic sur la bulle de chat
+       (aucune ouverture automatique). -->
+  <script src="https://cdn.botpress.cloud/webchat/v3.7/inject.js"></script>
+  <script src="https://files.bpcontent.cloud/2026/08/01/17/20260801171922-4PKEFZ4J.js" defer></script>
+
+  <?php $__cssBase = dirname(__DIR__, 2) . '/assets/css'; ?>
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= @filemtime($__cssBase . '/style.css') ?: time() ?>">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/landing-redesign.css?v=<?= @filemtime($__cssBase . '/landing-redesign.css') ?: time() ?>">
   <link href='https://cdn.boxicons.com/3.0.6/fonts/basic/boxicons.min.css' rel='stylesheet'>
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -26,13 +33,13 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Boldonse&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 
+  <!-- Seuls les visuels réellement affichés sont préchargés. hero-banner-1/2.jpg
+       et hero-shape-1.svg n'existent plus dans assets/images : ils ne
+       produisaient que des 404 et un avertissement « preloaded but not used ». -->
   <link rel="preload" as="image" href="<?= BASE_URL ?>/assets/images/hero-bg.svg">
-  <link rel="preload" as="image" href="<?= BASE_URL ?>/assets/images/hero-banner-1.jpg">
-  <link rel="preload" as="image" href="<?= BASE_URL ?>/assets/images/hero-banner-2.jpg">
-  <link rel="preload" as="image" href="<?= BASE_URL ?>/assets/images/hero-shape-1.svg">
   <link rel="preload" as="image" href="<?= BASE_URL ?>/assets/images/hero-shape-2.png">
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -40,7 +47,7 @@
 
   <!-- PWA -->
   <link rel="manifest" href="<?= BASE_URL ?>/manifest.json">
-  <meta name="theme-color" content="#8B52FA">
+  <meta name="theme-color" content="#8a52fa">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -103,15 +110,15 @@
           </li>
 
           <li class="navbar-item">
-            <a href="<?= BASE_URL ?>/assets/lib/tarifs.html" class="navbar-link" data-nav-link>Tarifs</a>
+            <a href="<?= url('/orientation') ?>" class="navbar-link" data-nav-link>Orientations</a>
           </li>
 
           <li class="navbar-item">
-            <a href="<?= BASE_URL ?>/public/orientation/orientation.html" class="navbar-link" data-nav-link>Orientations</a>
+            <a href="<?= url('/documentation') ?>" class="navbar-link" data-nav-link>Documentation</a>
           </li>
 
           <li class="navbar-item">
-            <a href="<?= BASE_URL ?>/assets/lib/contact.html" class="navbar-link" data-nav-link>Contact</a>
+            <a href="<?= BASE_URL ?>/contact" class="navbar-link" data-nav-link>Contact</a>
           </li>
 
         </ul>
@@ -148,22 +155,34 @@
           <div class="hero-content">
 
             <h1 class="h1 section-title">
-              Votre <span class="span"> réussite </span> ne doit plus dépendre du hasard.
+              Trouvez et <span class="span"> intégrez </span> votre future école, <span class="span-clics">en quelques clics</span>
             </h1>
 
             <p class="hero-text">
-              Apprentissage, Communauté et Orientation : Nous connectons étudiants et universités en quelques clics.
+              Comparez les universités, grandes écoles et instituts. Préinscrivez-vous et payez en ligne en toute confiance.
             </p>
 
-            <a href="<?= url('auth/connexion') ?>" class="btn has-before">
-              <span class="span"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
-                <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
-                <path d="M9 12H4s.5-1 1-4c2 1 3 3 3 3z"></path>
-                <path d="M12 15v5s1-.5 4-1c-1-2-3-3-3-3z"></path>
-              </svg>Commencer gratuitement</span>
-              <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
-            </a>
+            <div class="hero-actions">
+
+              <a href="<?= url('auth/connexion') ?>" class="btn has-before">
+                <span class="span"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
+                  <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
+                  <path d="M9 12H4s.5-1 1-4c2 1 3 3 3 3z"></path>
+                  <path d="M12 15v5s1-.5 4-1c-1-2-3-3-3-3z"></path>
+                </svg>Commencer gratuitement</span>
+                <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+              </a>
+
+              <a href="<?= url('/orientation') ?>" class="btn btn-hero-secondary has-before">
+                <span class="span"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                  <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                </svg>Explorer les écoles</span>
+                <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+              </a>
+
+            </div>
 
           </div>
 
@@ -192,7 +211,7 @@
             <img src="<?= BASE_URL ?>/assets/images/fille3.png" alt="Étudiant 5">
             
           </div>
-          <span class="proof-text">Rejoint par +1000 étudiants</span>
+          <span class="proof-text">Rejoint par +2000 étudiants</span>
         </div>
 
       </section>
@@ -200,7 +219,7 @@
       <section class="lili">
         <div class="max-w-7xl mx-auto px-6 text-center">
           <p class="text-base md:text-lg font-medium text-slate-700 mb-6 tracking-widest uppercase">Une plateforme de référence pour</p>
-          <div class="flex flex-wrap justify-center items-center gap-8 md:gap-16 grayscale opacity-60 hover:opacity-100 transition-opacity">
+          <div class="flex flex-wrap justify-center items-center gap-8 md:gap-16">
             <span class="text-xl md:text-2xl font-semibold tracking-tight text-slate-800 flex items-center gap-2"><iconify-icon icon="solar:banknote-2-linear"></iconify-icon> Ministère de l'Éducation.</span>
             <span class="text-xl md:text-2xl font-semibold tracking-tight text-slate-800 flex items-center gap-2"><iconify-icon icon="solar:buildings-2-linear"></iconify-icon> Les universités</span>
             <span class="text-xl md:text-2xl font-semibold tracking-tight text-slate-800 flex items-center gap-2"><iconify-icon icon="solar:diploma-linear"></iconify-icon> Office du Bac</span>
@@ -212,7 +231,7 @@
 
       <section class="apprentissage-section">
         <div class="img-appretissage">
-          <img src="<?= BASE_URL ?>/assets/images/tableau-apprentissage.png" alt="Tableau apprentissage">
+          <img src="<?= BASE_URL ?>/assets/images/img-apprentissage.PNG" alt="Tableau apprentissage">
         </div>
       </section>
 
@@ -230,7 +249,10 @@
                 <ion-icon name="play" aria-hidden="true"></ion-icon>
               </button>
 
-              <video class="video-player" controls style="display: none;">
+              <!-- preload="none" : le fichier pèse 27 Mo et reste masqué jusqu'au
+                   clic sur .play-btn (assets/js/script.js) — inutile de le
+                   télécharger à chaque affichage de la page d'accueil. -->
+              <video class="video-player" controls preload="none" style="display: none;">
                 <source src="<?= BASE_URL ?>/assets/images/video-presentation.mp4" type="video/mp4">
                 Votre navigateur ne supporte pas la lecture de vidéos.
               </video>
@@ -249,8 +271,8 @@
 
       <section class="roadmap-section">
         <div class="roadmap-header">
-          <h2 class="roadmap-main-title">UN PARCOURS PENSÉ POUR VOTRE RÉUSSITE</h2>
-          <h3 class="roadmap-subtitle">AUJOURD'HUI ET POUR DEMAIN</h3>
+          <h2 class="roadmap-main-title">Un parcours pensé pour votre réussite</h2>
+          <h3 class="roadmap-subtitle">Aujourd'hui et pour demain</h3>
           <p class="roadmap-description">Découvrez les fonctionnalités clés qui construisent progressivement une expérience éducative complète, moderne et adaptée au Gabon.</p>
         </div>
 
@@ -365,7 +387,7 @@
                   <svg class="check-icon" viewBox="0 0 20 20" fill="none">
                     <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fill="#10b981"/>
                   </svg>
-                  <span>L'entraide : Travaillez avec des apprenants venant des quartes coins du Gabon et au delà.<span class="feature-tag tag-nouveau">NOUVEAU</span></span>
+                  <span>L'entraide : Travaillez avec des apprenants venant des quatre coins du Gabon et au-delà.<span class="feature-tag tag-nouveau">NOUVEAU</span></span>
                 </li>
                 <li class="feature-pending">
                   <div class="empty-checkbox"></div>
@@ -406,7 +428,7 @@
                 <h3>Orientation</h3>
                 <p>Compare, explore et choisis l'école qui correspond à ton projet de vie.</p>
               </div>
-              <a href="<?= url('../../public/orientation/orientation.html') ?>" class="btn has-before">
+              <a href="<?= url('/orientation') ?>" class="btn has-before">
                 <span class="span">Commencer</span>
                 <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
               </a>
@@ -451,7 +473,7 @@
 
           <div class="latency-grid">
 
-            <div class="card-white pulse-card" style="--color: 170, 75%, 41%">
+            <div class="card-white pulse-card" style="--color: 262, 84%, 60%">
               <div class="icon-wrap green-bg">
                 <div class="card-icon">
                   <img src="<?= BASE_URL ?>/assets/images/category-1.svg" width="40" height="40" loading="lazy"
@@ -469,7 +491,7 @@
               </div>
             </div>
 
-            <div class="card-white revival-card" style="--color: 351, 83%, 61%">
+            <div class="card-white revival-card" style="--color: 262, 62%, 52%">
               <div class="revival-content">
                 <div class="icon-wrap blue-bg">
                   <div class="card-icon">
@@ -482,7 +504,7 @@
               </div>
             </div>
 
-            <div class="card-white scale-card" style="--color: 229, 75%, 58%">
+            <div class="card-white scale-card" style="--color: 262, 92%, 66%">
               <div class="icon-wrap purple-bg">
                 <div class="card-icon">
                   <img src="<?= BASE_URL ?>/assets/images/category-3.svg" width="40" height="40" loading="lazy"
@@ -493,7 +515,7 @@
               <p>Un prof IA qui personnalise votre apprentissage et résume les chapitres complexes pour vous permettre de réviser efficacement.</p>
             </div>
 
-            <div class="card-white recovered-card" style="--color: 42, 94%, 55%">
+            <div class="card-white recovered-card" style="--color: 262, 45%, 56%">
               <div class="icon-wrap orange-bg">
                 <div class="card-icon">
                   <img src="<?= BASE_URL ?>/assets/images/category-4.svg" width="40" height="40" loading="lazy"
@@ -508,28 +530,7 @@
         </div>
       </section>
 
-      <section class="integrations-container">
-        <div class="integrations-content">
-          <h2>Révisez efficacement vos cours avec<span>Connect'Academia</span></h2>
-        </div>
-
-        <div class="logos-grid-wrapper">
-          <div class="tiles-bg"></div>
-
-          <div class="logos-floating-layer">
-            <div class="logo-item pos-1"><img src="https://upload.wikimedia.org/wikipedia/commons/f/f1/Heart_coraz%C3%B3n.svg" alt="Heart"></div>
-            <div class="logo-item pos-2"><img src="<?= BASE_URL ?>/assets/images/maths.png" alt="maths"></div>
-            <div class="logo-item pos-3"><img src="<?= BASE_URL ?>/assets/images/physiques.png" alt="physiques"></div>
-            <div class="logo-item pos-4"><img src="<?= BASE_URL ?>/assets/images/francais.jpg" alt="francais"></div>
-            <div class="logo-item pos-5"><img src="<?= BASE_URL ?>/assets/images/svt.png" alt="svt"></div>
-            <div class="logo-item pos-6"><img src="<?= BASE_URL ?>/assets/images/philo.png" alt="philo"></div>
-            <div class="logo-item pos-7"><img src="<?= BASE_URL ?>/assets/images/anglais.png" alt="anglais"></div>
-            <div class="logo-item pos-8"><img src="<?= BASE_URL ?>/assets/images/economie.png" alt="economie"></div>
-            <div class="logo-item pos-9"><img src="<?= BASE_URL ?>/assets/images/histoire.png" alt="histoire"></div>
-          </div>
-        </div>
-      </section>
-
+      
       <section class="section about" id="about" aria-label="about">
         <div class="container">
 
@@ -601,9 +602,7 @@
             la grande communauté Connect'Academia <br> dès aujourd'hui
           </h1>
 
-          <div class="cta-action-group">
-            <p class="cta-sub-text">1 jours d'essai. Aucune carte requise.</p>
-          </div>
+          
 
           <div class="mockup-clipping-area">
             <img src="<?= BASE_URL ?>/assets/images/communauter.png" alt="Connect'Academia" class="clipped-image">
@@ -688,14 +687,14 @@
 
       <section class="benefits-section">
         <div class="benefits-header">
-          <h2>BIEN PLUS QU'UNE SIMPLE SOLUTION !</h2>
+          <h2>Bien plus qu'une simple solution</h2>
           <div class="purple-bar"></div>
         </div>
 
         <div class="benefits-grid">
           <div class="benefit-card">
             <div class="benefit-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
             </div>
             <div class="benefit-text-box">
               <h3>Performance Académique</h3>
@@ -705,17 +704,17 @@
 
           <div class="benefit-card">
             <div class="benefit-icon">
-              <i class='bx bx-dollar-circle'></i>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
             </div>
             <div class="benefit-text-box">
-              <h3>Abonnement</h3>
-              <p>Une offre adaptée à tous les budgets étudiants, sans engagement caché.</p>
+              <h3>100&nbsp;% Gratuit</h3>
+              <p>Tous les modules sont accessibles gratuitement, sans abonnement ni frais cachés.</p>
             </div>
           </div>
 
           <div class="benefit-card">
             <div class="benefit-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h18V4H4c-1.1 0-2 .9-2 2v11H0v3h14v-3H4V6zm19 2h-6c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1zm-1 9h-4v-7h4v7z"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8"/><path d="M10 19v-3.96 3.15"/><path d="M7 19h5"/><rect width="6" height="10" x="16" y="12" rx="2"/></svg>
             </div>
             <div class="benefit-text-box">
               <h3>Accessibilité Totale</h3>
@@ -725,7 +724,7 @@
 
           <div class="benefit-card">
             <div class="benefit-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><path d="m9 13 2 2 4-4"/></svg>
             </div>
             <div class="benefit-text-box active-border">
               <h3>Sérénité Administrative</h3>
@@ -735,7 +734,7 @@
 
           <div class="benefit-card">
             <div class="benefit-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
             <div class="benefit-text-box">
               <h3>Communauté Active</h3>
@@ -745,7 +744,7 @@
 
           <div class="benefit-card">
             <div class="benefit-icon">
-              <i class='bx bx-robot'></i>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
             </div>
             <div class="benefit-text-box">
               <h3>Orientation Stratégique</h3>
@@ -761,19 +760,17 @@
 
           <div class="visual-flow">
             <svg class="lines-svg" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M80 40 H280 V150 H300" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="6 6" />
-              <path d="M120 90 H250 V150" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="6 6" />
-              <path d="M80 150 H300" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="6 6" />
-              <path d="M120 210 H250 V150" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="6 6" />
-              <path d="M80 270 H280 V150" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="6 6" />
+              <path d="M120 27 H280 V150 H300" stroke="#8B52FA" stroke-width="1.5" stroke-dasharray="6 6" />
+              <path d="M120 109 H250 V150 H300" stroke="#8B52FA" stroke-width="1.5" stroke-dasharray="6 6" />
+              <path d="M80 191 H250 V150 H300" stroke="#8B52FA" stroke-width="1.5" stroke-dasharray="6 6" />
+              <path d="M120 273 H280 V150 H300" stroke="#8B52FA" stroke-width="1.5" stroke-dasharray="6 6" />
             </svg>
 
             <div class="tool-icons-stack">
               <div class="tool-icon icon-bitly"><img src="<?= BASE_URL ?>/assets/images/téléchargement-removebg-preview.png" alt="Afram"></div>
-              <div class="tool-icon icon-bitly"><img src="<?= BASE_URL ?>/assets/images/BBS-removebg-preview.png" alt="BBS"></div>
-              <div class="tool-icon icon-buffer"><img src="<?= BASE_URL ?>/assets/images/ITA.png" alt="ITA"></div>
-              <div class="tool-icon icon-generic"><img src="<?= BASE_URL ?>/assets/images/UIL-removebg-preview.png" alt="UIL"></div>
-              <div class="tool-icon icon-analytics"><img src="<?= BASE_URL ?>/assets/images/EM-Gabon.png" alt="Em-Gabon"></div>
+              <div class="tool-icon icon-bitly"><img src="<?= BASE_URL ?>/assets/images/Icones-Univ.png" alt="Université partenaire"></div>
+              <div class="tool-icon icon-buffer"><img src="<?= BASE_URL ?>/assets/images/Icones-Univ-2.png" alt="Institut partenaire"></div>
+              <div class="tool-icon icon-generic"><img src="<?= BASE_URL ?>/assets/images/Icones-Univ-3.png" alt="École partenaire"></div>
             </div>
 
             <div class="target-center">
@@ -788,7 +785,7 @@
 
           <div class="consolidation-text">
             <h2><span>Connect'Academia</span> centralise les universités et instituts du Gabon</h2>
-            <button class="btn-cta-black">Commencez gratuitement !</button>
+            
           </div>
 
         </div>
@@ -841,12 +838,12 @@
 
             <div class="sidebar-footer">
               <div class="stat-row">
-                <span>Ambassadeurs totales 368</span>
-                <span class="pill-stat"></span>
+                <span>Total ambassadeurs</span>
+                <span class="pill-stat">368</span>
               </div>
               <div class="stat-row">
-                <span>Avec coordonnées GPS</span>
-                <span class="pill-stat">0</span>
+                <span>Provinces couvertes</span>
+                <span class="pill-stat">7</span>
               </div>
             </div>
           </aside>
@@ -860,18 +857,33 @@
           <p>Créer des liens, c'est bien. Mais savoir qui clique, où et pourquoi, c'est encore mieux.</p>
         </div>
 
-        <div class="analytics-display-grid">
-          <div class="analytics-item">
-            <img src="<?= BASE_URL ?>/assets/images/visite.PNG" alt="Statistiques Visites">
+        <div class="analytics-carousel" id="analyticsCarousel">
+          <div class="analytics-tabs" role="tablist" aria-label="Statistiques disponibles">
+            <button type="button" class="analytics-tab is-active" role="tab" aria-selected="true" data-index="0">Visites</button>
+            <button type="button" class="analytics-tab" role="tab" aria-selected="false" data-index="1">Paiements</button>
+            <button type="button" class="analytics-tab" role="tab" aria-selected="false" data-index="2">Préinscriptions</button>
+            <button type="button" class="analytics-tab" role="tab" aria-selected="false" data-index="3">Inscriptions</button>
           </div>
-          <div class="analytics-item">
-            <img src="<?= BASE_URL ?>/assets/images/paiement.PNG" alt="Statistiques Paiements">
-          </div>
-          <div class="analytics-item">
-            <img src="<?= BASE_URL ?>/assets/images/preinscription.png" alt="Statistiques Documents">
-          </div>
-          <div class="analytics-item">
-            <img src="<?= BASE_URL ?>/assets/images/inscription.png" alt="Statistiques Inscriptions">
+
+          <div class="analytics-stage">
+            <div class="analytics-frame">
+              <div class="analytics-viewport">
+                <div class="analytics-track">
+                <figure class="analytics-slide">
+                  <img src="<?= BASE_URL ?>/assets/images/affiche1.png" alt="Statistiques des visites" loading="lazy">
+                </figure>
+                <figure class="analytics-slide">
+                  <img src="<?= BASE_URL ?>/assets/images/affiche-pay.png" alt="Statistiques des paiements" loading="lazy">
+                </figure>
+                <figure class="analytics-slide">
+                  <img src="<?= BASE_URL ?>/assets/images/affiche-preins.png" alt="Statistiques des préinscriptions" loading="lazy">
+                </figure>
+                <figure class="analytics-slide">
+                  <img src="<?= BASE_URL ?>/assets/images/affiche-inscr.png" alt="Statistiques des inscriptions" loading="lazy">
+                </figure>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -888,7 +900,9 @@
 
             <div class="testi-card">
               <div class="stars">★★★★★</div>
-              <p class="testi-text">"Je trouve la plateforme claire. Et l'idée d'un chatbot IA en direct est une excellente alternative à la question du conseiller d'orientation."</p>
+              <p class="testi-text">"J'ai comparé trois écoles côte à côte : filières, frais, reconnaissance. En dix minutes j'ai compris ce que je n'avais pas compris en deux mois de
+discussions autour de moi.
+"</p>
               <div class="user-info">
                 <img src="<?= BASE_URL ?>/assets/images/garcon2.png" alt="Lucas">
                 <div>
@@ -899,7 +913,8 @@
 
             <div class="testi-card">
               <div class="stars">★★★★★</div>
-              <p class="testi-text">"Merci pour cet outil, ça me donne déjà une idée des débouchés car je suis actuellement en 2nd LE. Peut-on avoir aussi des vidéos explicatives sur chaque filière ?"</p>
+              <p class="testi-text">"Je suis encore en 2nd LE et je viens déjà regarder les filières qui existent. Est-ce que vous comptez ajouter des fiches métiers, pour savoir
+concrètement où mène chaque filière ?"</p>
               <div class="user-info">
                 <img src="https://i.pravatar.cc/100?u=12" alt="Paul">
                 <div>
@@ -910,7 +925,8 @@
 
             <div class="testi-card">
               <div class="stars">★★★★<span class="star-gray">★</span></div>
-              <p class="testi-text">"Je veux voir plus d'informations sur les filières scientifiques au Gabon s'il vous plaît. Merci"</p>
+              <p class="testi-text">"Je cherche des écoles scientifiques et je ne suis pas dans la capitale. Est-ce qu'on pourra bientôt filtrer par ville pour voir ce qui existe près de chez
+moi ?"</p>
               <div class="user-info">
                 <img src="<?= BASE_URL ?>/assets/images/fille1.png" alt="Maxime">
                 <div>
@@ -921,7 +937,8 @@
 
             <div class="testi-card">
               <div class="stars">★★★★<span class="star-gray">★</span></div>
-              <p class="testi-text">"Bonjour j'ai bien envie de faire des études liées au métier de l'assurance et des mines et pétrole"</p>
+              <p class="testi-text">"Je vise l'assurance et les métiers des mines et du pétrole. J'ai trouvé deux écoles qui forment là-dessus, je ne savais même pas qu'elles existaient.
+"</p>
               <div class="user-info">
                 <img src="<?= BASE_URL ?>/assets/images/garcon1.png" alt="Hugo">
                 <div>
@@ -932,7 +949,9 @@
 
             <div class="testi-card">
               <div class="stars">★★★★★</div>
-              <p class="testi-text">"Zéro bug en 3 mois d'utilisation. Support réactif en moins de 24h. Les features marchent vraiment. Connect'Academia est stable, fiable, et l'équipe écoute vraiment ses utilisateurs."</p>
+              <p class="testi-text">"J'ai fait ma pré-inscription en ligne et reçu mon attestation tout de suite. Ensuite j'ai réglé mon inscription depuis mon téléphone, sans me déplacer
+une seule fois. Je ne pensais pas que c'était possible.
+"</p>
               <div class="user-info">
                 <img src="<?= BASE_URL ?>/assets/images/fille2.png" alt="Camille">
                 <div>
@@ -943,7 +962,9 @@
 
             <div class="testi-card">
               <div class="stars">★★★★★</div>
-              <p class="testi-text">"Est-ce que vous comptez ajouter une partie d'orientation basée sur les tests de personnalité ?"</p>
+              <p class="testi-text">"Est-ce que vous prévoyez un test pour aider à choisir quand on hésite encore ? Le conseiller est parfait quand on sait ce qu'on veut, moi je suis entre
+deux filières.
+"</p>
               <div class="user-info">
                 <img src="https://i.pravatar.cc/100?u=16" alt="Mathieu">
                 <div>
@@ -959,7 +980,7 @@
 
       <section class="faq-section">
         <div class="faq-header">
-          <h2>QUESTIONS FRÉQUENTES</h2>
+          <h2>Questions fréquentes</h2>
           <div class="title-underline"></div>
         </div>
 
@@ -967,41 +988,50 @@
 
           <div class="faq-item">
             <button class="faq-question">
-              <span>1. L'IA est-elle fiable pour mes cours ?</span>
+              <span>1. Concrètement, que permet la plateforme ?</span>
               <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </button>
             <div class="faq-answer">
-              <p>○ Réponse : Notre IA "Zéro Hallucination" garantit un alignement parfait avec le contenu des cours du programme national. Elle est incapable de produire des informations hors-sujet.</p>
+              <p>Trois choses. Découvrir les établissements supérieurs, vous pré-inscrire en ligne dans plusieurs écoles et finaliser votre inscription sans vous déplacer.
+Réviser votre programme scolaire avec des cours résumés et un assistant qui répond à vos questions. Et échanger avec d'autres élèves et étudiants
+dans un espace pensé pour les études, pas pour la dispersion.</p>
             </div>
           </div>
 
           <div class="faq-item">
             <button class="faq-question">
-              <span>2. La plateforme couvre-t-elle tous les niveaux ?</span>
+              <span>2. Comment se passe une inscription sur la plateforme ?</span>
               <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </button>
             <div class="faq-answer">
-              <p>○ Réponse : Pour l'instant, Connect'Academia est optimisée uniquement pour certaines classes (la Terminale), mais elle a pour objectif de couvrir l'ensemble du cycle secondaire à l'avenir.</p>
+              <p>En deux temps. Vous cliquez sur inscription, vous remplissez le formulaire et vous recevez immédiatement votre attestation de pré-inscription. C'est
+gratuit, automatique, sans validation préalable — et ce document vous sert notamment pour vos démarches de demande de bourse. Ensuite vient
+l'inscription définitive : vous réglez les frais depuis votre téléphone et l'établissement valide votre dossier. Vous pouvez vous pré-inscrire dans
+plusieurs écoles avant de choisir.</p>
             </div>
           </div>
 
           <div class="faq-item">
             <button class="faq-question">
-              <span>3. Comment fonctionne le comparateur d'écoles ?</span>
+              <span>3. Les cours correspondent-ils au programme officiel ?</span>
               <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </button>
             <div class="faq-answer">
-              <p>○ Réponse : Nous agrégeons les données officielles (reconnaissance CAMES, frais, localisation) pour vous permettre de comparer les établissements objectivement.</p>
+              <p>Oui. Nous avons repris les progressions officielles auprès de l'Institut Pédagogique National et numérisé le programme de terminale par série.
+Chaque cours est résumé et reformulé pour être plus clair que vos notes de classe. À côté du cours, un assistant pédagogique répond à vos questions
+sur le chapitre que vous êtes en train de réviser — comme un professeur particulier disponible à toute heure.</p>
             </div>
           </div>
 
           <div class="faq-item">
             <button class="faq-question">
-              <span>4. Puis-je gérer mes documents administratifs sur le site ?</span>
+              <span>4. Comment savoir quelle filière ou quelle école choisir ?</span>
               <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </button>
             <div class="faq-answer">
-              <p>○ Réponse : Oui. Nous déployons progressivement des outils pour simplifier vos démarches (inscriptions, suivi de dossiers, bourses) directement depuis votre espace personnel.</p>
+              <p>Un conseiller d'orientation est intégré à la plateforme. Vous pouvez lui poser vos questions sur les filières, les débouchés, la charge de travail, les
+métiers et les perspectives d'emploi. Il connaît aussi tous les établissements référencés et peut vous aider à les mettre en regard avant de décider.
+Une fonction de comparaison dédiée, pour placer deux écoles côte à côte, arrive prochainement.</p>
             </div>
           </div>
 
@@ -1011,7 +1041,9 @@
               <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </button>
             <div class="faq-answer">
-              <p>○ Réponse : L'inscription est gratuite et donne accès aux fonctionnalités de base. Des formules Premium permettent de débloquer l'IA illimitée et les outils avancés.</p>
+              <p>Oui pour tout ce qui précède le choix de votre école : découverte des établissements, conseil d'orientation, pré-inscription. Seule l'inscription
+définitive est payante, aux frais fixés par l'établissement lui-même — Connect'Academia ne fixe pas ces montants. La partie révision est gratuite pour
+l'instant ; elle passera à un abonnement mensuel à partir de la prochaine rentrée scolaire, avec un tarif communiqué à l'avance.</p>
             </div>
           </div>
 
@@ -1019,7 +1051,7 @@
 
         <div class="faq-footer">
           <p>Vous n'avez pas trouvé la réponse à vos questions ?</p>
-          <p><a href="<?= BASE_URL ?>/assets/lib/contact.html">Cliquez-ici</a></p>
+          <p><a href="<?= BASE_URL ?>/contact">Cliquez-ici</a></p>
         </div>
       </section>
 
@@ -1046,7 +1078,7 @@
           
 
           <div class="wrapper">
-            <span class="span">Call:</span>
+            <span class="span">Tél :</span>
             <a href="tel:+241077980375" class="footer-link">+241 077 98 03 75</a>
           </div>
 
@@ -1079,10 +1111,8 @@
 
 
           <li>
-            <a href="<?= BASE_URL ?>/assets/lib/tarifs.html" class="footer-link">Tarifs</a>
+            <a href="<?= url('/documentation') ?>" class="footer-link">Documentation</a>
           </li>
-
-           
 
         </ul>
 
@@ -1093,7 +1123,7 @@
           </li>
 
           <li>
-            <a href="<?= BASE_URL ?>/assets/lib/contact.html" class="footer-link">Contact </a>
+            <a href="<?= BASE_URL ?>/contact" class="footer-link">Contact </a>
           </li>
 
           
@@ -1121,10 +1151,10 @@
           </p>
 
           <form action="" class="newsletter-form">
-            <input type="email" name="email_address" placeholder="Your email" required class="input-field">
+            <input type="email" name="email_address" placeholder="Ton adresse e-mail" required class="input-field">
 
             <button type="submit" class="btn has-before">
-              <span class="span">s'abonner</span>
+              <span class="span">S'abonner</span>
               <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
             </button>
           </form>
@@ -1246,7 +1276,10 @@
   </style>
 
   <div id="cookie-card">
-    <div class="cookie-title"><ion-icon name="cookie-outline" style="color: #8B52FA;"></ion-icon> Cookies</div>
+    <!-- « cookie-outline » n'existe pas dans ionicons 5.5.2 : la récupération du
+         SVG partait en 404 sans en-tête CORS, ce qui levait un « Failed to
+         fetch » en console. shield-checkmark-outline existe et colle au consentement. -->
+    <div class="cookie-title"><ion-icon name="shield-checkmark-outline" style="color: #8B52FA;"></ion-icon> Cookies</div>
     <p class="cookie-text">Nous utilisons des cookies pour améliorer votre expérience sur Connect'Academia.</p>
     <button class="btn-accept-pro" onclick="acceptCookies()">Accepter & Fermer</button>
   </div>
@@ -1302,6 +1335,113 @@
   }
 </script>
 
+  <script>
+  (function () {
+    var carousel = document.getElementById('analyticsCarousel');
+    if (!carousel) return;
+
+    var track = carousel.querySelector('.analytics-track');
+    var slides = carousel.querySelectorAll('.analytics-slide');
+    var tabs = carousel.querySelectorAll('.analytics-tab');
+    if (!track || slides.length === 0 || tabs.length === 0) return;
+
+    var count = slides.length;
+    var current = 0; /* peut valoir `count` : le clone du 1er slide */
+    var timer = null;
+    var INTERVAL = 4000;
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    /* Boucle infinie sans rembobinage : le 1er slide est cloné en
+       fin de piste. On glisse toujours vers l'avant ; une fois sur
+       le clone, on saute sans animation sur le vrai 1er slide. */
+    var clone = slides[0].cloneNode(true);
+    clone.setAttribute('aria-hidden', 'true');
+    track.appendChild(clone);
+
+    function apply() {
+      track.style.transform = 'translateX(-' + (current * 100) + '%)';
+    }
+
+    function jump(index) { /* repositionnement invisible */
+      current = index;
+      track.style.transition = 'none';
+      apply();
+      void track.offsetWidth; /* force le reflow avant de réanimer */
+      track.style.transition = '';
+    }
+
+    function setActiveTab(i) {
+      Array.prototype.forEach.call(tabs, function (tab, j) {
+        tab.classList.toggle('is-active', j === i);
+        tab.setAttribute('aria-selected', j === i ? 'true' : 'false');
+      });
+    }
+
+    function goTo(index) {
+      current = index;
+      apply();
+      setActiveTab(current % count);
+    }
+
+    function next() {
+      if (current >= count) jump(0);
+      goTo(current + 1);
+    }
+
+    function prev() {
+      if (current <= 0) jump(count);
+      goTo(current - 1);
+    }
+
+    track.addEventListener('transitionend', function (e) {
+      if (e.target === track && current === count) jump(0);
+    });
+
+    function stop() {
+      if (timer) { clearInterval(timer); timer = null; }
+    }
+
+    function start() {
+      /* Le défilement reste automatique même avec "réduire les animations" :
+         la transition devient instantanée via CSS, mais l'avance continue. */
+      if (timer || document.hidden) return;
+      timer = setInterval(next, INTERVAL);
+    }
+
+    Array.prototype.forEach.call(tabs, function (tab) {
+      tab.addEventListener('click', function () {
+        if (current >= count) jump(0);
+        goTo(parseInt(tab.getAttribute('data-index'), 10) || 0);
+        stop();
+        start();
+      });
+    });
+
+    carousel.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') { next(); stop(); start(); }
+      if (e.key === 'ArrowLeft') { prev(); stop(); start(); }
+    });
+
+    /* Aucune pause au survol : le défilement ne s'arrête jamais.
+       Seuls les onglets/flèches relancent le compteur, et l'onglet
+       caché ou hors écran suspend le timer (invisible, économise
+       les ressources). */
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { stop(); } else { start(); }
+    });
+
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) { start(); } else { stop(); }
+        });
+      }, { threshold: 0.25 }).observe(carousel);
+    } else {
+      start();
+    }
+  })();
+  </script>
+
   <script src="<?= BASE_URL ?>/assets/js/script.js" defer></script>
 
   <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
@@ -1341,15 +1481,19 @@
   })();
   </script>
 
-  <script>
-(function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="GCRCfFG4ahJN6GlIIbvyC";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
-  </script>
+  
+    
+    
+    
 
   <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('<?= BASE_URL ?>/sw.js', {
-        scope: '<?= BASE_URL ?>/'
+      // json_encode fournit ses propres guillemets ET échappe l'apostrophe :
+      // BASE_URL contient « connect'academia » en local, ce qui cassait le
+      // littéral JS et tuait tout ce bloc (service worker jamais enregistré).
+      navigator.serviceWorker.register(<?= json_encode(BASE_URL . '/sw.js', JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>, {
+        scope: <?= json_encode(BASE_URL . '/', JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>
       }).catch(function (err) {
         console.warn('[PWA] SW registration failed:', err);
       });

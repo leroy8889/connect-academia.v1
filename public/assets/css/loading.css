@@ -1,0 +1,104 @@
+/* ============================================================
+   Connect'Academia — Loading states
+   Skeleton screens + barre de progression de navigation.
+   Fichier autonome (variables locales + fallbacks) chargé par
+   TOUS les layouts pour un état de chargement cohérent partout.
+   ============================================================ */
+
+/* ── Filet de sécurité responsive (chargé partout) ──────────
+   Empêche tout défilement horizontal parasite sur mobile.
+   `clip` préserve position:sticky (contrairement à `hidden`).
+   Les conteneurs qui doivent scroller garde leur overflow-x:auto. */
+html, body { max-width: 100%; overflow-x: clip; }
+img, video, canvas, svg { max-width: 100%; }
+
+/* ── Skeleton screens ─────────────────────────────────────── */
+@keyframes ca-skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton {
+  --ca-skel-base:  #E7E9ED;
+  --ca-skel-shine: #F4F5F7;
+  display: block;
+  border-radius: var(--radius-sm, 6px);
+  background-color: var(--ca-skel-base);
+  background-image: linear-gradient(
+    90deg,
+    var(--ca-skel-base) 0%,
+    var(--ca-skel-shine) 50%,
+    var(--ca-skel-base) 100%
+  );
+  background-size: 200% 100%;
+  animation: ca-skeleton-shimmer 1.4s ease-in-out infinite;
+  color: transparent !important;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+
+/* Formes */
+.skeleton--text   { height: .7em;   margin: .3em 0;  border-radius: var(--radius-sm, 6px); }
+.skeleton--title  { height: 1.15em; margin: .4em 0;  border-radius: var(--radius-sm, 6px); }
+.skeleton--circle { border-radius: 50%; }
+.skeleton--avatar { width: 40px; height: 40px; border-radius: 50%; flex: 0 0 auto; }
+.skeleton--btn    { height: 38px; border-radius: var(--radius, 10px); }
+.skeleton--thumb  { width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius-md, 12px); }
+.skeleton--block  { height: 100px; border-radius: var(--radius-md, 12px); }
+
+/* Largeurs utilitaires */
+.skeleton--w100 { width: 100%; }
+.skeleton--w90  { width: 90%; }
+.skeleton--w80  { width: 80%; }
+.skeleton--w70  { width: 70%; }
+.skeleton--w60  { width: 60%; }
+.skeleton--w50  { width: 50%; }
+.skeleton--w40  { width: 40%; }
+.skeleton--w30  { width: 30%; }
+
+/* Conteneurs d'assemblage */
+.skeleton-stack > * + * { margin-top: 10px; }
+.skeleton-row  { display: flex; align-items: center; gap: 12px; }
+.skeleton-card {
+  padding: var(--space-4, 16px);
+  border: 1px solid var(--border, #E5E7EB);
+  border-radius: var(--radius-lg, 16px);
+  background: var(--bg-primary, #fff);
+}
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4, 16px);
+}
+
+/* Thème sombre */
+[data-theme="dark"] .skeleton {
+  --ca-skel-base:  #2A2A3E;
+  --ca-skel-shine: #3A3A54;
+}
+
+/* Accessibilité : coupe l'animation si l'utilisateur la refuse */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; background-image: none; }
+}
+
+/* ── Barre de progression de navigation (chargement de page) ── */
+#ca-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  width: 0;
+  background: linear-gradient(90deg, var(--primary, #8B52FA), var(--color-teal, #14B8A6));
+  box-shadow: 0 0 10px rgba(139, 82, 250, .55);
+  border-radius: 0 3px 3px 0;
+  z-index: 10000;
+  opacity: 0;
+  pointer-events: none;
+  transition: width .2s ease, opacity .35s ease;
+}
+#ca-progress.active { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  #ca-progress { transition: opacity .2s ease; }
+}

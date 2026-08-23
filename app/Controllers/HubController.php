@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Controllers;
 
-use Core\{Response, Session, Settings};
-use Models\{User, Abonnement, Announcement};
+use Core\{Response, Session};
+use Models\{User, Announcement};
 
 class HubController
 {
@@ -27,32 +27,34 @@ class HubController
             Response::redirect('/auth/connexion');
         }
 
-        // Statut abonnement — période depuis DB (Settings) en priorité, fallback .env
-        $abonnement    = (new Abonnement())->getActif($userId);
-        $createdAt     = strtotime($user['created_at']);
-        $expireGratuit = $createdAt + Settings::getPeriodeGratuiteSecondes();
-        $resteGratuit  = max(0, $expireGratuit - time());
+        // Compte visiteur (grand public orientation) : pas de hub élève,
+        // son espace est le suivi de ses dossiers d'inscription.
+        if (($user['role'] ?? '') === 'visiteur') {
+            Response::redirect('/eleve/orientation');
+        }
 
-        $acces = $resteGratuit > 0 || $abonnement !== false;
-
-        // Stats rapides + cours en cours (uniquement si accès)
+        // Plateforme 100 % gratuite : tous les modules sont accessibles.
         $stats      = $this->getStats($userId);
-        $enCours    = $acces ? $this->getEnCours($userId) : [];
+        $enCours    = $this->getEnCours($userId);
         $annonce    = $this->getActiveAnnonce();
 
         Response::view('hub/index', [
             'pageTitle'     => "Hub — Connect'Academia",
             'user'          => $user,
-            'abonnement'    => $abonnement,
-            'acces'         => $acces,
-            'resteGratuit'  => $resteGratuit,
             'stats'         => $stats,
             'enCours'       => $enCours,
             'annonce'       => $annonce,
-            'prixMensuel'   => Settings::getPrixMensuel(),
-            'prixAnnuel'    => Settings::getPrixAnnuel(),
             'extraCss'      => ['hub.css'],
         ]);
+    }
+
+    /**
+     * Anciennes URLs /abonnement/* — la plateforme est gratuite,
+     * on redirige simplement vers le hub.
+     */
+    public function legacyAbonnement(): void
+    {
+        Response::redirect('/hub');
     }
 
     public function stats(): void

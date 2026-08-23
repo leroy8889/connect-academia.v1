@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<title>BGFI Business School — Connect'Academia · Orientation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="template/site.css" />
+<style>
+  /* couleur d'accent établissement — changer cette seule valeur pour adapter à n'importe quel établissement */
+  :root { --brand: #1F4E79; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════ HEADER ════════════════ -->
+<header class="site-header">
+  <nav class="nav wrap">
+    <a class="brand-id" href="#top" aria-label="Accueil établissement">
+      <div class="brand-logo">
+        <img src="assets/logo-mark.svg" alt="BBS Logo" />
+      </div>
+      <span class="brand-text">
+        <strong id="estName">BGFI Business School</strong>
+        <span id="estSub">Grande école · Libreville</span>
+      </span>
+    </a>
+
+    <div class="nav-menu">
+      <a href="#filieres">Formations</a>
+      <a href="#tarifs">Admission</a>
+      <a href="#blog">Blog</a>
+      <a href="#contact">Contact</a>
+    </div>
+
+    <div class="nav-cta">
+      <a class="btn btn-primary btn-sm" href="#tarifs">Candidature
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+      <button class="burger" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<!-- ════════════════ HERO ════════════════ -->
+<section class="hero" id="top" data-screen-label="Hero">
+  <!-- annotation flottante : date limite -->
+  <div class="float float-deadline">
+    <small>Date limite dossier</small>
+    <b>18 mai 2026</b>
+  </div>
+  <!-- annotation flottante : logo établissement -->
+  <div class="float float-logo">
+    <img src="assets/logo-mark.svg" alt="Logo BBS" />
+  </div>
+
+  <div class="hero-inner wrap">
+    <span class="eyebrow"><span class="pulse"></span>Candidatures 2026 — 2027 ouvertes</span>
+
+    <h1 class="display" style="font-size: clamp(46px,8vw,80px)">L'école supérieure de management <span class="hl">conçue pour</span> les leaders de demain.</h1>
+
+    <p class="hero-sub"><strong>BBS — BGFI Business School</strong> forme l'élite africaine en Finance, Banque, Assurance, Droit et Systèmes d'Information.</p>
+
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#tarifs">Préinscription gratuite
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+      <a class="btn btn-outline" href="#tarifs">Inscription en ligne
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+      <a class="btn btn-ghost" href="#video">
+        <span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+        Voir la visite (2 min)
+      </a>
+    </div>
+
+    <div class="trust">
+      <span class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>
+        Agréée État
+      </span>
+      <span class="trust-sep"></span>
+      <span class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5"/></svg>
+        Accréditée CAMES
+      </span>
+      <span class="trust-sep"></span>
+      <span class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-6h6v6"/></svg>
+        Groupe BGFI Bank
+      </span>
+      <span class="trust-sep"></span>
+      <span class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Libreville · Franceville · En ligne
+      </span>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ FILIÈRES ════════════════ -->
+<section class="section filieres" id="filieres" data-screen-label="Filières">
+  <div class="wrap">
+    <div class="section-head center">
+      <span class="section-tag">Nos filières</span>
+      <h2 class="display">Des parcours <span class="hl">d'excellence</span>, du Bac+1 au Bac+5.</h2>
+      <p>Chaque formation est ouverte à la préinscription en ligne. Choisis ta filière et lance ta candidature en quelques minutes.</p>
+    </div>
+
+    <div class="filiere-grid">
+      <article class="filiere">
+        <div class="filiere-top">
+          <span class="filiere-niveau">Licence · Bac+3</span>
+          <span class="filiere-statut"><span class="dot"></span>Ouverte</span>
+        </div>
+        <div class="filiere-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 5-6"/><circle cx="7" cy="14" r="0.5" fill="currentColor"/></svg></div>
+        <h3>Banque, Finance & Assurance</h3>
+        <div class="filiere-meta">
+          <div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>3 ans · 6 semestres</div>
+          <div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>40 places disponibles</div>
+        </div>
+        <div class="filiere-foot">
+          <div class="filiere-price"><small>À partir de</small><b>2 000 000<span> FCFA/an</span></b></div>
+          <a class="btn btn-primary btn-sm" href="#tarifs">Préinscription</a>
+        </div>
+      </article>
+
+      <article class="filiere">
+        <div class="filiere-top">
+          <span class="filiere-niveau">Licence · Bac+3</span>
+          <span class="filiere-statut"><span class="dot"></span>Ouverte</span>
+        </div>
+        <div class="filiere-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M7 7h10M5 7l-2.5 6a3 3 0 0 0 5 0L5 7zM19 7l-2.5 6a3 3 0 0 0 5 0L19 7zM8 21h8"/></svg></div>
+        <h3>Droit des affaires & Fiscalité</h3>
+        <div class="filiere-meta">
+          <div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>3 ans · 6 semestres</div>
+          <div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>35 places disponibles</div>
+        </div>
+        <div class="filiere-foot">
+          <div class="filiere-price"><small>À partir de</small><b>2 000 000<span> FCFA/an</span></b></div>
+          <a class="btn btn-primary btn-sm" href="#tarifs">Préinscription</a>
+        </div>
+      </article>
+
+      <article class="filiere">
+        <div class="filiere-top">
+          <span class="filiere-niveau">Licence · Bac+3</span>
+          <span class="filiere-statut"><span class="dot"></span>Ouverte</span>
+        </div>
+        <div class="filiere-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></div>
+        <h3>Systèmes d'Information & Data</h3>
+        <div class="filiere-meta">
+          <div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>3 ans · 6 semestres</div>
+          <div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>30 places disponibles</div>
+        </div>
+        <div class="filiere-foot">
+          <div class="filiere-price"><small>À partir de</small><b>2 200 000<span> FCFA/an</span></b></div>
+          <a class="btn btn-primary btn-sm" href="#tarifs">Préinscription</a>
+        </div>
+      </article>
+
+      <article class="filiere">
+        <div class="filiere-top">
+          <span class="filiere-niveau">Master · Bac+5</span>
+          <span class="filiere-statut"><span class="dot"></span>Ouverte</span>
+        </div>
+        <div class="filiere-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/></svg></div>
+        <h3>Management & Stratégie d'entreprise</h3>
+        <div class="filiere-meta">
+          <div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>2 ans · 4 semestres</div>
+          <div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>25 places disponibles</div>
+        </div>
+        <div class="filiere-foot">
+          <div class="filiere-price"><small>À partir de</small><b>2 800 000<span> FCFA/an</span></b></div>
+          <a class="btn btn-primary btn-sm" href="#tarifs">Préinscription</a>
+        </div>
+      </article>
+
+      <article class="filiere">
+        <div class="filiere-top">
+          <span class="filiere-niveau">Master · Bac+5</span>
+          <span class="filiere-statut"><span class="dot"></span>Ouverte</span>
+        </div>
+        <div class="filiere-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v3h6V3M8.5 12l2 2 4-4"/></svg></div>
+        <h3>Audit, Contrôle & Comptabilité</h3>
+        <div class="filiere-meta">
+          <div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>2 ans · 4 semestres</div>
+          <div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>20 places disponibles</div>
+        </div>
+        <div class="filiere-foot">
+          <div class="filiere-price"><small>À partir de</small><b>2 800 000<span> FCFA/an</span></b></div>
+          <a class="btn btn-primary btn-sm" href="#tarifs">Préinscription</a>
+        </div>
+      </article>
+
+      <article class="filiere">
+        <div class="filiere-top">
+          <span class="filiere-niveau">Bachelor · Bac+1</span>
+          <span class="filiere-statut closed"><span class="dot"></span>Bientôt</span>
+        </div>
+        <div class="filiere-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5M22 10v6"/></svg></div>
+        <h3>Année préparatoire Business</h3>
+        <div class="filiere-meta">
+          <div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>1 an · 2 semestres</div>
+          <div class="row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>Ouverture sept. 2026</div>
+        </div>
+        <div class="filiere-foot">
+          <div class="filiere-price"><small>À partir de</small><b>1 800 000<span> FCFA/an</span></b></div>
+          <a class="btn btn-ghost btn-sm" href="#contact">M'avertir</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ VIDÉO ════════════════ -->
+<section class="section video-sec" id="video" data-screen-label="Vidéo">
+  <div class="wrap">
+    <div class="section-head center">
+      <span class="section-tag">Visite guidée</span>
+      <h2 class="display">Découvrez <span class="hl">BBS</span> en 2 minutes.</h2>
+      <p>Une plongée immersive : campus, professeurs, vie associative et débouchés.</p>
+    </div>
+    <div class="video-stage" id="videoStage">
+      <!-- Remplacer par : <iframe src="https://www.youtube.com/embed/VOTRE_ID" ...></iframe> -->
+      <image-slot id="video-thumb" shape="rounded" radius="24"
+                  placeholder="Déposez la vignette / vidéo de présentation"></image-slot>
+      <div class="video-play"><span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ QUI SOMMES-NOUS ════════════════ -->
+<section class="section about" id="about" data-screen-label="Qui sommes-nous">
+  <div class="wrap about-grid">
+    <div class="about-visual">
+      <div class="about-img-wrap">
+        <image-slot id="about-img" shape="rounded" radius="24"
+                    placeholder="Déposez une photo du campus / direction"></image-slot>
+      </div>
+      <div class="about-quote">
+        <div class="mark">"</div>
+        <p>Nous mettons l'accent sur l'employabilité de nos diplômés en renforçant nos liens avec les entreprises et en offrant des programmes axés sur les compétences du marché.</p>
+        <div class="who"><strong>Emilien OKOSSI NOUHO</strong><span>Directeur Général</span></div>
+      </div>
+    </div>
+
+    <div class="about-body">
+      <span class="section-tag">Qui sommes-nous ?</span>
+      <h2 class="display" style="font-size:clamp(30px,3.4vw,46px); margin:14px 0 22px;">Une business school <span class="hl">reconnue par l'État</span>.</h2>
+      <p>BGFI Business School est un établissement privé d'enseignement supérieur habilité et reconnu par l'État gabonais, accrédité <strong>CAMES</strong> et adossé au <strong>Groupe BGFI Bank</strong>.</p>
+      <p>Notre approche s'inspire des meilleures business schools nord-américaines et européennes, avec un corps professoral international et des programmes pensés pour notre environnement socio-professionnel.</p>
+      <ul class="about-list">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Diplômes reconnus État gabonais &amp; CAMES</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Stages pratiques &amp; insertion vers les métiers BGFI</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Campus à Libreville &amp; Franceville, formations en ligne</li>
+      </ul>
+      <div class="about-stats">
+        <div class="about-stat"><b>2003</b><span>Année de création</span></div>
+        <div class="about-stat"><b>+1 200</b><span>Diplômés en poste</span></div>
+        <div class="about-stat"><b>92%</b><span>Taux d'insertion</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ BLOG / ACTUALITÉS ════════════════ -->
+<section class="section blog" id="blog" data-screen-label="Blog">
+  <div class="wrap">
+    <div class="blog-head">
+      <div class="section-head">
+        <span class="section-tag">Le blog</span>
+        <h2 class="display">La vie du campus, <span class="hl">en images</span>.</h2>
+        <p>Actualités, événements, témoignages et temps forts de l'établissement.</p>
+      </div>
+      <a class="blog-alllink" href="#blog">Tous les articles
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+    <div class="blog-grid">
+
+      <!-- Article à la une -->
+      <article class="post featured">
+        <div class="post-media">
+          <span class="post-cat">Événement</span>
+          <image-slot id="blog-1" shape="rect" placeholder="Photo à la une"></image-slot>
+        </div>
+        <div class="post-body">
+          <span class="post-flag">Article à la une</span>
+          <span class="post-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>12 juin 2026</span>
+          <h3>Cérémonie de remise des diplômes : la promotion 2026 fait son entrée dans la vie active</h3>
+          <p>Plus de 200 diplômés ont été célébrés en présence des partenaires du Groupe BGFI Bank et des familles. Retour en images sur une journée d'exception.</p>
+          <span class="post-link">Lire l'article
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </article>
+
+      <article class="post">
+        <div class="post-media">
+          <span class="post-cat">Vie étudiante</span>
+          <image-slot id="blog-2" shape="rect" placeholder="Photo"></image-slot>
+        </div>
+        <div class="post-body">
+          <span class="post-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>28 mai 2026</span>
+          <h3>Lancement du Bureau des Étudiants 2026 — 2027</h3>
+          <p>Élections, projets associatifs et nouvelle dynamique pour la vie de campus.</p>
+          <span class="post-link">Lire <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+        </div>
+      </article>
+
+      <article class="post">
+        <div class="post-media">
+          <span class="post-cat">Partenariat</span>
+          <image-slot id="blog-3" shape="rect" placeholder="Photo"></image-slot>
+        </div>
+        <div class="post-body">
+          <span class="post-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>15 mai 2026</span>
+          <h3>Signature d'une convention de stage avec BGFI Bank Gabon</h3>
+          <p>Nos étudiants accèdent désormais à des stages garantis au sein du groupe.</p>
+          <span class="post-link">Lire <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+        </div>
+      </article>
+
+      <article class="post">
+        <div class="post-media">
+          <span class="post-cat">Conférence</span>
+          <image-slot id="blog-4" shape="rect" placeholder="Photo"></image-slot>
+        </div>
+        <div class="post-body">
+          <span class="post-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>30 avril 2026</span>
+          <h3>Masterclass « Finance durable en Afrique centrale »</h3>
+          <p>Une matinée d'échange avec des dirigeants du secteur bancaire régional.</p>
+          <span class="post-link">Lire <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+        </div>
+      </article>
+
+      <article class="post">
+        <div class="post-media">
+          <span class="post-cat">Réussite</span>
+          <image-slot id="blog-5" shape="rect" placeholder="Photo"></image-slot>
+        </div>
+        <div class="post-body">
+          <span class="post-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>18 avril 2026</span>
+          <h3>Nos étudiants primés au concours inter-écoles de gestion</h3>
+          <p>L'équipe BBS décroche la première place de la compétition nationale.</p>
+          <span class="post-link">Lire <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+        </div>
+      </article>
+
+      <article class="post">
+        <div class="post-media">
+          <span class="post-cat">Campus</span>
+          <image-slot id="blog-6" shape="rect" placeholder="Photo"></image-slot>
+        </div>
+        <div class="post-body">
+          <span class="post-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>2 avril 2026</span>
+          <h3>Inauguration du nouveau learning lab numérique</h3>
+          <p>Un espace équipé pour les travaux de groupe, la data et l'innovation.</p>
+          <span class="post-link">Lire <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+        </div>
+      </article>
+
+      <article class="post">
+        <div class="post-media">
+          <span class="post-cat">International</span>
+          <image-slot id="blog-7" shape="rect" placeholder="Photo"></image-slot>
+        </div>
+        <div class="post-body">
+          <span class="post-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>20 mars 2026</span>
+          <h3>Programme d'échange avec une école partenaire au Maroc</h3>
+          <p>Une nouvelle mobilité ouverte aux étudiants de Master dès la rentrée.</p>
+          <span class="post-link">Lire <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ TARIFS ════════════════ -->
+<section class="section tarifs" id="tarifs" data-screen-label="Tarifs">
+  <div class="wrap">
+    <div class="section-head center">
+      <span class="section-tag">Scolarité &amp; admission</span>
+      <h2 class="display">Des frais clairs, <span class="hl">un paiement simple</span>.</h2>
+    </div>
+
+    <div class="tarif-card">
+      <div class="tarif-left">
+        <span class="badge">Scolarité 2026 — 2027</span>
+        <div class="tarif-price">
+          <div class="small">À partir de</div>
+          <span class="big">2 000 000<span class="unit"> FCFA / an</span></span>
+        </div>
+        <ul class="tarif-check">
+          <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span>Frais d'inscription : 300 000 FCFA</li>
+          <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span>Frais de dossier concours : 30 000 FCFA (≈ 46 €)</li>
+          <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span>Diplômes reconnus État gabonais &amp; CAMES</li>
+          <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span>Accompagnement vers les métiers BGFI</li>
+        </ul>
+        <div class="tarif-actions">
+          <a class="btn btn-primary" href="#contact">Candidature en ligne
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </a>
+          <a class="btn btn-ghost" href="#contact">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Formulaires L1 / L3 / M1
+          </a>
+        </div>
+      </div>
+
+      <div class="tarif-right">
+        <div class="pay-title">Modes de paiement</div>
+        <div class="pay-list">
+          <div class="pay">
+            <div class="pay-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg></div>
+            <div class="pay-txt"><strong>Espèces</strong><span>Comptabilité de l'établissement</span></div>
+          </div>
+          <div class="pay">
+            <div class="pay-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 10h16M5 10V7l7-4 7 4v3M6 10v11M18 10v11M10 10v11M14 10v11"/></svg></div>
+            <div class="pay-txt"><strong>Virement bancaire</strong><span>IBAN GA21 4000 3041 0041 0078 7901 229 — BGFIGALI</span></div>
+          </div>
+          <div class="pay">
+            <div class="pay-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg></div>
+            <div class="pay-txt"><strong>Mobile Money</strong><span>Airtel Money · *150*3*10# — code commerce (préciser le nom du candidat)</span></div>
+          </div>
+          <div class="pay">
+            <div class="pay-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.7-2.5 2-2.5 4M12 17h.01"/></svg></div>
+            <div class="pay-txt"><strong>Paiement en ligne sécurisé</strong><span>Carte &amp; Mobile Money via Connect'Academia (MoneyFusion)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ LOCALISATION / CONTACT ════════════════ -->
+<section class="contact" id="contact" data-screen-label="Contact">
+  <div class="contact-grid">
+    <div class="contact-map">
+      <a class="map-open" href="https://maps.google.com/?q=BGFI+Business+School+Libreville" target="_blank" rel="noopener">
+        Ouvrir dans Maps
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>
+      </a>
+      <iframe title="Localisation établissement" loading="lazy"
+        src="https://www.google.com/maps?q=Libreville%20Gabon&output=embed"></iframe>
+    </div>
+    <div class="contact-info">
+      <h2 class="display">Nous contacter</h2>
+      <div class="contact-row">
+        <div class="contact-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        <div class="ct"><small>Adresse</small><span>Boulevard de l'Indépendance — Centre-ville, Libreville, Gabon</span></div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg></div>
+        <div class="ct"><small>Email</small><a href="mailto:admission@bbs.ga">admission@bbs.ga</a></div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+        <div class="ct"><small>Téléphone</small><a href="tel:+24106670114">(+241) 066 70 11 84</a></div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+        <div class="ct"><small>WhatsApp</small><a href="https://wa.me/24174000043">(+241) 074 00 00 43</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ FOOTER ════════════════ -->
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="foot-brand">
+          <img src="assets/logo-mark.svg" alt="" />
+          <strong id="estNameFoot">BGFI Business School</strong>
+        </div>
+        <p class="foot-about">L'école supérieure de management de référence en Afrique centrale. Candidatures 2026 — 2027 ouvertes en ligne.</p>
+      </div>
+      <div class="foot-col">
+        <h4>Établissement</h4>
+        <a href="#filieres">Nos filières</a>
+        <a href="#about">Qui sommes-nous</a>
+        <a href="#tarifs">Admission &amp; tarifs</a>
+        <a href="#blog">Le blog</a>
+        <a href="#video">Visite guidée</a>
+      </div>
+      <div class="foot-col">
+        <h4>Candidature</h4>
+        <a href="#tarifs">Préinscription en ligne</a>
+        <a href="#tarifs">Inscription &amp; paiement</a>
+        <a href="#contact">Nous contacter</a>
+        <a href="#tarifs">Formulaires à télécharger</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 BGFI Business School — Tous droits réservés.</span>
+      <span class="powered"><span class="dot"></span>Propulsé par <b>Connect'Academia</b> · Orientation</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ════════════════ SCRIPTS ════════════════ -->
+<script src="template/image-slot.js"></script>
+<script src="template/site.js"></script>
+
+</body>
+</html>

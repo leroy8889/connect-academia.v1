@@ -43,6 +43,10 @@ function adminNavActive(string $path, string $current, string $base): string {
   <link rel="apple-touch-icon" href="<?= asset('images/icons/apple-touch-icon.png') ?>">
 
   <link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
+  <link rel="stylesheet" href="<?= asset('css/admin-claude.css') ?>">
+  <link rel="stylesheet" href="<?= asset('css/loading.css') ?>">
+  <!-- Restaure l'état replié de la sidebar avant le rendu (anti-flash) -->
+  <script>try{if(localStorage.getItem('caAdminSidebar')==='collapsed'){document.documentElement.classList.add('sidebar-collapsed');}}catch(e){}</script>
   <script>
     window.CA_ADMIN = {
       baseUrl: <?= json_encode($baseUrl) ?>,
@@ -79,6 +83,10 @@ function adminNavActive(string $path, string $current, string $base): string {
         $isModo       = ($adminRole === 'moderateur');
         $isModo1      = ($adminRole === 'moderateur_1');
         $isSuperAdmin = ($adminRole === 'super_admin');
+        // Accès au tableau de bord sécurité : super_admin + admin.
+        $canSecurite  = in_array($adminRole, ['super_admin', 'admin'], true);
+        // Compteur d'alertes de sécurité non lues (rôles autorisés uniquement).
+        $secUnseen = $canSecurite ? \Core\SecurityMonitor::unseenCount() : 0;
     ?>
     <nav class="sidebar-nav">
 
@@ -184,6 +192,36 @@ function adminNavActive(string $path, string $current, string $base): string {
       </div>
       <?php endif; ?>
 
+      <?php if (!$isModo && !$isModo1): ?>
+      <!-- ORIENTATION — masqué pour modérateurs -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Orientation</div>
+        <a href="<?= url('/admin/orientation') ?>" class="sidebar-link<?= str_contains($currentUri, '/admin/orientation') && !str_contains($currentUri, '/admin/orientation/paiements') && !str_contains($currentUri, '/admin/orientation/reconciliation') ? ' active' : '' ?>">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M12 14l9-5-9-5-9 5 9 5z"/>
+            <path d="M12 14l6.16-3.422a12.083 12.083 0 0 1 .665 6.479A11.952 11.952 0 0 0 12 20.055a11.952 11.952 0 0 0-6.824-2.998 12.078 12.078 0 0 1 .665-6.479L12 14z"/>
+          </svg>
+          <span>Établissements</span>
+        </a>
+        <a href="<?= url('/admin/orientation/paiements') ?>" class="sidebar-link<?= str_contains($currentUri, '/admin/orientation/paiements') ? ' active' : '' ?>">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <rect x="2" y="5" width="20" height="14" rx="2"/>
+            <line x1="2" y1="10" x2="22" y2="10"/>
+          </svg>
+          <span>Paiements écoles</span>
+        </a>
+        <a href="<?= url('/admin/orientation/reconciliation') ?>" class="sidebar-link<?= str_contains($currentUri, '/admin/orientation/reconciliation') ? ' active' : '' ?>">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M3 12a9 9 0 0 1 15.36-6.36L21 8"/>
+            <path d="M21 3v5h-5"/>
+            <path d="M21 12a9 9 0 0 1-15.36 6.36L3 16"/>
+            <path d="M3 21v-5h5"/>
+          </svg>
+          <span>Réconciliation</span>
+        </a>
+      </div>
+      <?php endif; ?>
+
       <?php if (!$isModo): ?>
       <!-- SYSTÈME — visible pour admin, super_admin, moderateur_1 -->
       <div class="sidebar-section">
@@ -203,6 +241,17 @@ function adminNavActive(string $path, string $current, string $base): string {
             <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
           </svg>
           <span>Notifications</span>
+        </a>
+        <?php endif; ?>
+        <?php if ($canSecurite): ?>
+        <a href="<?= url('/admin/securite') ?>" class="sidebar-link<?= str_contains($currentUri, '/admin/securite') ? ' active' : '' ?>" style="justify-content:flex-start;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2 4 5v6c0 5 3.4 7.7 8 9 4.6-1.3 8-4 8-9V5z"/>
+          </svg>
+          <span>Sécurité</span>
+          <?php if ($secUnseen > 0): ?>
+          <span style="margin-left:auto;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#B91C1C;color:#fff;font-size:10.5px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;"><?= $secUnseen > 99 ? '99+' : (int)$secUnseen ?></span>
+          <?php endif; ?>
         </a>
         <?php endif; ?>
         <?php if ($isSuperAdmin): ?>
@@ -241,6 +290,16 @@ function adminNavActive(string $path, string $current, string $base): string {
               onclick="document.getElementById('admin-sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').style.display='block'">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+
+      <!-- Repli sidebar (desktop) -->
+      <button id="sidebar-collapse-btn" class="sidebar-collapse-btn" type="button"
+              aria-label="Replier ou déplier le menu" aria-expanded="true" title="Replier / déplier le menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="16" rx="2"/>
+          <line x1="9" y1="4" x2="9" y2="20"/>
+          <path d="M14 9l-2 3 2 3" class="scb-chev"/>
         </svg>
       </button>
 
@@ -300,7 +359,14 @@ function adminNavActive(string $path, string $current, string $base): string {
   </div><!-- .admin-main -->
 </div><!-- .admin-layout -->
 
+<script src="<?= asset('js/loading.js') ?>"></script>
 <script src="<?= asset('js/admin.js') ?>"></script>
+<!-- Pastille de hover en verre liquide (sidebar) — verre CSS pur ici.
+     La console admin n'utilise plus html2canvas/container.js (WebGL) : sur des
+     pages longues le snapshot se remappait mal dans le shader et le survol
+     virait au noir. Progressive enhancement : sans JS, la surbrillance CSS
+     de secours (.sidebar-link:hover) reste active. -->
+<script src="<?= asset('liquid-glass/sidebar-glass.js') ?>" defer></script>
 <?php if (!empty($extraJs)): foreach ($extraJs as $js): ?>
 <script src="<?= $js ?>"></script>
 <?php endforeach; endif; ?>
@@ -314,8 +380,10 @@ function adminNavActive(string $path, string $current, string $base): string {
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('<?= BASE_URL ?>/sw.js', {
-      scope: '<?= BASE_URL ?>/'
+    // json_encode : BASE_URL peut contenir une apostrophe (dossier
+    // « connect'academia » en local) — un littéral '…' casserait le script.
+    navigator.serviceWorker.register(<?= json_encode(BASE_URL . '/sw.js', JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>, {
+      scope: <?= json_encode(BASE_URL . '/', JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>
     }).catch(function (err) {
       console.warn('[PWA] SW registration failed:', err);
     });

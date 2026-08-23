@@ -81,23 +81,31 @@ class Admin extends BaseModel
      */
     public function findByResetToken(string $token): array|false
     {
+        \Core\AdminResetSchema::ensure($this->db);
+
+        // Le token circule en clair (email / URL) mais n'est stocké que hashé.
+        $tokenHash = hash('sha256', $token);
         return $this->query(
-            "SELECT id, email FROM admins 
-             WHERE reset_token = ? 
-             AND reset_expires_at > NOW() 
+            "SELECT id, email FROM admins
+             WHERE reset_token = ?
+             AND reset_expires_at > NOW()
              AND is_active = 1",
-            [$token]
+            [$tokenHash]
         )->fetch(PDO::FETCH_ASSOC);
     }
 
     /**
-     * Enregistre un token de réinitialisation pour un admin
+     * Enregistre un token de réinitialisation pour un admin.
+     * Le token est stocké HASHÉ (SHA-256) : une fuite de la base ne permet
+     * pas de forger un lien de réinitialisation valide.
      */
     public function setResetToken(int $id, string $token): bool
     {
+        \Core\AdminResetSchema::ensure($this->db);
+
         return (bool) $this->query(
             "UPDATE admins SET reset_token = ?, reset_expires_at = DATE_ADD(NOW(), INTERVAL 2 HOUR) WHERE id = ?",
-            [$token, $id]
+            [hash('sha256', $token), $id]
         );
     }
 
@@ -119,7 +127,7 @@ class Admin extends BaseModel
     {
         $this->query(
             "UPDATE admins SET reset_token = NULL, reset_expires_at = NULL WHERE reset_token = ?",
-            [$token]
+            [hash('sha256', $token)]
         );
     }
 
@@ -258,7 +266,8 @@ class Admin extends BaseModel
         }
         if (!empty($filters['q'])) {
             $like     = '%' . $filters['q'] . '%';
-            $where[]  = '(u.nom LIKE ? OR u.prenom LIKE ? OR u.email LIKE ?)';
+            $where[]  = '(u.nom LIKE ? OR u.prenom LIKE ? OR u.email LIKE ? OR u.telephone LIKE ?)';
+            $params[] = $like;
             $params[] = $like;
             $params[] = $like;
             $params[] = $like;
@@ -268,13 +277,17 @@ class Admin extends BaseModel
         $params[] = $offset;
 
         $sql = "
-            SELECT u.id, u.nom, u.prenom, u.email, u.role, u.photo_profil,
+            SELECT u.id, u.nom, u.prenom, u.email, u.telephone, u.role, u.photo_profil,
                    u.is_active, u.serie_id,
                    u.last_login, UNIX_TIMESTAMP(u.last_login) AS last_login_ts,
                    u.last_activity, UNIX_TIMESTAMP(u.last_activity) AS last_activity_ts,
                    u.created_at, u.posts_count,
                    s.nom AS serie, m.nom AS matiere,
-                   ab.plan AS ab_plan, ab.statut AS ab_statut, ab.fin AS ab_fin
+                   ab.plan AS ab_plan, ab.statut AS ab_statut, ab.fin AS ab_fin,
+                   (SELECT GROUP_CONCAT(DISTINCT e.nom ORDER BY e.nom SEPARATOR ', ')
+                      FROM dossiers_inscription di
+                      JOIN etablissements e ON e.id = di.etablissement_id
+                     WHERE di.eleve_id = u.id AND di.statut = 'inscrit') AS etabs_inscrit
             FROM users u
             LEFT JOIN series s ON s.id = u.serie_id
             LEFT JOIN ressources top_r ON top_r.id = (
@@ -312,7 +325,8 @@ class Admin extends BaseModel
         }
         if (!empty($filters['q'])) {
             $like     = '%' . $filters['q'] . '%';
-            $where[]  = '(nom LIKE ? OR prenom LIKE ? OR email LIKE ?)';
+            $where[]  = '(nom LIKE ? OR prenom LIKE ? OR email LIKE ? OR telephone LIKE ?)';
+            $params[] = $like;
             $params[] = $like;
             $params[] = $like;
             $params[] = $like;
@@ -332,7 +346,7 @@ class Admin extends BaseModel
              FROM users WHERE is_deleted = 0 GROUP BY role"
         )->fetchAll(PDO::FETCH_ASSOC);
 
-        $counts = ['total' => 0, 'eleve' => 0, 'enseignant' => 0, 'admin' => 0, 'actifs' => 0, 'suspendus' => 0];
+        $counts = ['total' => 0, 'eleve' => 0, 'gestionnaire' => 0, 'admin' => 0, 'visiteur' => 0, 'actifs' => 0, 'suspendus' => 0];
         foreach ($rows as $row) {
             $counts['total']     += $row['nb'];
             $counts[$row['role']] = $row['nb'];

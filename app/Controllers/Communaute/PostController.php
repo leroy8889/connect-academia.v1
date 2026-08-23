@@ -66,8 +66,8 @@ class PostController
             Response::json(['success' => false, 'error' => ['code' => 'VALIDATION_ERROR', 'message' => 'Données invalides', 'fields' => $validator->getErrors()]], 422);
         }
 
-        if ($data['type'] === 'annonce' && !in_array(Session::userRole(), ['enseignant', 'admin'], true)) {
-            Response::json(['success' => false, 'error' => ['code' => 'FORBIDDEN', 'message' => 'Seuls les enseignants peuvent publier des annonces']], 403);
+        if ($data['type'] === 'annonce' && !in_array(Session::userRole(), ['gestionnaire', 'admin'], true)) {
+            Response::json(['success' => false, 'error' => ['code' => 'FORBIDDEN', 'message' => 'Seuls les gestionnaires et administrateurs peuvent publier des annonces']], 403);
         }
 
         // Upload image
@@ -113,6 +113,12 @@ class PostController
         }
 
         $input = json_decode(file_get_contents('php://input'), true) ?? [];
+
+        if (isset($input['type']) && $input['type'] === 'annonce'
+            && !in_array(Session::userRole(), ['gestionnaire', 'admin'], true)) {
+            Response::json(['success' => false, 'error' => ['code' => 'FORBIDDEN', 'message' => 'Seuls les gestionnaires et administrateurs peuvent publier des annonces']], 403);
+        }
+
         $postModel->update($postId, $input);
 
         Response::json(['success' => true, 'message' => 'Publication mise à jour']);

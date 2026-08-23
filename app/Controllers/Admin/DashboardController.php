@@ -5,6 +5,7 @@ namespace Controllers\Admin;
 
 use Core\{Response, Cache};
 use Models\Admin;
+use Models\Bilan;
 
 class DashboardController
 {
@@ -44,6 +45,9 @@ class DashboardController
         $activiteRecente = $this->model->getActiviteRecente(5);
         $croissance      = $allCroissance[6];
 
+        // Bilans PDF : liste des établissements pour le sélecteur — cache 10 min
+        $bilanEtabs = Cache::remember('admin:dashboard:bilan-etabs', 600, fn() => (new Bilan())->etablissementsSelect());
+
         Response::view('admin/dashboard/index', [
             'pageTitle'          => "Dashboard — Admin",
             'breadcrumbSection'  => 'Pilotage',
@@ -55,6 +59,7 @@ class DashboardController
             'dernieres'          => $dernieres,
             'activiteRecente'    => $activiteRecente,
             'activiteMatieres'   => $activiteMatieres,
+            'bilanEtabs'         => $bilanEtabs,
         ], 'admin');
     }
 

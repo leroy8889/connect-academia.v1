@@ -56,17 +56,27 @@ class ParametresController
             'enable_chat', 'enable_paiement', 'gemini_rate_limit_per_minute',
             'periode_gratuite_jours', 'prix_mensuel_xaf', 'prix_annuel_xaf',
             'email_inscription', 'email_signalement', 'email_ressource',
+            'maintenance_mode', 'maintenance_message',
         ];
 
         $boolKeys = [
             'enable_suivi', 'enable_messagerie', 'enable_signalements', 'enable_notif_email',
             'enable_chat', 'enable_paiement',
             'email_inscription', 'email_signalement', 'email_ressource',
+            'maintenance_mode',
         ];
+
+        // Le mode maintenance est une action à portée globale : réservé au super-admin.
+        if (Session::adminRole() !== 'super_admin') {
+            $allowed = array_values(array_diff($allowed, ['maintenance_mode', 'maintenance_message']));
+        }
 
         foreach ($allowed as $key) {
             if (in_array($key, $boolKeys, true)) {
-                $val = isset($_POST[$key]) ? '1' : '0';
+                // Motif hidden+checkbox : le hidden ('0') est toujours envoyé,
+                // donc isset() ne suffit pas. Lire la VALEUR réelle soumise
+                // (checkbox '1' si cochée, sinon hidden '0').
+                $val = (($_POST[$key] ?? '0') === '1') ? '1' : '0';
             } else {
                 if (!isset($_POST[$key])) continue;
                 $val = trim((string) $_POST[$key]);

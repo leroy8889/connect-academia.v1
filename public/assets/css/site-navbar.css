@@ -1,0 +1,223 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Connect'Academia — Navbar site unifiée (.ca-nav)
+   Pilule flottante translucide — même style que le hub Orientation.
+   Autonome : aucune dépendance à style.css, tokens design système inline.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.ca-nav {
+  --ca-purple:       #8B52FA;
+  --ca-purple-hover: #9D6EFB;
+  --ca-purple-deep:  #7440D9;
+  --ca-ink:          #1A1A1A;
+  --ca-ink-2:        #4A4A4A;
+  --ca-ease:         cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  max-width: 1100px;
+  z-index: 90;
+  box-sizing: border-box;
+  padding: 8px 16px;
+  border: 1px solid rgba(140, 82, 255, 0.25);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(139, 82, 250, 0.08),
+              0 8px 32px rgba(139, 82, 250, 0.05);
+  font-family: 'Montserrat', system-ui, sans-serif;
+  transition: background 300ms var(--ca-ease), box-shadow 300ms var(--ca-ease);
+}
+.ca-nav *, .ca-nav *::before, .ca-nav *::after { box-sizing: border-box; }
+
+/* État scrollé : pilule fixée, verre plus opaque pour rester lisible */
+.ca-nav.is-fixed {
+  position: fixed;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow: 0 8px 28px rgba(139, 82, 250, 0.12),
+              0 2px 8px rgba(26, 26, 26, 0.06);
+  animation: ca-nav-slide-in 400ms var(--ca-ease);
+}
+@keyframes ca-nav-slide-in {
+  from { transform: translateX(-50%) translateY(-110%); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);     opacity: 1; }
+}
+
+.ca-nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* ── Logo officiel (rotation continue, pause au survol — comme le hub) ── */
+.ca-nav__logo { display: flex; align-items: center; flex: none; }
+.ca-nav__logo img {
+  width: 56px;
+  height: auto;
+  display: block;
+  animation: ca-nav-spin 3s linear infinite;
+}
+.ca-nav__logo img:hover { animation-play-state: paused; }
+@keyframes ca-nav-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* ── Liens (desktop) ──────────────────────────────────────────────────── */
+.ca-nav__list {
+  display: flex;
+  align-items: center;
+  gap: 44px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ca-nav__link {
+  position: relative;
+  display: block;
+  padding: 18px 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ca-ink);
+  text-decoration: none;
+  transition: color 200ms var(--ca-ease);
+}
+.ca-nav__link:hover,
+.ca-nav__link:focus-visible { color: var(--ca-purple); }
+.ca-nav__link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--ca-purple);
+  transform: translateX(-50%) scale(0);
+  transition: transform 200ms var(--ca-ease);
+}
+.ca-nav__link:hover::after,
+.ca-nav__link.is-active::after { transform: translateX(-50%) scale(1); }
+.ca-nav__link.is-active { color: var(--ca-purple); font-weight: 600; }
+
+/* ── Actions (CTA Connexion + burger) ─────────────────────────────────── */
+.ca-nav__actions { display: flex; align-items: center; gap: 15px; flex: none; }
+
+.ca-nav__cta {
+  display: none;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 24px;
+  border-radius: 8px;
+  background: var(--ca-purple);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 200ms var(--ca-ease), transform 120ms ease-out, box-shadow 200ms var(--ca-ease);
+}
+.ca-nav__cta svg { width: 17px; height: 17px; flex: none; }
+.ca-nav__cta:hover,
+.ca-nav__cta:focus-visible {
+  background: var(--ca-purple-hover);
+  box-shadow: 0 0 24px rgba(139, 82, 250, 0.35);
+}
+.ca-nav__cta:active { background: var(--ca-purple-deep); transform: scale(0.98); }
+
+.ca-nav__burger,
+.ca-nav__close {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ca-ink);
+  cursor: pointer;
+  transition: color 200ms var(--ca-ease);
+}
+.ca-nav__burger svg, .ca-nav__close svg { width: 26px; height: 26px; }
+.ca-nav__burger:hover, .ca-nav__close:hover { color: var(--ca-purple); }
+
+/* ── Menu mobile off-canvas (fond blanc plein, comme le hub) ──────────── */
+.ca-nav__menu-head {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 20px;
+  border-bottom: 2px solid #E5E5E5;
+  background: #fff;
+}
+.ca-nav__menu-head .ca-nav__logo img { width: 64px; animation: none; }
+.ca-nav__close {
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.ca-nav__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(0, 0, 0, 0.8);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 250ms ease;
+}
+
+@media (max-width: 1199px) {
+  .ca-nav__menu {
+    position: fixed;
+    top: 0;
+    left: -320px;
+    width: 100%;
+    max-width: 320px;
+    height: 100vh;
+    height: 100dvh;
+    background: #fff;
+    visibility: hidden;
+    transition: transform 250ms cubic-bezier(0.6, -0.28, 0.735, 0.045), visibility 0s 250ms;
+    z-index: 95;
+  }
+  .ca-nav__menu.is-open {
+    transform: translateX(320px);
+    visibility: visible;
+    transition: transform 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275), visibility 0s;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15), 0 0 40px rgba(0, 0, 0, 0.1);
+    border-right: 1px solid #E5E5E5;
+  }
+  .ca-nav__menu-head { display: flex; }
+  .ca-nav__list { display: block; padding: 20px; }
+  .ca-nav__link {
+    padding: 12px 0;
+    font-size: 15px;
+    color: var(--ca-ink);
+    border-bottom: 1px solid #F0F0F0;
+  }
+  .ca-nav__link::after { display: none; }
+  .ca-nav__overlay.is-open {
+    opacity: 1;
+    pointer-events: all;
+    z-index: 94;
+  }
+}
+
+@media (min-width: 768px) {
+  .ca-nav { padding: 10px 24px; }
+  .ca-nav__cta { display: inline-flex; }
+}
+
+@media (min-width: 1200px) {
+  .ca-nav__burger, .ca-nav__overlay, .ca-nav__menu-head { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-nav__logo img { animation: none; }
+  .ca-nav.is-fixed { animation: none; }
+}

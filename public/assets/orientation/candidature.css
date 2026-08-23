@@ -1,0 +1,632 @@
+/* ── candidature.css — Connect'Academia · Formulaires candidature ── */
+@import url('./tokens.css');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: var(--clr-bg, #FAF9F5);
+    color: var(--clr-txt, #1A1523);
+    font-family: 'Montserrat', -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* ── Top bar ── */
+.cand-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: #fff;
+    border-bottom: 1px solid var(--clr-border, #E8E4F0);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    gap: 12px;
+}
+
+.cand-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--clr-txt-m, #63596E);
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 600;
+    transition: color .2s;
+    white-space: nowrap;
+}
+.cand-back:hover { color: var(--brand); }
+
+.cand-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 14px;
+    background: color-mix(in srgb, var(--brand) 9%, transparent);
+    border: 1.5px solid color-mix(in srgb, var(--brand) 28%, transparent);
+    border-radius: 100px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--brand);
+    white-space: nowrap;
+}
+
+.cand-step-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--clr-txt-m, #63596E);
+}
+
+/* ── Page layout ── */
+.cand-page {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+}
+
+/* ── Hero ── */
+.cand-hero {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.cand-hero h1 {
+    font-size: clamp(1.55rem, 4vw, 2rem);
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    letter-spacing: -.02em;
+}
+
+.cand-hero h1 .accent { color: var(--brand); }
+
+.cand-hero p {
+    font-size: 14.5px;
+    color: var(--clr-txt-m, #63596E);
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.75;
+}
+
+/* ── Stepper ── */
+.stepper {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    margin-bottom: 32px;
+    gap: 0;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.step-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2.5px solid var(--clr-border, #E8E4F0);
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--clr-txt-l, #A49DB0);
+    transition: background .2s, border-color .2s, color .2s;
+    position: relative;
+    z-index: 1;
+}
+
+.step.done .step-circle {
+    background: #22c55e;
+    border-color: #22c55e;
+    color: #fff;
+}
+
+.step.active .step-circle {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: #fff;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 18%, transparent);
+}
+
+.step-name {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--clr-txt-l, #A49DB0);
+    text-align: center;
+    white-space: nowrap;
+    max-width: 80px;
+}
+
+.step.active .step-name { color: var(--brand); font-weight: 700; }
+.step.done .step-name   { color: var(--clr-txt-m, #63596E); }
+
+.step-connector {
+    width: 64px;
+    height: 2.5px;
+    background: var(--clr-border, #E8E4F0);
+    margin-top: 15px;
+    transition: background .3s;
+    flex-shrink: 0;
+}
+
+.step-connector.done { background: #22c55e; }
+
+/* ── Form card ── */
+.cand-card {
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 4px 28px rgba(0,0,0,.06), 0 1px 4px rgba(0,0,0,.04);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.cand-card-head {
+    padding: 24px 28px 0;
+    border-bottom: 1px solid var(--clr-border, #E8E4F0);
+    padding-bottom: 20px;
+    margin-bottom: 0;
+}
+
+.cand-card-head h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.cand-card-head p {
+    font-size: 13px;
+    color: var(--clr-txt-m, #63596E);
+}
+
+/* ── Form sections ── */
+.form-section {
+    padding: 22px 28px;
+    border-bottom: 1px solid var(--clr-border, #E8E4F0);
+}
+
+.form-section:last-child { border-bottom: none; }
+
+.section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--brand);
+    margin-bottom: 18px;
+}
+
+.section-label::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 13px;
+    background: var(--brand);
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+/* ── Form grid ── */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.form-row:last-child { margin-bottom: 0; }
+.form-row.full       { grid-template-columns: 1fr; }
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--clr-txt-m, #63596E);
+}
+
+.form-group label .req { color: var(--brand); }
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    border: 1.5px solid var(--clr-border, #E8E4F0);
+    border-radius: 12px;
+    padding: 11px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--clr-txt, #1A1523);
+    background: #fff;
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+}
+
+.form-group select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+    cursor: pointer;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 12%, transparent);
+}
+
+.form-group input.is-error,
+.form-group select.is-error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239,68,68,.1);
+}
+
+.field-error {
+    font-size: 11px;
+    color: #dc2626;
+    font-weight: 500;
+}
+
+/* ── Tel group ── */
+.tel-group {
+    display: flex;
+    gap: 8px;
+}
+
+/* Indicatif : largeur fixe. Sans width:auto le width:100% hérité de
+   `.form-group select` + flex-shrink:0 écrasait le champ numéro à 0 (invisible). */
+.tel-group .tel-code {
+    flex: 0 0 132px;
+    width: 132px;
+    min-width: 132px;
+}
+
+/* Numéro : occupe le reste. min-width:0 pour pouvoir rétrécir en flex. */
+.tel-group .tel-num {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+}
+
+/* ── Alert boxes ── */
+.alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 13px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    margin-bottom: 20px;
+}
+
+.alert-success {
+    background: rgba(34,197,94,.08);
+    border: 1px solid rgba(34,197,94,.28);
+    color: #15803d;
+}
+
+.alert-error {
+    background: rgba(239,68,68,.06);
+    border: 1px solid rgba(239,68,68,.22);
+    color: #dc2626;
+}
+
+.alert-info {
+    background: color-mix(in srgb, var(--brand) 7%, transparent);
+    border: 1px solid color-mix(in srgb, var(--brand) 22%, transparent);
+    color: var(--brand);
+}
+
+.alert svg { flex-shrink: 0; margin-top: 1px; }
+
+/* ── Info banner (inside card) ── */
+.info-banner {
+    margin: 0 28px 20px;
+    padding: 13px 16px;
+    background: rgba(34,197,94,.07);
+    border: 1px solid rgba(34,197,94,.25);
+    border-radius: 12px;
+    font-size: 12.5px;
+    color: #166534;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+/* ── CTA footer (preinscription) ── */
+.cand-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 24px;
+    flex-wrap: wrap;
+}
+
+/* ── Navigation footer (inscription wizard) ── */
+.nav-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 24px;
+}
+
+.nav-center { flex: 1; text-align: center; }
+
+/* ── Buttons ── */
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--brand);
+    color: #fff;
+    border: none;
+    border-radius: 100px;
+    padding: 12px 26px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    transition: filter .2s, transform .1s;
+}
+
+.btn-primary:hover  { filter: brightness(1.08); }
+.btn-primary:active { transform: scale(.97); }
+.btn-primary:disabled { opacity: .5; cursor: default; filter: none; }
+
+.btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    color: var(--clr-txt-m, #63596E);
+    border: 1.5px solid var(--clr-border, #E8E4F0);
+    border-radius: 100px;
+    padding: 11px 22px;
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color .2s, color .2s;
+}
+
+.btn-ghost:hover  { border-color: var(--clr-txt-m); color: var(--clr-txt); }
+.btn-ghost:disabled { opacity: .35; cursor: default; }
+
+.btn-link {
+    background: none;
+    border: none;
+    color: var(--clr-txt-m, #63596E);
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color .2s;
+    padding: 0;
+}
+
+.btn-link:hover { color: var(--brand); text-decoration: underline; }
+
+/* ── Filière pills ── */
+.filiere-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.filiere-pill { cursor: pointer; }
+
+.filiere-pill input[type="radio"] { display: none; }
+
+.filiere-pill span {
+    display: block;
+    text-align: center;
+    padding: 10px 14px;
+    border: 2px solid var(--clr-border, #E8E4F0);
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--clr-txt-m, #63596E);
+    transition: border-color .15s, background .15s, color .15s;
+    user-select: none;
+}
+
+.filiere-pill:hover span {
+    border-color: var(--brand);
+    color: var(--brand);
+}
+
+.filiere-pill input:checked + span {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: #fff;
+}
+
+/* ── Upload zones ── */
+.uploads-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.upload-zone {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 2px dashed #D5D0E0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-zone:hover {
+    border-color: var(--brand);
+    background: color-mix(in srgb, var(--brand) 3%, transparent);
+}
+
+.upload-zone.has-file {
+    border-color: #22c55e;
+    border-style: solid;
+    background: rgba(34,197,94,.04);
+}
+
+.upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+
+.upload-ico {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--brand) 10%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--brand);
+}
+
+.upload-ico.done {
+    background: rgba(34,197,94,.12);
+    color: #16a34a;
+}
+
+.upload-meta  { flex: 1; min-width: 0; }
+
+.upload-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--clr-txt);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.upload-name .req-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--brand);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.upload-hint {
+    font-size: 11.5px;
+    color: var(--clr-txt-l, #A49DB0);
+    margin-top: 2px;
+}
+
+.upload-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 100px;
+}
+
+.upload-badge.obligatoire {
+    background: color-mix(in srgb, var(--brand) 10%, transparent);
+    color: var(--brand);
+}
+
+.upload-badge.optionnel {
+    background: rgba(0,0,0,.05);
+    color: var(--clr-txt-l);
+}
+
+/* ── Success card ── */
+.success-icon {
+    width: 72px;
+    height: 72px;
+    background: rgba(34,197,94,.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.dossier-summary {
+    background: var(--clr-bg, #FAF9F5);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 20px 0;
+}
+
+.dossier-summary dt {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--clr-txt-l);
+    margin-bottom: 2px;
+}
+
+.dossier-summary dd {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--clr-txt);
+    margin-bottom: 12px;
+}
+
+.dossier-summary dd:last-child { margin-bottom: 0; }
+
+/* ── Payment placeholder ── */
+.pay-lock {
+    width: 64px;
+    height: 64px;
+    background: color-mix(in srgb, var(--brand) 10%, transparent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    color: var(--brand);
+}
+
+/* ── Responsive ── */
+@media (max-width: 540px) {
+    .form-row              { grid-template-columns: 1fr; }
+    .filiere-grid          { grid-template-columns: 1fr 1fr; }
+    .cand-page             { padding: 24px 14px 60px; }
+    .form-section          { padding: 18px 18px; }
+    .info-banner           { margin: 0 18px 16px; }
+    .cand-card-head        { padding: 20px 18px; }
+    .stepper               { gap: 0; }
+    .step-connector        { width: 36px; }
+    .step-name             { max-width: 60px; font-size: 9.5px; }
+    .cand-footer           { flex-direction: column-reverse; align-items: stretch; text-align: center; }
+    .cand-footer .btn-link { order: 2; }
+}

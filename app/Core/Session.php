@@ -80,6 +80,16 @@ class Session
         return $_SESSION['user_role'] ?? null;
     }
 
+    /**
+     * Compte "visiteur" (grand public — module Orientation) : parent,
+     * étudiant ou toute personne qui suit ses dossiers d'inscription
+     * sans être élève de terminale sur la plateforme.
+     */
+    public static function isVisiteur(): bool
+    {
+        return self::isLoggedIn() && ($_SESSION['user_role'] ?? '') === 'visiteur';
+    }
+
     public static function user(): array
     {
         return [
@@ -89,6 +99,17 @@ class Session
             'name'  => $_SESSION['user_name']  ?? null,
             'photo' => $_SESSION['user_photo'] ?? null,
         ];
+    }
+
+    // ── Gestionnaire (établissements orientation) ─────────────────────────
+    public static function isGestionnaire(): bool
+    {
+        return !empty($_SESSION['gestionnaire_id']) && !empty($_SESSION['gestionnaire_etab_id']);
+    }
+
+    public static function gestionnaireId(): ?int
+    {
+        return isset($_SESSION['gestionnaire_id']) ? (int) $_SESSION['gestionnaire_id'] : null;
     }
 
     // ── Admin ─────────────────────────────────────────────────────────────

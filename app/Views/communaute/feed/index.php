@@ -183,7 +183,7 @@ $userId    = \Core\Session::userId();
                 <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
               </svg>
             </button>
-            <input type="file" id="post-image-input" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none">
+            <input type="file" id="post-image-input" accept="image/*" style="display:none">
           </div>
           <button id="submit-post" type="button" disabled
                   style="padding:10px 24px;background:var(--color-primary);color:#fff;border:none;border-radius:var(--radius-full);font-size:14px;font-weight:600;transition:opacity .2s">

@@ -10,8 +10,6 @@ if ($serie) {
 }
 $progGlobale = (int) ($stats['progression_globale'] ?? 0);
 $annonce     = $annonce ?? false;
-$prixMensuel = $prixMensuel ?? 2000;
-$prixAnnuel  = $prixAnnuel  ?? 15000;
 ?>
 
 <div class="hub">
@@ -20,41 +18,26 @@ $prixAnnuel  = $prixAnnuel  ?? 15000;
   <section class="hub__hero">
     <div class="hub__hero-content">
       <div class="hub__hero-text">
-        <p class="hub__hero-greeting"><?= $greeting ?>,</p>
+        <p class="hub__hero-greeting"><?= $greeting ?></p>
         <h1 class="hub__hero-name"><?= $userName ?></h1>
 
-        <?php if ($serieLabel): ?>
-        <span class="hub__serie-badge">Série <?= $serieLabel ?></span>
-        <?php endif; ?>
-
-        <?php if ($acces): ?>
-          <?php if ($abonnement): ?>
-          <p class="hub__hero-sub hub__hero-sub--premium">
-            <i data-lucide="star"></i>
-            Abonnement actif — accès complet
-          </p>
-          <?php elseif ($resteGratuit > 0): ?>
-          <p class="hub__hero-sub">
-            <i data-lucide="clock"></i>
-            Période gratuite — il te reste <?= ceil($resteGratuit / 3600) ?>h d'accès
-          </p>
+        <div class="hub__hero-badges">
+          <?php if ($serieLabel): ?>
+          <span class="hub__serie-badge">Série <?= $serieLabel ?></span>
           <?php endif; ?>
+          <span class="hub__free-badge">
+            <i data-lucide="gift"></i>
+            Accès complet — gratuit
+          </span>
+        </div>
 
-          <?php if ($progGlobale > 0): ?>
-          <div class="hub__hero-progress">
-            <div class="hub__hero-progress-bar">
-              <div class="hub__hero-progress-fill" style="width:<?= $progGlobale ?>%"></div>
-            </div>
-            <span class="hub__hero-progress-label"><?= $progGlobale ?>% progression globale</span>
+        <?php if ($progGlobale > 0): ?>
+        <div class="hub__hero-progress">
+          <div class="hub__hero-progress-bar">
+            <div class="hub__hero-progress-fill" style="width:<?= $progGlobale ?>%"></div>
           </div>
-          <?php endif; ?>
-
-        <?php else: ?>
-        <p class="hub__hero-sub hub__hero-sub--warning">
-          <i data-lucide="alert-triangle"></i>
-          Période gratuite expirée —
-          <a href="<?= url('/abonnement/choisir') ?>">S'abonner pour <?= number_format($prixMensuel, 0, ',', ' ') ?> XAF/mois</a>
-        </p>
+          <span class="hub__hero-progress-label"><?= $progGlobale ?>% de progression globale</span>
+        </div>
         <?php endif; ?>
       </div>
 
@@ -73,7 +56,7 @@ $prixAnnuel  = $prixAnnuel  ?? 15000;
     <div class="hub__stats-grid">
 
       <div class="hub__stat-card">
-        <div class="hub__stat-icon hub__stat-icon--purple">
+        <div class="hub__stat-icon">
           <i data-lucide="book-open"></i>
         </div>
         <div class="hub__stat-info">
@@ -83,8 +66,8 @@ $prixAnnuel  = $prixAnnuel  ?? 15000;
       </div>
 
       <div class="hub__stat-card">
-        <div class="hub__stat-icon hub__stat-icon--green">
-          <i data-lucide="check-square"></i>
+        <div class="hub__stat-icon">
+          <i data-lucide="check-circle-2"></i>
         </div>
         <div class="hub__stat-info">
           <span class="hub__stat-num" id="stat-termines"><?= (int) ($stats['cours_termines'] ?? 0) ?></span>
@@ -93,7 +76,7 @@ $prixAnnuel  = $prixAnnuel  ?? 15000;
       </div>
 
       <div class="hub__stat-card">
-        <div class="hub__stat-icon hub__stat-icon--blue">
+        <div class="hub__stat-icon">
           <i data-lucide="message-square"></i>
         </div>
         <div class="hub__stat-info">
@@ -103,7 +86,7 @@ $prixAnnuel  = $prixAnnuel  ?? 15000;
       </div>
 
       <div class="hub__stat-card">
-        <div class="hub__stat-icon hub__stat-icon--orange">
+        <div class="hub__stat-icon">
           <i data-lucide="users"></i>
         </div>
         <div class="hub__stat-info">
@@ -147,73 +130,59 @@ $prixAnnuel  = $prixAnnuel  ?? 15000;
     <div class="hub__modules-grid">
 
       <!-- Apprentissage -->
-      <a href="<?= url($acces ? '/apprentissage' : '/abonnement/choisir') ?>"
-         class="hub__module-card hub__module-card--apprentissage <?= !$acces ? 'hub__module-card--locked' : '' ?>">
+      <a href="<?= url('/apprentissage') ?>" class="hub__module-card">
         <div class="hub__module-card__header">
           <div class="hub__module-icon">
             <i data-lucide="book-open"></i>
           </div>
-          <?php if (!$acces): ?>
-          <span class="hub__module-lock">
-            <i data-lucide="lock"></i>
-          </span>
-          <?php else: ?>
-          <span class="hub__module-badge hub__module-badge--active">Accès</span>
-          <?php endif; ?>
+          <span class="hub__module-badge">Gratuit</span>
         </div>
         <h3 class="hub__module-title">Apprentissage</h3>
-        <p class="hub__module-desc">Cours, TD et épreuves par série et matière. Assistant IA intégré.</p>
+        <p class="hub__module-desc">Cours, TD et anciennes épreuves par série et matière, avec un assistant IA intégré.</p>
         <div class="hub__module-features">
           <span><i data-lucide="file-text"></i> Cours PDF</span>
           <span><i data-lucide="pen-tool"></i> TD et exercices</span>
-          <span><i data-lucide="cpu"></i> IA Gemini</span>
+          <span><i data-lucide="messages-square"></i> Assistant IA</span>
           <span><i data-lucide="bar-chart-2"></i> Progression</span>
         </div>
         <div class="hub__module-cta">
-          <?= $acces ? 'Accéder' : "S'abonner" ?>
+          Accéder
           <i data-lucide="arrow-right"></i>
         </div>
       </a>
 
       <!-- Communauté -->
-      <a href="<?= url($acces ? '/communaute' : '/abonnement/choisir') ?>"
-         class="hub__module-card hub__module-card--communaute <?= !$acces ? 'hub__module-card--locked' : '' ?>">
+      <a href="<?= url('/communaute') ?>" class="hub__module-card">
         <div class="hub__module-card__header">
           <div class="hub__module-icon">
             <i data-lucide="users"></i>
           </div>
-          <?php if (!$acces): ?>
-          <span class="hub__module-lock">
-            <i data-lucide="lock"></i>
-          </span>
-          <?php else: ?>
-          <span class="hub__module-badge hub__module-badge--active">Accès</span>
-          <?php endif; ?>
+          <span class="hub__module-badge">Gratuit</span>
         </div>
         <h3 class="hub__module-title">Communauté</h3>
-        <p class="hub__module-desc">Échangez avec d'autres élèves et étudiants. Posez vos questions, partagez vos astuces.</p>
+        <p class="hub__module-desc">Échange avec d'autres élèves et étudiants. Pose tes questions, partage tes astuces.</p>
         <div class="hub__module-features">
           <span><i data-lucide="message-circle"></i> Fil d'actualité</span>
           <span><i data-lucide="help-circle"></i> Questions</span>
-          <span><i data-lucide="zap"></i> Chat en direct</span>
+          <span><i data-lucide="radio"></i> Chat en direct</span>
           <span><i data-lucide="bell"></i> Notifications</span>
         </div>
         <div class="hub__module-cta">
-          <?= $acces ? 'Accéder' : "S'abonner" ?>
+          Accéder
           <i data-lucide="arrow-right"></i>
         </div>
       </a>
 
       <!-- Orientation -->
-      <a href="<?= BASE_URL ?>/public/orientation/orientation.html" class="hub__module-card hub__module-card--orientation">
+      <a href="<?= url('/orientation') ?>" class="hub__module-card">
         <div class="hub__module-card__header">
           <div class="hub__module-icon">
             <i data-lucide="compass"></i>
           </div>
-          <span class="hub__module-badge hub__module-badge--free">Gratuit</span>
+          <span class="hub__module-badge">Gratuit</span>
         </div>
         <h3 class="hub__module-title">Orientation</h3>
-        <p class="hub__module-desc">Découvrez les universités et filières au Gabon. Guide d'orientation pour votre avenir.</p>
+        <p class="hub__module-desc">Découvre les universités et filières au Gabon, et candidate directement en ligne.</p>
         <div class="hub__module-features">
           <span><i data-lucide="building"></i> Universités</span>
           <span><i data-lucide="graduation-cap"></i> Instituts privés</span>
@@ -229,41 +198,8 @@ $prixAnnuel  = $prixAnnuel  ?? 15000;
     </div>
   </section>
 
-  <!-- ── BANNER ABONNEMENT (si pas d'accès) ────────────────────────────────── -->
-  <?php if (!$acces): ?>
-  <section class="hub__pricing">
-    <div class="hub__pricing-card">
-      <div class="hub__pricing-badge">Déverrouillez l'accès complet</div>
-      <h2 class="hub__pricing-title">Choisissez votre plan</h2>
-      <p class="hub__pricing-desc">Accès illimité à tous les cours, à la communauté et à l'assistant IA</p>
-      <div class="hub__pricing-plans">
-        <div class="hub__plan">
-          <div class="hub__plan-header">
-            <span class="hub__plan-name">Mensuel</span>
-          </div>
-          <div class="hub__plan-price">
-            <span class="hub__plan-amount"><?= number_format($prixMensuel, 0, ',', ' ') ?></span>
-            <span class="hub__plan-currency">XAF/mois</span>
-          </div>
-          <a href="<?= url('/abonnement/choisir') ?>" class="btn btn--outline btn--full">Choisir</a>
-        </div>
-        <div class="hub__plan hub__plan--featured">
-          <div class="hub__plan-header">
-            <span class="hub__plan-name">Annuel</span>
-            <span class="hub__plan-save">-37%</span>
-          </div>
-          <div class="hub__plan-price">
-            <span class="hub__plan-amount"><?= number_format($prixAnnuel, 0, ',', ' ') ?></span>
-            <span class="hub__plan-currency">XAF/an</span>
-          </div>
-          <a href="<?= url('/abonnement/choisir') ?>" class="btn btn--primary btn--full">Choisir</a>
-        </div>
-      </div>
-    </div>
-  </section>
-  <?php endif; ?>
-
 </div><!-- /.hub -->
+
 
 <?php if ($annonce): ?>
 <?php
@@ -277,13 +213,15 @@ $aCtaLabel = $annonce['cta_label'] ? e($annonce['cta_label']) : '';
 $aCtaUrl   = $annonce['cta_url']   ? e($annonce['cta_url'])   : '';
 $aPinned   = (bool) $annonce['is_pinned'];
 
-$typeStyles = [
-    'info'    => ['gradient' => 'linear-gradient(135deg,#3B82F6,#6366F1)', 'badge_bg' => 'rgba(99,102,241,.15)', 'badge_color' => '#6366F1', 'label' => 'INFO'],
-    'warning' => ['gradient' => 'linear-gradient(135deg,#F59E0B,#EF4444)', 'badge_bg' => 'rgba(245,158,11,.15)',  'badge_color' => '#D97706', 'label' => 'AVERTISSEMENT'],
-    'success' => ['gradient' => 'linear-gradient(135deg,#8B52FA,#7C3AED)', 'badge_bg' => 'rgba(139,82,250,.15)', 'badge_color' => '#8B52FA', 'label' => 'SUCCÈS'],
-    'urgent'  => ['gradient' => 'linear-gradient(135deg,#8B52FA,#EF4444)', 'badge_bg' => 'rgba(139,82,250,.15)', 'badge_color' => '#8B52FA', 'label' => 'URGENT'],
+// Le type ne pilote plus qu'un libellé + une icône : couleur = purple unique
+// (langage Claude, un seul accent chromatique — plus de dégradé par type).
+$typeLabels = [
+    'info'    => 'INFO',
+    'warning' => 'AVERTISSEMENT',
+    'success' => 'SUCCÈS',
+    'urgent'  => 'URGENT',
 ];
-$ts = $typeStyles[$aType] ?? $typeStyles['info'];
+$ts = ['label' => $typeLabels[$aType] ?? 'INFO'];
 ?>
 
 <!-- ══ POPUP ANNONCE ═══════════════════════════════════════════════════ -->
@@ -291,25 +229,27 @@ $ts = $typeStyles[$aType] ?? $typeStyles['info'];
 .ca-ann-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(8,8,20,.65);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(26,26,26,.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 9000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  animation: caAnnFadeIn .35s ease both;
+  animation: caAnnFadeIn .3s ease both;
 }
 @keyframes caAnnFadeIn { from { opacity:0; } to { opacity:1; } }
 
+/* Aplat, hairline, radius 16 — langage Claude. Zéro dégradé. */
 .ca-ann-popup {
   width: 100%;
-  max-width: 480px;
-  border-radius: 24px;
+  max-width: 460px;
+  border-radius: 16px;
   overflow: hidden;
-  background: #fff;
-  box-shadow: 0 40px 100px rgba(0,0,0,.3), 0 0 0 1px rgba(255,255,255,.08);
+  background: var(--bg-elevated, #fff);
+  border: 1px solid var(--border-subtle, rgba(26,26,26,.08));
+  box-shadow: 0 24px 60px rgba(26,26,26,.18);
   animation: caAnnSlideUp .4s cubic-bezier(.2,.8,.2,1) both;
   position: relative;
 }
@@ -318,33 +258,12 @@ $ts = $typeStyles[$aType] ?? $typeStyles['info'];
   to   { opacity:1; transform: translateY(0) scale(1); }
 }
 
-/* Header gradient */
+/* Header aplat — blanc cassé, hairline en bas, accent purple par la typo */
 .ca-ann-header {
-  background: <?= $ts['gradient'] ?>;
-  padding: 28px 24px 24px;
+  background: transparent;
+  padding: 24px 24px 18px;
   position: relative;
-  min-height: 100px;
-  overflow: hidden;
-}
-.ca-ann-header::before {
-  content: '';
-  position: absolute;
-  right: -30px;
-  bottom: -40px;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,.18) 0%, transparent 65%);
-}
-.ca-ann-header::after {
-  content: '';
-  position: absolute;
-  left: -20px;
-  top: -30px;
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,.1) 0%, transparent 65%);
+  border-bottom: 1px solid var(--border-subtle, rgba(26,26,26,.08));
 }
 
 .ca-ann-close {
@@ -353,18 +272,17 @@ $ts = $typeStyles[$aType] ?? $typeStyles['info'];
   right: 14px;
   width: 30px;
   height: 30px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255,255,255,.2);
-  color: #fff;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle, rgba(26,26,26,.08));
+  background: var(--bg-main, #fff);
+  color: var(--text-muted, #9E9E9E);
   cursor: pointer;
   display: grid;
   place-items: center;
   z-index: 2;
-  transition: background .15s, transform .15s;
-  backdrop-filter: blur(4px);
+  transition: background .15s, color .15s;
 }
-.ca-ann-close:hover  { background: rgba(255,255,255,.35); transform: scale(1.1); }
+.ca-ann-close:hover  { background: var(--hub-cream, #FAF9F5); color: var(--text-primary, #1A1A1A); }
 .ca-ann-close svg    { width: 14px; height: 14px; }
 
 .ca-ann-header-badges {
@@ -380,36 +298,35 @@ $ts = $typeStyles[$aType] ?? $typeStyles['info'];
   align-items: center;
   gap: 5px;
   padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.2);
-  color: #fff;
+  border-radius: 8px;
+  background: var(--purple-tint, #F3EFFF);
+  color: var(--purple-press, #7440D9);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: .08em;
-  backdrop-filter: blur(4px);
 }
 .ca-ann-type-badge svg { width: 10px; height: 10px; }
 .ca-ann-custom-badge {
   display: inline-flex;
   align-items: center;
   padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.9);
-  color: #1A1A2E;
+  border-radius: 8px;
+  background: var(--purple-neon, #8B52FA);
+  color: var(--text-on-purple, #fff);
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: .06em;
 }
 
 .ca-ann-header-title {
   font-size: 20px;
-  font-weight: 800;
-  color: #fff;
-  line-height: 1.25;
+  font-weight: 700;
+  color: var(--text-primary, #1A1A1A);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
   margin: 0;
   position: relative;
   z-index: 1;
-  text-shadow: 0 1px 3px rgba(0,0,0,.15);
 }
 
 /* Image */
@@ -441,16 +358,17 @@ $ts = $typeStyles[$aType] ?? $typeStyles['info'];
   padding: 13px 20px;
   border-radius: 12px;
   border: none;
-  background: <?= $ts['gradient'] ?>;
-  color: #fff;
+  background: var(--purple-neon, #8B52FA);
+  color: var(--text-on-purple, #fff);
   font-size: 14.5px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   text-decoration: none;
-  transition: opacity .2s, transform .15s;
+  transition: background .2s, transform .12s;
   margin-bottom: 12px;
 }
-.ca-ann-cta:hover { opacity: .9; transform: translateY(-1px); }
+.ca-ann-cta:hover  { background: var(--purple-hover, #9D6EFB); }
+.ca-ann-cta:active { background: var(--purple-press, #7440D9); transform: scale(.98); }
 .ca-ann-cta svg   { width: 16px; height: 16px; }
 
 /* Footer */
@@ -489,16 +407,21 @@ $ts = $typeStyles[$aType] ?? $typeStyles['info'];
 .ca-ann-popup.pinned .ca-ann-close { display: none; }
 .ca-ann-popup.pinned .ca-ann-footer { justify-content: center; }
 
-/* Dark mode */
+/* Dark mode — surface plus claire, hairline blanche, purple identique */
 @media (prefers-color-scheme: dark) {
-  .ca-ann-popup  { background: #1E1E2E; }
+  .ca-ann-popup  { background: #2D2D2D; border-color: rgba(255,255,255,.08); }
+  .ca-ann-header { border-bottom-color: rgba(255,255,255,.08); }
+  .ca-ann-header-title { color: #F5F5F7; }
+  .ca-ann-close  { background: #2D2D2D; border-color: rgba(255,255,255,.12); color: #9E9E9E; }
+  .ca-ann-close:hover { background: #383838; color: #F5F5F7; }
+  .ca-ann-type-badge { background: rgba(139,82,250,.16); color: #B79BFB; }
   .ca-ann-desc   { color: #C0C0C0; }
-  .ca-ann-footer .ca-ann-dismiss { color: #666; }
-  .ca-ann-footer .ca-ann-dismiss:hover { color: #999; }
-  .ca-ann-date   { color: #555; }
+  .ca-ann-footer .ca-ann-dismiss { color: #888; }
+  .ca-ann-footer .ca-ann-dismiss:hover { color: #C0C0C0; }
+  .ca-ann-date   { color: #666; }
 }
 @media (max-width: 520px) {
-  .ca-ann-popup { border-radius: 20px; max-width: 100%; }
+  .ca-ann-popup { max-width: 100%; }
   .ca-ann-header-title { font-size: 18px; }
   .ca-ann-image { height: 140px; }
 }

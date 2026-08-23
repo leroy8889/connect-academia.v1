@@ -24,6 +24,12 @@ class AdminPermissions
         '/admin/api/contact',
         '/admin/paiement',
         '/admin/api/paiement',
+        // Module Orientation — établissements, paiements écoles, réconciliation
+        // (le préfixe /admin/orientation couvre /paiements et /reconciliation).
+        '/admin/orientation',
+        // Tableau de bord sécurité (IDS + alertes)
+        '/admin/securite',
+        '/admin/api/securite',
         '/admin/analytics',
         '/admin/notifications',
         '/admin/api/notifications',

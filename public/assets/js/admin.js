@@ -29,6 +29,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  /* ── Sidebar collapse rail (desktop) ─────────────────────── */
+  const collapseBtn = document.getElementById('sidebar-collapse-btn');
+  if (collapseBtn) {
+    const isCollapsed = () =>
+      document.documentElement.classList.contains('sidebar-collapsed');
+    collapseBtn.setAttribute('aria-expanded', String(!isCollapsed()));
+    collapseBtn.addEventListener('click', () => {
+      const collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
+      try {
+        localStorage.setItem('caAdminSidebar', collapsed ? 'collapsed' : 'expanded');
+      } catch (e) {}
+      collapseBtn.setAttribute('aria-expanded', String(!collapsed));
+    });
+  }
+
   /* ── Password toggle ─────────────────────────────────────── */
   document.querySelectorAll('.password-toggle').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -148,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.user-toggle').forEach(toggle => {
     toggle.addEventListener('change', async () => {
       const userId = toggle.dataset.userId;
-      const row    = toggle.closest('tr');
+      const row    = toggle.closest('tr, .kb-card');
       const badge  = row?.querySelector('.status-badge');
       try {
         const data = await apiJson(`${base()}/admin/api/utilisateurs/${userId}/toggle`, 'PATCH');
@@ -156,6 +171,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (badge) {
           badge.className = 'badge badge-' + (toggle.checked ? 'actif' : 'suspendu') + ' status-badge';
           badge.textContent = toggle.checked ? 'Actif' : 'Suspendu';
+        }
+        // Carte kanban : accent + avatar reflètent le statut sans recharger
+        if (row?.classList.contains('kb-card')) {
+          row.classList.toggle('is-suspended', !toggle.checked);
+          if (row.dataset.accent) {
+            row.style.setProperty('--kb-accent', toggle.checked ? row.dataset.accent : 'var(--red,#EF4444)');
+          }
+          const avatar = row.querySelector('.user-avatar');
+          if (avatar && !avatar.querySelector('img')) {
+            avatar.style.background = toggle.checked ? 'var(--ap)' : 'var(--txt-l)';
+          }
         }
         showToast(data.message ?? 'Mis à jour', 'success');
       } catch { toggle.checked = !toggle.checked; showToast('Erreur réseau', 'error'); }
@@ -191,6 +217,8 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('edit-prenom').value     = btn.dataset.prenom;
       document.getElementById('edit-nom').value        = btn.dataset.nom;
       document.getElementById('edit-email').value      = btn.dataset.email;
+      const editTel = document.getElementById('edit-telephone');
+      if (editTel) editTel.value = btn.dataset.telephone ?? '';
       document.getElementById('edit-role').value       = btn.dataset.role;
       const serieSelect = document.getElementById('edit-serie-id');
       if (serieSelect) serieSelect.value = btn.dataset.serieId ?? '';
@@ -220,6 +248,49 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  /* ── Envoyer un message à un utilisateur ─────────────────── */
+  document.querySelectorAll('.btn-message-user').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('message-user-id').value = btn.dataset.userId;
+      document.getElementById('message-user-name').textContent = btn.dataset.name;
+      const txt = document.getElementById('message-user-text');
+      if (txt) { txt.value = ''; }
+      const counter = document.getElementById('message-char-count');
+      if (counter) counter.textContent = '0';
+      openModal('modal-message-user');
+      setTimeout(() => txt?.focus(), 60);
+    });
+  });
+
+  const msgUserText = document.getElementById('message-user-text');
+  msgUserText?.addEventListener('input', () => {
+    const counter = document.getElementById('message-char-count');
+    if (counter) counter.textContent = String(msgUserText.value.length);
+  });
+
+  const btnSubmitMessageUser = document.getElementById('btn-submit-message-user');
+  if (btnSubmitMessageUser) {
+    btnSubmitMessageUser.addEventListener('click', async () => {
+      const form   = document.getElementById('form-message-user');
+      const userId = document.getElementById('message-user-id').value;
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      setBtnLoading(btnSubmitMessageUser, true);
+      try {
+        const data = await apiForm(`${base()}/admin/api/utilisateurs/${userId}/message`, 'POST', form);
+        if (data.success) {
+          closeModal('modal-message-user');
+          form.reset();
+          const counter = document.getElementById('message-char-count');
+          if (counter) counter.textContent = '0';
+          showToast(data.message, 'success');
+        } else {
+          showToast(data.message ?? 'Erreur', 'error');
+        }
+      } catch { showToast('Erreur réseau', 'error'); }
+      finally { setBtnLoading(btnSubmitMessageUser, false, 'Envoyer'); }
+    });
+  }
+
   /* ── Supprimer utilisateur ───────────────────────────────── */
   document.querySelectorAll('.btn-delete-user').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -229,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const data = await apiJson(`${base()}/admin/api/utilisateurs/${id}`, 'DELETE');
         if (data.success) {
-          btn.closest('tr')?.remove();
+          btn.closest('tr, .kb-card')?.remove();
           showToast(data.message, 'success');
         } else {
           showToast(data.message ?? 'Erreur', 'error');

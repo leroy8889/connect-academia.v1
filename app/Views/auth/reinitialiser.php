@@ -1,6 +1,9 @@
 <?php
 use Core\Session;
-$errors = Session::getFlash('errors', []);
+// Même piège que sur mot-de-passe-oublie.php : AuthController::showReset a déjà
+// consommé le flash et le passe à la vue. Relire ici écrasait $errors par null
+// et masquait les messages de validation du nouveau mot de passe.
+$errors = $errors ?? [];
 ?>
 <div class="auth-split-layout">
 
@@ -150,7 +153,7 @@ $errors = Session::getFlash('errors', []);
   height: 100vh;
 }
 .auth-image-panel--reset {
-  background-image: url('<?= asset('images/Images en 409x610 - Page de Connexion 2.png') ?>');
+  background-image: url('<?= css_safe(asset('images/Images en 409x610 - Page de Connexion 2.png')) ?>');
   background-color: #16161E;
 }
 

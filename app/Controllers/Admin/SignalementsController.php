@@ -34,10 +34,14 @@ class SignalementsController
     public function traiter(array $params): void
     {
         $id     = (int) ($params['id'] ?? 0);
-        $action = $_POST['action'] ?? $this->jsonInput('action');
+        $action = (string) ($_POST['action'] ?? $this->jsonInput('action'));
 
-        if (!in_array($action, ['reviewed', 'dismissed', 'delete_post'])) {
+        // WEB-11 — seule une valeur de la liste blanche peut poursuivre : au-delà
+        // de ce point $action est une constante contrôlée, jamais l'entrée brute.
+        // (Response::json() émet déjà « Content-Type: application/json; charset=utf-8 ».)
+        if (!in_array($action, ['reviewed', 'dismissed', 'delete_post'], true)) {
             Response::json(['success' => false, 'message' => 'Action invalide.'], 422);
+            return;
         }
 
         if ($action === 'delete_post') {

@@ -5,7 +5,19 @@ namespace Core;
 
 class Uploader
 {
-    private const ALLOWED_IMAGE_MIME = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    /**
+     * Formats d'image acceptés à la publication.
+     *
+     * Volontairement large (photos de téléphone incluses : HEIC/HEIF, AVIF) —
+     * plus aucune image légitime n'est refusée. SVG reste EXCLU : un SVG est un
+     * document XML pouvant embarquer du JavaScript, servi depuis notre domaine
+     * ce serait un XSS stocké.
+     */
+    private const ALLOWED_IMAGE_MIME = [
+        'image/jpeg', 'image/pjpeg', 'image/png', 'image/gif', 'image/webp',
+        'image/avif', 'image/bmp', 'image/x-ms-bmp', 'image/tiff',
+        'image/heic', 'image/heif',
+    ];
     private const ALLOWED_DOC_MIME   = ['application/pdf'];
 
     // Dimensions max pour les avatars (px)
@@ -103,24 +115,29 @@ class Uploader
         imagecopyresampled($dstImage, $srcImage, 0, 0, 0, 0, $newW, $newH, $srcW, $srcH);
         imagedestroy($srcImage);
 
-        // Dossier de destination
-        $destDir = BASE_PATH . '/public/uploads/avatars';
-        if (!is_dir($destDir) && !mkdir($destDir, 0755, true) && !is_dir($destDir)) {
+        // Dossier de destination (repli storage/ si public/uploads n'est pas
+        // accessible en écriture — cf. MediaStorage).
+        try {
+            $dest = MediaStorage::destination('avatars');
+        } catch (\RuntimeException $e) {
             imagedestroy($dstImage);
-            throw new \RuntimeException("Impossible de créer le dossier de destination.");
+            error_log('[Uploader] ' . $e->getMessage());
+            throw new \RuntimeException("Le serveur ne peut pas enregistrer l'image. Réessayez plus tard.");
         }
 
         $filename = bin2hex(random_bytes(16)) . '.jpg';
-        $destPath = $destDir . '/' . $filename;
+        $destPath = $dest['dir'] . $filename;
 
-        $saved = imagejpeg($dstImage, $destPath, self::AVATAR_QUALITY);
+        $saved = @imagejpeg($dstImage, $destPath, self::AVATAR_QUALITY);
         imagedestroy($dstImage);
 
         if (!$saved) {
+            error_log('[Uploader] Écriture avatar impossible dans ' . $dest['dir']);
             throw new \RuntimeException("Échec de l'enregistrement de l'image.");
         }
+        @chmod($destPath, 0644);
 
-        return '/public/uploads/avatars/' . $filename;
+        return $dest['stored'] . $filename;
     }
 
     private function handle(array $file, string $dir, array $allowedMimes, ?int $maxBytes = null): string
@@ -141,30 +158,88 @@ class Uploader
         $finfo    = new \finfo(FILEINFO_MIME_TYPE);
         $mimeType = $finfo->file($file['tmp_name']);
         if (!in_array($mimeType, $allowedMimes, true)) {
-            throw new \RuntimeException("Format non autorisé.");
+            throw new \RuntimeException(
+                "Format non pris en charge (" . ($mimeType ?: 'inconnu') . ")."
+            );
         }
 
         $extensions = [
             'image/jpeg'      => 'jpg',
+            'image/pjpeg'     => 'jpg',
             'image/png'       => 'png',
             'image/gif'       => 'gif',
             'image/webp'      => 'webp',
+            'image/avif'      => 'avif',
+            'image/bmp'       => 'bmp',
+            'image/x-ms-bmp'  => 'bmp',
+            'image/tiff'      => 'jpg',   // converti en JPEG ci-dessous
+            'image/heic'      => 'jpg',   // idem (photos iPhone)
+            'image/heif'      => 'jpg',
             'application/pdf' => 'pdf',
         ];
 
         $ext      = $extensions[$mimeType] ?? 'bin';
         $filename = bin2hex(random_bytes(16)) . '.' . $ext;
-        $destDir  = BASE_PATH . '/public/uploads/' . trim($dir, '/');
 
-        if (!is_dir($destDir) && !mkdir($destDir, 0755, true) && !is_dir($destDir)) {
-            throw new \RuntimeException("Impossible de créer le dossier de destination.");
+        // public/uploads/ appartient au compte de déploiement alors que PHP tourne
+        // en www-data : MediaStorage bascule sur storage/uploads/ le cas échéant.
+        $type = trim($dir, '/');
+        try {
+            $dest = MediaStorage::destination($type);
+        } catch (\RuntimeException $e) {
+            error_log('[Uploader] ' . $e->getMessage());
+            throw new \RuntimeException("Le serveur ne peut pas enregistrer le fichier. Réessayez plus tard.");
         }
 
-        if (!move_uploaded_file($file['tmp_name'], $destDir . '/' . $filename)) {
-            throw new \RuntimeException("Échec du déplacement du fichier.");
+        $destPath = $dest['dir'] . $filename;
+
+        // move_uploaded_file peut échouer (partition, ACL) là où copy() passe :
+        // repli explicite avant d'abandonner.
+        if (!@move_uploaded_file($file['tmp_name'], $destPath)
+            && !(@copy($file['tmp_name'], $destPath) && @unlink($file['tmp_name']))) {
+            $err = error_get_last()['message'] ?? 'raison inconnue';
+            error_log('[Uploader] Écriture impossible dans ' . $dest['dir'] . ' : ' . $err);
+            throw new \RuntimeException("Le serveur n'a pas pu enregistrer le fichier. Réessayez plus tard.");
         }
 
-        return '/public/uploads/' . trim($dir, '/') . '/' . $filename;
+        @chmod($destPath, 0644);
+
+        // Formats qu'aucun navigateur n'affiche (TIFF, HEIC/HEIF) : on les
+        // réécrit en JPEG. Si GD ne sait pas les décoder, mieux vaut refuser
+        // franchement que stocker une image qui ne s'affichera nulle part.
+        if (!self::convertirSiNecessaire($destPath, (string)$mimeType)) {
+            @unlink($destPath);
+            throw new \RuntimeException(
+                "Ce format de photo n'est pas pris en charge par le serveur. "
+                . "Enregistrez-la en JPEG ou PNG puis réessayez."
+            );
+        }
+
+        return $dest['stored'] . $filename;
+    }
+
+    /**
+     * Réécrit en JPEG les formats qu'aucun navigateur n'affiche (TIFF,
+     * HEIC/HEIF). Retourne false si GD ne sait pas décoder le fichier —
+     * l'appelant refuse alors l'upload plutôt que de stocker une image morte.
+     * Les formats directement affichables passent sans traitement.
+     */
+    private static function convertirSiNecessaire(string $path, string $mimeType): bool
+    {
+        if (!in_array($mimeType, ['image/tiff', 'image/heic', 'image/heif'], true)) {
+            return true;
+        }
+        $data = @file_get_contents($path);
+        if ($data === false) {
+            return false;
+        }
+        $img = @imagecreatefromstring($data);
+        if ($img === false) {
+            return false;
+        }
+        $ok = @imagejpeg($img, $path, 88);
+        imagedestroy($img);
+        return (bool)$ok;
     }
 
     /**

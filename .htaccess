@@ -1,22 +1,6 @@
 Options -Indexes
 Options -MultiViews
 
-# ── Limites PHP upload (production) ────────────────────────────────────────
-<IfModule mod_php.c>
-    php_value upload_max_filesize 50M
-    php_value post_max_size 55M
-    php_value memory_limit 256M
-    php_value max_execution_time 300
-    php_value max_input_time 300
-</IfModule>
-<IfModule mod_php8.c>
-    php_value upload_max_filesize 50M
-    php_value post_max_size 55M
-    php_value memory_limit 256M
-    php_value max_execution_time 300
-    php_value max_input_time 300
-</IfModule>
-
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
@@ -41,18 +25,35 @@ Options -MultiViews
         </FilesMatch>
     </IfModule>
 
-    # ── Bloquer l'accès aux fichiers sensibles ──────────────────────────────
-    <FilesMatch "\.(env|log|sql|gitignore|lock)$">
-        Order allow,deny
-        Deny from all
-    </FilesMatch>
+    # ══════════════════════════════════════════════════════════════════════
+    #  BLOCAGE DES FICHIERS SENSIBLES
+    #  Fait via RewriteRule (override FileInfo) car Order/Deny (override Limit)
+    #  est ignoré par certains hébergeurs → c'est ce qui a laissé fuiter .env.
+    #  IMPORTANT : ces règles DOIVENT rester AVANT la passthrough "-f/-d".
+    # ══════════════════════════════════════════════════════════════════════
+
+    # Tout dotfile (.env, .git, .htaccess, .htpasswd, .DS_Store…) sauf .well-known
+    RewriteRule (^|/)\.(?!well-known/) - [F,L]
+
+    # Extensions sensibles, à n'importe quelle profondeur
+    RewriteRule \.(env|log|sql|sqlite|lock|ini|bak|old|dist|example|sh|yml|yaml|conf)$ - [F,L]
+
+    # Fichiers projet à la racine
+    RewriteRule ^(composer\.(json|lock)|package(-lock)?\.json|\.user\.ini|README|LICENSE)$ - [F,L]
 
     # ── Bloquer l'accès direct aux répertoires internes ─────────────────────
-    RewriteRule ^app(/|$) - [F,L]
-    RewriteRule ^config(/|$) - [F,L]
-    RewriteRule ^storage(/|$) - [F,L]
-    RewriteRule ^database(/|$) - [F,L]
-    RewriteRule ^docs(/|$) - [F,L]
+    RewriteRule ^(app|config|storage|database|docs|vendor|node_modules|bin)(/|$) - [F,L]
+
+    # Ceinture + bretelles : blocage authz si le module est présent (Apache 2.4)
+    <FilesMatch "(^\.|\.(env|log|sql|sqlite|lock|ini|bak|old|dist|example|sh|conf)$)">
+        <IfModule mod_authz_core.c>
+            Require all denied
+        </IfModule>
+        <IfModule !mod_authz_core.c>
+            Order allow,deny
+            Deny from all
+        </IfModule>
+    </FilesMatch>
 
     # ── Autoriser les fichiers réels (assets, orientation) ──────────────────
     RewriteCond %{REQUEST_FILENAME} -f [OR]

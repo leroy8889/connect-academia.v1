@@ -1,0 +1,1139 @@
+/*-----------------------------------------------------------*\
+  #LANDING REDESIGN — Connect'Academia
+  Chargé APRÈS style.css, uniquement sur la landing page.
+
+  Principes appliqués :
+  - Tokens Connect'Academia : Purple Neon #8B52FA unique accent,
+    Montserrat unique famille, rayon signature 24px.
+  - Rythme éditorial Claude : hiérarchie calme, un seul grand
+    titre par section (taille uniforme), ombres rares et douces,
+    sentence case, animations sans rebond.
+  - Liquid Glass : réservé aux éléments flottants (header,
+    social-proof) + reflet spéculaire discret sur les grands
+    conteneurs arrondis.
+  - AUCUN arrière-plan de section n'est modifié ici.
+\*-----------------------------------------------------------*/
+
+:root {
+  /* Ré-alignement des anciens tokens sur la charte officielle */
+  --kappel: #8B52FA;
+  --radical-red: #8B52FA;
+  --primary-purple: #8B52FA;
+  --gradient: #9D6EFB;
+
+  /* Tokens Connect'Academia */
+  --ca-purple: #8B52FA;
+  --ca-purple-hover: #9D6EFB;
+  --ca-purple-press: #7440D9;
+  --ca-purple-tint: #F3EFFF;
+  --ca-ink: #1A1A1A;
+  --ca-charcoal: #2D2D2D;
+  --ca-text-secondary: #6B7280;
+  --ca-hairline: #ECECF1;
+  --ca-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Taille UNIQUE des grands titres de section (28px -> 42px) */
+  --lp-title: clamp(2.8rem, 1.9rem + 2.2vw, 4.2rem);
+  /* Titres de cartes / sous-blocs */
+  --lp-card-title: 2rem;
+  /* Corps de texte des sections */
+  --lp-body: 1.6rem;
+}
+
+
+/*-----------------------------------------------------------*\
+  1. TYPOGRAPHIE — une seule famille : Montserrat
+\*-----------------------------------------------------------*/
+
+.roadmap-section,
+.latency-container,
+.integrations-container,
+.social-media-section,
+.testimonials-container,
+.final-cta-container,
+.faq-section,
+.benefits-section,
+.consolidation-container,
+.map-dashboard-section,
+.analytics-grid-section,
+.features-section,
+.feature-text h3,
+.feature-text p {
+  font-family: var(--ff-montserrat);
+}
+
+/* Grands titres de section : taille, graisse et couleur UNIFORMES */
+.roadmap-main-title,
+.latency-header h2,
+.integrations-content h2,
+.about .h2.section-title,
+.cta-title,
+.intro-left h2,
+.benefits-header h2,
+.consolidation-text h2,
+.testimonials-header h2,
+.analytics-header h2,
+.faq-header h2 {
+  font-family: var(--ff-montserrat);
+  font-size: var(--lp-title);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--ca-ink);
+  text-transform: none;
+}
+
+/* Le mot accentué dans un titre : toujours le même violet */
+.section-title .span,
+.integrations-content h2 span,
+.consolidation-text h2 span {
+  color: var(--ca-purple);
+}
+
+/* Sous-titre du roadmap : ligne d'appui, plus discret que le titre */
+.roadmap-subtitle {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--ca-purple);
+  letter-spacing: 0;
+  margin: 0 0 20px 0;
+}
+
+/* Descriptions de section : gris cohérent, largeur de lecture */
+.roadmap-description,
+.latency-header p.subtitle,
+.analytics-header p,
+.about .section-text {
+  color: var(--ca-text-secondary);
+  font-size: var(--lp-body);
+  line-height: 1.7;
+  font-family: var(--ff-montserrat);
+}
+
+.testimonials-container .subtitle,
+.map-dashboard-section .subtitle {
+  color: var(--ca-text-secondary);
+  font-size: var(--lp-body);
+  margin-top: 16px;
+  font-family: var(--ff-montserrat);
+}
+
+
+/*-----------------------------------------------------------*\
+  2. EYEBROWS / PASTILLES — un seul style, teinte violette
+\*-----------------------------------------------------------*/
+
+.system-pill,
+.badge-purple-tag,
+.about-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ca-purple-tint);
+  color: var(--ca-purple);
+  border: 1px solid rgba(139, 82, 250, 0.18);
+  font-family: var(--ff-montserrat);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border-radius: 999px;
+  margin-bottom: 20px;
+}
+
+.system-pill .dot-blue { background: var(--ca-purple); }
+
+/* Soulignés décoratifs : fins et courts (retenue Claude) */
+.purple-bar,
+.title-underline {
+  width: 64px;
+  height: 4px;
+  background-color: var(--ca-purple);
+  border-radius: 999px;
+  margin: 16px auto 0;
+}
+
+/* Le titre benefits n'est plus en majuscules forcées */
+.benefits-header h2 { text-transform: none; }
+
+.product-badge {
+  background: var(--ca-purple-tint);
+  color: var(--ca-purple);
+}
+
+
+/*-----------------------------------------------------------*\
+  3. HEADER & HERO — liquid glass maîtrisé
+\*-----------------------------------------------------------*/
+
+.header {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 8px 32px rgba(139, 82, 250, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.60);
+}
+
+/* Le logo ne tourne plus en boucle : mouvement calme, pas de gadget */
+.header .logo img { animation: none; }
+
+.navbar-link { font-family: var(--ff-montserrat); }
+
+.hero { border-color: rgba(139, 82, 250, 0.30); }
+
+.hero-content h1 {
+  font-family: var(--ff-montserrat);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25; /* respire : laisse la place au verre du mot accentué */
+}
+
+/* Le mot accentué du H1 hero : VERRE LIQUIDE VIOLET dominant.
+   Le verre translucide teinté violet prime, le texte passe en blanc. */
+.hero-content h1 .span {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  padding: 0.02em 0.3em 0.1em;
+  margin: 0 0.04em;
+  border-radius: 0.42em;
+  /* 1er calque = reflet spéculaire (bande de lumière en haut du verre)
+     2e calque  = corps du verre : quasi incolore, violet à peine deviné */
+  background:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.60) 0%, rgba(255, 255, 255, 0) 45%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.30) 0%, rgba(139, 82, 250, 0.20) 55%, rgba(116, 64, 217, 0.28) 100%);
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow:
+    0 8px 28px rgba(139, 82, 250, 0.22),
+    0 2px 6px rgba(116, 64, 217, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.70),
+    inset 0 -6px 14px rgba(139, 82, 250, 0.18);
+  text-shadow: 0 1px 10px rgba(74, 30, 140, 0.35);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+/* Halo violet diffus derrière le verre : profondeur + glow flottant, discret */
+.hero-content h1 .span::after {
+  content: "";
+  position: absolute;
+  inset: -30% -12%;
+  z-index: -1;
+  background: radial-gradient(55% 72% at 50% 45%, rgba(139, 82, 250, 0.28), rgba(139, 82, 250, 0) 72%);
+  filter: blur(7px);
+  pointer-events: none;
+}
+
+.hero-content h1 .span:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 34px rgba(139, 82, 250, 0.30),
+    0 3px 8px rgba(116, 64, 217, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.80),
+    inset 0 -6px 16px rgba(139, 82, 250, 0.22);
+}
+
+/* Repli : navigateurs sans backdrop-filter → verre plus opaque, teinte légère */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .hero-content h1 .span {
+    color: #5b2bb0;
+    -webkit-text-fill-color: #5b2bb0;
+    text-shadow: none;
+    background:
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.35) 45%),
+      linear-gradient(135deg, rgba(157, 110, 251, 0.45), rgba(116, 64, 217, 0.55));
+  }
+}
+
+.hero-text {
+  color: var(--ca-charcoal);
+  font-family: var(--ff-montserrat);
+  font-size: 1.8rem;
+  line-height: 1.65;
+}
+
+/* Preuve sociale : pastille de verre flottante sur le fond du hero.
+   margin-block-start = respiration entre la rangée de CTA (.hero-actions)
+   et la pastille ; neutralise le margin-left:10px de style.css. */
+.social-proof {
+  width: max-content;
+  max-width: calc(100% - 32px);
+  margin: 40px auto 28px;
+  padding: 8px 22px 8px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 8px 32px rgba(139, 82, 250, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.60);
+}
+
+@media (max-width: 575px) {
+  .social-proof {
+    margin-block-start: 28px;
+    flex-direction: column;
+    text-align: center;
+    padding: 16px 18px;
+    gap: 10px;
+  }
+  .proof-text { font-size: 1rem; }
+}
+
+.avatars img { border-color: #ffffff; }
+
+.proof-text {
+  color: var(--ca-charcoal);
+  font-family: var(--ff-montserrat);
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+
+/*-----------------------------------------------------------*\
+  4. BOUTONS — états press/hover de la charte
+\*-----------------------------------------------------------*/
+
+.btn {
+  border-radius: 12px;
+  font-weight: 600;
+  transition:
+    transform 0.12s var(--ca-ease),
+    box-shadow 0.2s var(--ca-ease);
+}
+
+.btn:active { transform: scale(0.98); }
+
+.btn:focus-visible,
+.faq-question:focus-visible,
+.btn-cta-black:focus-visible {
+  outline: 3px solid rgba(139, 82, 250, 0.35);
+  outline-offset: 2px;
+}
+
+.btn-cta-black {
+  background: var(--ca-purple);
+  font-family: var(--ff-montserrat);
+  font-size: 1.6rem;
+  font-weight: 600;
+  padding: 14px 28px;
+  border-radius: 12px;
+  transition:
+    background-color 0.2s var(--ca-ease),
+    transform 0.12s var(--ca-ease);
+}
+
+.btn-cta-black:hover { background: var(--ca-purple-hover); }
+.btn-cta-black:active { background: var(--ca-purple-press); transform: scale(0.98); }
+
+/* "en quelques clics" : accent violet plein. Force couleur + fill (bat le verre). */
+.hero-content h1 .span-clics,
+.hero .section-title .span-clics {
+  color: #8B52FA !important;
+  -webkit-text-fill-color: #8B52FA !important;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Rangée des 2 CTA hero : espacée, centrée mobile / gauche desktop, wrap safe.
+   margin-top sépare du paragraphe hero. */
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 20px;
+  margin-block-start: 28px;
+  justify-content: center;
+}
+
+/* Neutralise margin-inline:auto (.hero .btn, style.css) → boutons côte à côte.
+   Réduit l'ombre géante (.hero-content .btn) qui faisait baver les 2 CTA ensemble. */
+.hero-actions .btn {
+  margin-inline: 0;
+  box-shadow: 0 8px 24px rgba(139, 82, 250, 0.16);
+}
+
+/* 2e CTA : contour violet sur fond clair, secondaire visuellement */
+.btn-hero-secondary {
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--ca-purple);
+  border: 1.5px solid rgba(139, 82, 250, 0.55);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: 0 6px 18px rgba(139, 82, 250, 0.10) !important;
+}
+
+.btn-hero-secondary .span { color: var(--ca-purple); }
+.btn-hero-secondary svg { stroke: var(--ca-purple); }
+.btn-hero-secondary ion-icon { color: var(--ca-purple); }
+
+/* Repli d'expansion violet de .btn::before désactivé : garde le style contour */
+.btn-hero-secondary::before { display: none; }
+
+.btn-hero-secondary:hover {
+  background: rgba(139, 82, 250, 0.10);
+  border-color: var(--ca-purple);
+  transform: translateY(-1px);
+}
+
+/* Desktop : hero passe à gauche (style.css @992px) → rangée CTA suit */
+@media (min-width: 992px) {
+  .hero-actions { justify-content: flex-start; }
+}
+
+/* Très petits écrans : boutons pleine largeur empilés proprement */
+@media (max-width: 480px) {
+  .hero-actions { flex-direction: column; align-items: stretch; }
+  .hero-actions .btn { justify-content: center; width: 100%; }
+}
+
+
+/*-----------------------------------------------------------*\
+  5. SECTION PARTENAIRES (.lili) — logos nets, texte aligné
+\*-----------------------------------------------------------*/
+
+.lili p {
+  font-family: var(--ff-montserrat);
+  color: var(--ca-text-secondary);
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: 0.08em;
+}
+
+.lili span {
+  font-family: var(--ff-montserrat);
+  color: var(--ca-charcoal);
+}
+
+.lili iconify-icon { color: var(--ca-purple); }
+
+
+/*-----------------------------------------------------------*\
+  6. VIDÉO — image plus claire, voile allégé
+\*-----------------------------------------------------------*/
+
+.video-banner::after { background-color: rgba(0, 0, 0, 0.14); }
+
+
+/*-----------------------------------------------------------*\
+  7. ROADMAP — hiérarchie calme, un seul accent
+\*-----------------------------------------------------------*/
+
+.roadmap-main-title { margin-bottom: 8px; }
+
+.timeline-line { background: var(--ca-hairline); }
+.timeline-line::after { background: var(--ca-purple); }
+
+.phase-card {
+  border: 1px solid rgba(139, 82, 250, 0.30);
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(20, 20, 19, 0.04);
+}
+
+.phase-current .phase-card {
+  border: 1px solid var(--ca-purple);
+  box-shadow: 0 8px 24px rgba(139, 82, 250, 0.12);
+}
+
+.phase-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(139, 82, 250, 0.12);
+}
+
+.phase-rocket { background: var(--ca-purple); }
+
+.phase-date {
+  font-style: normal;
+  font-weight: 700;
+  font-family: var(--ff-montserrat);
+  color: var(--ca-ink);
+}
+
+.phase-subtitle { font-family: var(--ff-montserrat); }
+
+/* Étiquettes de fonctionnalités : une seule teinte, plus d'arc-en-ciel */
+.feature-tag,
+.tag-core,
+.tag-milestone,
+.tag-vital,
+.tag-lancement,
+.tag-nouveau,
+.tag-dev,
+.tag-rd {
+  background: var(--ca-purple-tint);
+  border-color: rgba(139, 82, 250, 0.25);
+  color: var(--ca-purple-press);
+}
+
+
+/*-----------------------------------------------------------*\
+  8. FEATURES — cartes 24px, ombres douces
+\*-----------------------------------------------------------*/
+
+.feature-card {
+  border-radius: 24px;
+  border: 1px solid var(--ca-hairline);
+  box-shadow:
+    0 1px 3px rgba(20, 20, 19, 0.04),
+    0 16px 40px rgba(139, 82, 250, 0.08);
+  transition:
+    transform 0.3s var(--ca-ease),
+    box-shadow 0.3s var(--ca-ease);
+}
+
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 2px 6px rgba(20, 20, 19, 0.05),
+    0 24px 56px rgba(139, 82, 250, 0.12);
+}
+
+.feature-text h3 {
+  font-size: 2.8rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ca-ink);
+}
+
+.feature-text p {
+  color: var(--ca-text-secondary);
+  font-size: var(--lp-body);
+  line-height: 1.7;
+}
+
+/* Même nappe organique violette que la section analytics, posée
+   en arrière-plan de l'image. L'image est réduite et flotte en
+   carte blanche par-dessus la nappe. */
+.apprentissage-section {
+  position: relative;
+  border: 1px solid rgba(139, 82, 250, 0.30);
+  border-radius: 24px;
+  overflow: hidden;
+  padding: clamp(40px, 6vw, 72px) clamp(16px, 2.5vw, 32px) clamp(20px, 3vw, 32px);
+  /* écrase le background-image SVG de style.css */
+  background-image:
+    radial-gradient(72% 82% at 90% 98%, rgba(213, 158, 229, 0.55), rgba(213, 158, 229, 0) 62%),
+    linear-gradient(170deg, #D5C3F4 0%, #E2D4F9 48%, #F0E9FC 100%);
+  box-shadow:
+    0 1px 3px rgba(20, 20, 19, 0.04),
+    0 16px 40px rgba(139, 82, 250, 0.10);
+}
+
+/* Dôme violet plus soutenu en haut à gauche (repris de .analytics-stage::after) */
+.apprentissage-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: min(52%, 560px);
+  height: 78%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #AE89E6 0%, #BFA2EC 42%, rgba(211, 189, 244, 0) 76%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Image réduite, flottant en carte blanche par-dessus la nappe */
+.apprentissage-section .img-appretissage {
+  position: relative;
+  z-index: 1;
+  max-width: 135%;
+  margin: 0 auto;
+  background: #FFFFFF;
+  padding: clamp(8px, 1.4vw, 14px);
+  border-radius: 24px;
+  border: 1px solid rgba(139, 82, 250, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.90),
+    0 2px 6px rgba(26, 26, 26, 0.05),
+    0 28px 56px -20px rgba(139, 82, 250, 0.30);
+}
+
+.apprentissage-section .img-appretissage img {
+  border-radius: 14px;
+  padding: 0;
+  width: 100%;
+  display: block;
+}
+
+/* Mobile : image plus large, nappe resserrée */
+@media (max-width: 768px) {
+  .apprentissage-section {
+    padding: 32px 20px;
+  }
+  .apprentissage-section .img-appretissage {
+    max-width: 112%;
+  }
+}
+
+
+/*-----------------------------------------------------------*\
+  9. BIBLIOTHÈQUE (latency) — Bento monochrome violet
+\*-----------------------------------------------------------*/
+
+.latency-container { padding: 96px 5%; }
+
+.latency-card-outer {
+  border-radius: 24px;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.70);
+}
+
+.card-white { border-radius: 24px; }
+
+.card-white h3 {
+  font-size: var(--lp-card-title);
+  font-family: var(--ff-montserrat);
+  margin: 20px 0 8px 0;
+}
+
+.card-white p {
+  color: var(--ca-text-secondary);
+  font-size: 1.5rem;
+  font-family: var(--ff-montserrat);
+}
+
+/* Icônes de cartes : une seule teinte violette */
+.green-bg,
+.blue-bg,
+.purple-bg,
+.orange-bg {
+  background: var(--ca-purple-tint);
+  color: var(--ca-purple);
+}
+
+/* Radar : accent violet au lieu du vert */
+.circle { border-color: #EDE7FB; }
+
+.radar-sweep {
+  background: conic-gradient(from 0deg, rgba(139, 82, 250, 0.12) 0%, transparent 40%);
+}
+
+.radar-dot { background: var(--ca-purple); }
+
+/* Survol : montée douce, sans sur-rebond */
+.card-white:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 16px 36px hsla(var(--color), 0.18),
+    0 6px 16px rgba(15, 23, 42, 0.08);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .latency-grid:hover .card-white {
+    transform: translateY(-2px);
+    filter: none;
+  }
+  .latency-grid:hover .card-white:hover { transform: translateY(-6px); }
+}
+
+
+/*-----------------------------------------------------------*\
+  10. INTÉGRATIONS / MATIÈRES — respiration + accent unique
+\*-----------------------------------------------------------*/
+
+.integrations-container { padding: 96px 0 0 0; }
+
+.integrations-content h2 { margin-bottom: 16px; }
+
+.logo-item {
+  border-radius: 16px;
+  border: 1px solid var(--ca-hairline);
+  transition: transform 0.2s var(--ca-ease), box-shadow 0.2s var(--ca-ease);
+}
+
+.logo-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(139, 82, 250, 0.12);
+}
+
+
+/*-----------------------------------------------------------*\
+  11. À PROPOS — eyebrow violet, checklist violette
+\*-----------------------------------------------------------*/
+
+.about .section-subtitle {
+  color: var(--ca-purple);
+  font-family: var(--ff-montserrat);
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: 0.08em;
+}
+
+.about-content {
+  border: 1px solid var(--ca-hairline);
+  border-radius: 24px;
+  padding: 32px;
+}
+
+.about-item ion-icon { color: var(--ca-purple); }
+
+.about-item .span { font-weight: 600; }
+
+
+/*-----------------------------------------------------------*\
+  12. CTA FINAL — géométrie signature
+\*-----------------------------------------------------------*/
+
+.cta-inner-box {
+  border-radius: 32px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.80);
+}
+
+.cta-title { margin-bottom: 32px; }
+
+.cta-sub-text {
+  color: var(--ca-text-secondary);
+  font-family: var(--ff-montserrat);
+  font-size: 1.4rem;
+  font-weight: 500;
+}
+
+
+/*-----------------------------------------------------------*\
+  13. MÉDIAS SOCIAUX — cartes homogènes
+\*-----------------------------------------------------------*/
+
+.post-card {
+  border-radius: 16px;
+  border: 1px solid var(--ca-hairline);
+  transition: transform 0.2s var(--ca-ease), box-shadow 0.2s var(--ca-ease);
+}
+
+.post-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(20, 20, 19, 0.08);
+}
+
+.post-footer i { color: var(--ca-charcoal); }
+.post-footer i:hover { color: var(--ca-purple); transform: none; }
+
+/* Cartes compactes : la grille est bridée et centrée, l'image est
+   recadrée en 4/5 pour que les trois cartes aient la même hauteur. */
+.social-media-section .posts-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  max-width: 1010px;
+  margin-inline: auto;
+}
+
+.social-media-section .post-card { border-radius: 14px; }
+
+.social-media-section .post-header {
+  padding: 10px 12px;
+  gap: 10px;
+}
+
+.social-media-section .post-header img {
+  width: 28px;
+  height: 28px;
+}
+
+.social-media-section .post-header span { font-size: 1.3rem; }
+
+.social-media-section .post-image img {
+  aspect-ratio: 4 / 5;
+  height: auto;
+  object-fit: cover;
+}
+
+.social-media-section .post-footer { padding: 10px 12px; }
+
+.social-media-section .post-footer i { font-size: 2rem; }
+
+@media (max-width: 1024px) {
+  .social-media-section .posts-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 690px;
+  }
+}
+
+@media (max-width: 768px) {
+  .social-media-section { padding: 72px 20px; }
+
+  .social-media-section .posts-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+    max-width: 360px;
+  }
+
+  .social-media-section .post-image img { aspect-ratio: 1 / 1; }
+}
+
+@media (max-width: 420px) {
+  .social-media-section .posts-grid { max-width: 100%; }
+}
+
+
+/*-----------------------------------------------------------*\
+  14. BÉNÉFICES — icônes outline, liseré interactif
+\*-----------------------------------------------------------*/
+
+.benefits-section { padding: 96px 24px; }
+
+.benefit-icon { color: var(--ca-purple); }
+
+.benefit-icon svg {
+  fill: none;
+  stroke: currentColor;
+}
+
+.benefit-text-box {
+  border-left: 3px solid var(--ca-hairline);
+  transition: border-color 0.2s var(--ca-ease);
+}
+
+/* Plus de carte "élue" arbitraire : le liseré violet répond au survol */
+.benefit-text-box.active-border { border-left-color: var(--ca-hairline); }
+.benefit-card:hover .benefit-text-box { border-left-color: var(--ca-purple); }
+
+.benefit-text-box h3 {
+  font-family: var(--ff-montserrat);
+  font-size: 1.8rem;
+  color: var(--ca-ink);
+}
+
+.benefit-text-box p {
+  font-family: var(--ff-montserrat);
+  font-size: 1.5rem;
+  color: var(--ca-text-secondary);
+}
+
+
+/*-----------------------------------------------------------*\
+  15. CENTRALISATION — accent violet, largeur corrigée
+\*-----------------------------------------------------------*/
+
+.consolidation-card {
+  width: 100%;
+  border-radius: 24px;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.70);
+}
+
+.main-glow {
+  background: radial-gradient(circle, rgba(139, 82, 250, 0.14) 0%, transparent 70%);
+}
+
+.target-icon { border: 1px solid var(--ca-hairline); }
+
+.tool-icon {
+  border: 1px solid var(--ca-hairline);
+  box-shadow: 0 8px 20px rgba(20, 20, 19, 0.06);
+}
+
+
+/*-----------------------------------------------------------*\
+  16. CARTE / AMBASSADEURS — chrome cohérent
+\*-----------------------------------------------------------*/
+
+.dashboard-card {
+  border-radius: 24px;
+  border: 1px solid var(--ca-hairline);
+  box-shadow:
+    0 20px 50px rgba(139, 82, 250, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.70);
+}
+
+.sidebar-top h3 {
+  font-family: var(--ff-montserrat);
+  font-size: 1.8rem;
+  color: var(--ca-ink);
+}
+
+.pill-stat { background: var(--ca-purple); }
+
+.prov-card { transition: border-color 0.2s var(--ca-ease), transform 0.2s var(--ca-ease); }
+
+
+/*-----------------------------------------------------------*\
+  17. ANALYTICS — carrousel à onglets, une capture à la fois
+\*-----------------------------------------------------------*/
+
+.analytics-header h2 { margin-bottom: 16px; }
+
+.analytics-carousel {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+/* Onglets façon template : texte encre, l'actif porte un
+   rectangle arrondi teinté + un trait violet sous la pilule */
+.analytics-tabs {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: clamp(8px, 2vw, 28px);
+  margin-bottom: 28px;
+}
+
+.analytics-tab {
+  appearance: none;
+  border: none;
+  background: transparent;
+  position: relative;
+  font-family: var(--ff-montserrat);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--ca-ink);
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition:
+    color 0.2s var(--ca-ease),
+    background-color 0.2s var(--ca-ease);
+}
+
+/* Trait violet sous l'onglet actif */
+.analytics-tab::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -5px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--ca-purple);
+  opacity: 0;
+  transform: scaleX(0.6);
+  transition:
+    opacity 0.25s var(--ca-ease),
+    transform 0.25s var(--ca-ease);
+}
+
+.analytics-tab:hover { color: var(--ca-purple); }
+
+.analytics-tab.is-active {
+  background: var(--ca-purple-tint);
+  color: var(--ca-purple);
+}
+
+.analytics-tab.is-active::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.analytics-tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 82, 250, 0.30);
+}
+
+/* Nappe organique violette derrière la capture, calquée sur le
+   template : un grand socle lavande dont le sommet forme le dôme
+   droit, un dôme gauche violet plus profond posé devant, et un
+   voile rosé en bas à droite. La carte flotte par-dessus et
+   déborde du bas de la nappe. (Seule exception gradient —
+   accent unique #8B52FA décliné en voiles.) */
+.analytics-stage {
+  position: relative;
+  padding: clamp(44px, 6.5vw, 76px) clamp(24px, 5vw, 60px) clamp(20px, 3.5vw, 36px);
+}
+
+/* Socle + dôme droit : sommet en arche dont le point haut est
+   décalé vers la droite, comme sur le template */
+.analytics-stage::before {
+  content: "";
+  position: absolute;
+  inset: clamp(12px, 2vw, 22px) 0 clamp(48px, 12%, 88px);
+  border-radius:
+    62% 38% clamp(48px, 7vw, 84px) clamp(48px, 7vw, 84px)
+    / 24% 26% clamp(48px, 7vw, 84px) clamp(48px, 7vw, 84px);
+  background:
+    radial-gradient(72% 82% at 90% 98%, rgba(213, 158, 229, 0.60), rgba(213, 158, 229, 0) 62%),
+    linear-gradient(170deg, #D5C3F4 0%, #E2D4F9 48%, #F0E9FC 100%);
+  pointer-events: none;
+}
+
+/* Dôme gauche : ellipse violette plus soutenue, fondue vers le
+   bas pour se dissoudre dans le socle */
+.analytics-stage::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: min(52%, 560px);
+  height: 78%;
+  border-radius: 50%;
+  background: linear-gradient(
+    180deg,
+    #AE89E6 0%,
+    #BFA2EC 42%,
+    rgba(211, 189, 244, 0) 76%
+  );
+  pointer-events: none;
+}
+
+/* Cadre : carte blanche flottante, biseau intérieur qui rend la
+   fenêtre de défilement clairement visible */
+.analytics-frame {
+  position: relative;
+  z-index: 1;
+  background: #FFFFFF;
+  padding: clamp(8px, 1.4vw, 14px);
+  border-radius: 24px;
+  border: 1px solid rgba(139, 82, 250, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.90),
+    0 2px 6px rgba(26, 26, 26, 0.05),
+    0 28px 56px -20px rgba(139, 82, 250, 0.30);
+}
+
+.analytics-viewport {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid var(--ca-hairline);
+  background: #F8F6FD;
+}
+
+.analytics-track {
+  display: flex;
+  transition: transform 0.7s var(--ca-ease);
+  will-change: transform;
+}
+
+.analytics-slide {
+  flex: 0 0 100%;
+  min-width: 100%;
+  margin: 0;
+  aspect-ratio: 3 / 2;
+}
+
+.analytics-slide img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+@media (max-width: 768px) {
+  .analytics-tabs {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .analytics-tabs::-webkit-scrollbar { display: none; }
+
+  .analytics-tab {
+    flex: 0 0 auto;
+    font-size: 1.4rem;
+    padding: 8px 14px;
+  }
+
+  .analytics-stage {
+    padding: 28px 12px 14px;
+  }
+
+  .analytics-stage::before {
+    inset: 8px 0 clamp(40px, 12%, 64px);
+    border-radius: 62% 38% 24px 24px / 18% 20% 24px 24px;
+  }
+
+  .analytics-frame {
+    padding: 6px;
+    border-radius: 16px;
+  }
+
+  .analytics-viewport { border-radius: 10px; }
+}
+
+
+/*-----------------------------------------------------------*\
+  18. TÉMOIGNAGES — cartes 24px, hairline
+\*-----------------------------------------------------------*/
+
+.testimonials-container { padding-top: 96px; }
+
+.testi-card {
+  border-radius: 24px;
+  border: 1px solid var(--ca-hairline);
+}
+
+.testi-text {
+  font-family: var(--ff-montserrat);
+  font-size: 1.5rem;
+  color: var(--ca-charcoal);
+}
+
+.user-name { font-family: var(--ff-montserrat); }
+
+
+/*-----------------------------------------------------------*\
+  19. FAQ — accent unique, réponses propres
+\*-----------------------------------------------------------*/
+
+.faq-section { padding: 96px 20px; }
+
+.faq-item { border-radius: 12px; }
+
+.faq-question span {
+  font-family: var(--ff-montserrat);
+  font-size: 1.5rem;
+}
+
+.chevron { color: var(--ca-purple); }
+
+.faq-item.active .faq-answer { max-height: 320px; }
+
+.faq-answer p {
+  font-family: var(--ff-montserrat);
+  font-size: 1.4rem;
+  color: var(--ca-text-secondary);
+}
+
+.faq-footer { font-family: var(--ff-montserrat); }
+.faq-footer a { color: var(--ca-purple); }
+
+
+/*-----------------------------------------------------------*\
+  20. FOOTER — champ newsletter, focus violet
+\*-----------------------------------------------------------*/
+
+.newsletter-form .input-field {
+  border-radius: 8px;
+  font-family: var(--ff-montserrat);
+  transition: box-shadow 0.2s var(--ca-ease);
+}
+
+.newsletter-form .input-field:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 82, 250, 0.30);
+}
+
+
+/*-----------------------------------------------------------*\
+  21. ACCESSIBILITÉ & MOUVEMENT
+\*-----------------------------------------------------------*/
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .card-white,
+  .feature-card,
+  .phase-card,
+  .post-card,
+  .logo-item {
+    transition: none;
+  }
+
+  .analytics-track { transition: none; }
+
+  .radar-sweep { animation: none; }
+}

@@ -1,5 +1,11 @@
 {
     "require": {
-        "phpmailer/phpmailer": "^7.0"
+        "phpmailer/phpmailer": "^7.0",
+        "aws/aws-sdk-php": "^3.387",
+        "chillerlan/php-qrcode": "^6.0",
+        "dompdf/dompdf": "^3.1"
+    },
+    "require-dev": {
+        "vimeo/psalm": "^6.16"
     }
 }

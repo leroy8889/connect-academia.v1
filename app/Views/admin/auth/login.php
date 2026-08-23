@@ -7,20 +7,9 @@ $waitMin           = (int)  \Core\Session::getFlash('wait_min', 0);
 $waitSecs          = (int)  \Core\Session::getFlash('wait_secs', 0);
 $attemptsUsed      = (int)  \Core\Session::getFlash('login_attempts_used', 0);
 $attemptsRemaining = (int)  \Core\Session::getFlash('login_attempts_remaining', 0);
-
-// QR Code en mode 2FA
-$qr_url = "";
-if ($is2fa) {
-    $otp_code = $_SESSION['admin_2fa_pending']['otp'] ?? '000000';
-    $qr_url = "https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=" . urlencode("OTP:$otp_code") . "&choe=UTF-8";
-}
 ?>
 
 <style>
-    /* QR Code — non défini dans admin.css */
-    .qr-container { background: #fff; padding: 12px; border-radius: 14px; margin: 20px auto; width: fit-content; border: 1px solid rgba(139,82,250,0.18); box-shadow: 0 4px 16px rgba(139,82,250,0.08); }
-    .qr-container img { width: 130px; height: 130px; display: block; }
-    .qr-label { font-family: var(--font-mid); color: #2D1B69; font-size: 10px; text-align: center; margin-top: 6px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
     /* label champs formulaire */
     .field-label { display: block; font-family: var(--font-mid); font-size: 12px; font-weight: 600; color: var(--txt-m); margin-bottom: 7px; letter-spacing: 0.02em; }
     .hidden { display: none; }
@@ -233,7 +222,14 @@ if ($is2fa) {
     <?php else: ?>
     <div class="admin-auth-badge">Vérification 2FA</div>
     <h1>Code de sécurité</h1>
-    <p class="auth-desc">Entrez le code à 6 chiffres envoyé par mail ou scannez le QR code ci-dessous.</p>
+    <p class="auth-desc">Entrez le code à 6 chiffres envoyé à votre adresse email.</p>
+
+    <?php if ($success): ?>
+      <div class="admin-alert admin-alert-success">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        <?= $success ?>
+      </div>
+    <?php endif; ?>
 
     <?php if ($error): ?>
       <div class="admin-alert admin-alert-error">
@@ -241,11 +237,6 @@ if ($is2fa) {
         <?= e($error) ?>
       </div>
     <?php endif; ?>
-
-    <div class="qr-container">
-        <img src="<?= $qr_url ?>" alt="QR Code OTP">
-        <div class="qr-label">SCANNEZ L'OTP</div>
-    </div>
 
     <form action="<?= url('/Administratorconnect/verifier-2fa') ?>" method="POST" id="otp-form">
       <input type="hidden" name="_csrf_token" value="<?= \Core\Session::getCsrfToken() ?>">

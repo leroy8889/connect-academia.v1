@@ -3,13 +3,10 @@ declare(strict_types=1);
 
 namespace Middleware;
 
-use Core\{Session, Response, Redis, AdminPermissions};
+use Core\{Session, Response, AdminPermissions};
 
 class AdminMiddleware
 {
-    // Clé Redis : 'admin:activity:{session_id}'
-    private const ACTIVITY_NS = 'admin:activity:';
-
     public function handle(): void
     {
         if (!Session::isAdmin()) {
@@ -19,7 +16,8 @@ class AdminMiddleware
             Response::redirect('/Administratorconnect/login');
         }
 
-        $this->checkInactivity();
+        // Pas de timeout d'inactivité : l'admin reste connecté tant que sa
+        // session PHP est vivante (déconnexion uniquement via le bouton logout).
         $this->checkRoleAccess();
     }
 
@@ -50,39 +48,6 @@ class AdminMiddleware
             }
             Response::redirect(AdminPermissions::getDefaultPath($role));
         }
-    }
-
-    /**
-     * Détecte l'inactivité admin via Redis.
-     * La clé Redis expire au bout de ADMIN_INACTIVITY_TIMEOUT secondes.
-     * Si la clé est absente alors que l'admin est connecté → timeout.
-     */
-    private function checkInactivity(): void
-    {
-        $redis = Redis::getInstance();
-        if (!$redis->isAvailable()) {
-            // Redis indisponible : on ne bloque pas l'admin
-            return;
-        }
-
-        $timeout    = (int)($_ENV['ADMIN_INACTIVITY_TIMEOUT'] ?? 1800);
-        $activityKey = self::ACTIVITY_NS . session_id();
-
-        if (!$redis->exists($activityKey)) {
-            // Clé expirée = inactivité détectée
-            Session::destroy();
-
-            if ($this->isAjax()) {
-                Response::json([
-                    'success' => false,
-                    'error'   => ['code' => 'SESSION_TIMEOUT', 'message' => 'Session expirée par inactivité'],
-                ], 401);
-            }
-            Response::redirect('/Administratorconnect/login?reason=timeout');
-        }
-
-        // Rafraîchir le TTL à chaque requête active
-        $redis->expire($activityKey, $timeout);
     }
 
     private function isAjax(): bool

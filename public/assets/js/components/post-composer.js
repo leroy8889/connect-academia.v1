@@ -162,10 +162,16 @@ const PostComposer = (() => {
         const file = e.target.files[0];
         if (!file) return;
 
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-
-        if (!allowedTypes.includes(file.type)) {
-            App.toast.warning('Format non supporté. Utilisez JPEG, PNG, GIF ou WebP');
+        // Tout format d'image est accepté (JPEG, PNG, GIF, WebP, AVIF, BMP,
+        // TIFF, HEIC des iPhone…). Seul le SVG est refusé : c'est un document
+        // XML pouvant embarquer du JavaScript — XSS stocké côté serveur.
+        const type = (file.type || '').toLowerCase();
+        if (type === 'image/svg+xml') {
+            App.toast.warning("Le format SVG n'est pas accepté. Utilisez une image (JPEG, PNG, WebP…).");
+            return;
+        }
+        if (type !== '' && !type.startsWith('image/')) {
+            App.toast.warning("Ce fichier n'est pas une image.");
             return;
         }
 

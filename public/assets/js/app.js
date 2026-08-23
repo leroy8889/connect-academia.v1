@@ -65,6 +65,14 @@
     }, duration);
   };
 
+  // ── Barre de progression (chargement de page) ─────────────
+  // Logique dans loading.js (autonome, chargé par tous les layouts).
+  // Ici : simple délégation, sûre quel que soit l'ordre de chargement.
+  const progress = {
+    start: () => window.CALoading && window.CALoading.start(),
+    done:  () => window.CALoading && window.CALoading.done(),
+  };
+
   // ── Navbar ────────────────────────────────────────────────
   function initNavbar() {
     // Hamburger (mobile)
@@ -126,16 +134,12 @@
     if (!btn || !dropdown) return;
 
     let isOpen = false;
-    let loaded = false;
 
     function openDropdown() {
       dropdown.classList.remove('hidden');
       overlay?.classList.remove('hidden');
       isOpen = true;
-      if (!loaded) {
-        loadNotifications();
-        loaded = true;
-      }
+      loadNotifications();
     }
 
     function closeDropdown() {
@@ -152,21 +156,30 @@
     on(overlay, 'click', closeDropdown);
 
     async function loadNotifications() {
-      if (list) list.innerHTML = '<div class="notif-dropdown__empty">Chargement...</div>';
+      if (list) list.innerHTML = skeleton.list(4);
       const data = await apiFetch('/api/notifications?limit=10');
       if (!data?.success || !list) return;
 
-      if (!data.data?.length) {
+      // L'API renvoie data: { notifications: [...], unread_count: n }
+      const notifs = data.data?.notifications || [];
+      if (!notifs.length) {
         list.innerHTML = '<div class="notif-dropdown__empty">Aucune notification</div>';
         return;
       }
 
-      list.innerHTML = data.data.map(n => `
+      list.innerHTML = notifs.map(n => {
+        // Message officiel de l'administration : actor_id NULL + type announcement
+        const isOfficial = n.type === 'announcement' && !n.actor_id;
+        const text = isOfficial
+          ? `<strong>Connect'Academia</strong> — ${escapeHtml(n.message)}`
+          : escapeHtml(n.message);
+        return `
         <div class="notif-item ${!n.is_read ? 'notif-item--unread' : ''}" data-id="${n.id}">
-          <p class="notif-item__text">${escapeHtml(n.message)}</p>
+          <p class="notif-item__text">${text}</p>
           <span class="notif-item__time">${timeAgo(n.created_at)}</span>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     on(readAll, 'click', async () => {
@@ -189,7 +202,7 @@
     async function pollNotifCount() {
       const data = await apiFetch('/api/notifications/count');
       if (!data?.success || !badge) return;
-      const count = data.data?.count || 0;
+      const count = data.data?.unread_count || 0;
       if (count > 0) {
         badge.textContent = count > 99 ? '99+' : count;
         badge.classList.remove('hidden');
@@ -233,6 +246,95 @@
     return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   }
 
+  // ── Skeleton screens ──────────────────────────────────────
+  // Générateurs de balisage réutilisables : on renvoie des chaînes HTML
+  // à injecter dans un conteneur avant un chargement asynchrone.
+  const skeleton = {
+    line:   (w = '100%') => `<span class="skeleton skeleton--text" style="width:${w}"></span>`,
+    title:  (w = '55%')  => `<span class="skeleton skeleton--title" style="width:${w}"></span>`,
+    circle: (s = 40)     => `<span class="skeleton skeleton--circle" style="width:${s}px;height:${s}px"></span>`,
+    block:  (h = 100)    => `<span class="skeleton skeleton--block" style="height:${h}px"></span>`,
+
+    // Liste : avatar + 2 lignes (notifs, commentaires, résultats…)
+    list(n = 5) {
+      let html = '';
+      for (let i = 0; i < n; i++) {
+        html += `
+          <div class="skeleton-row" style="padding:12px 0">
+            <span class="skeleton skeleton--avatar"></span>
+            <div style="flex:1">
+              ${this.line('70%')}
+              ${this.line('45%')}
+            </div>
+          </div>`;
+      }
+      return html;
+    },
+
+    // Cartes : grille de vignettes (ressources, établissements…)
+    cards(n = 6) {
+      let cells = '';
+      for (let i = 0; i < n; i++) {
+        cells += `
+          <div class="skeleton-card skeleton-stack">
+            <span class="skeleton skeleton--thumb"></span>
+            ${this.title('70%')}
+            ${this.line('90%')}
+            ${this.line('50%')}
+          </div>`;
+      }
+      return `<div class="skeleton-grid">${cells}</div>`;
+    },
+
+    // Fil d'actualité : cartes de publication
+    feed(n = 3) {
+      let html = '';
+      for (let i = 0; i < n; i++) {
+        html += `
+          <div class="skeleton-card skeleton-stack" style="margin-bottom:var(--space-4,16px)">
+            <div class="skeleton-row">
+              <span class="skeleton skeleton--avatar"></span>
+              <div style="flex:1">
+                ${this.line('40%')}
+                ${this.line('25%')}
+              </div>
+            </div>
+            ${this.line('95%')}
+            ${this.line('85%')}
+            ${this.line('60%')}
+            <span class="skeleton skeleton--block" style="height:180px;margin-top:6px"></span>
+          </div>`;
+      }
+      return html;
+    },
+
+    // Lignes de tableau (admin)
+    rows(n = 6, cols = 4) {
+      let html = '';
+      for (let i = 0; i < n; i++) {
+        let tds = '';
+        for (let c = 0; c < cols; c++) {
+          tds += `<td>${this.line(c === 0 ? '60%' : '80%')}</td>`;
+        }
+        html += `<tr class="skeleton-tr">${tds}</tr>`;
+      }
+      return html;
+    },
+
+    // Monte un skeleton dans un conteneur et renvoie une fonction de nettoyage.
+    mount(target, html) {
+      const el = typeof target === 'string' ? document.querySelector(target) : target;
+      if (!el) return () => {};
+      const prev = el.getAttribute('aria-busy');
+      el.setAttribute('aria-busy', 'true');
+      el.innerHTML = html;
+      return () => {
+        if (prev === null) el.removeAttribute('aria-busy');
+        else el.setAttribute('aria-busy', prev);
+      };
+    },
+  };
+
   // ── App API (utilisée par feed.js, post-composer.js, comments.js, follow.js) ──
   window.App = {
     toast: {
@@ -243,6 +345,8 @@
     },
     timeAgo:    timeAgo,
     escapeHtml: escapeHtml,
+    skeleton:   skeleton,
+    progress:   progress,
     formatNumber: function (n) {
       n = parseInt(n) || 0;
       if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';

@@ -6,6 +6,32 @@ $matieresBySerie = $matieresBySerie ?? [];
 $totalRessources = $totalRessources ?? 0;
 $totalVues       = $totalVues ?? 0;
 $totalPdf        = $totalPdf ?? 0;
+$filtres         = ($filtres ?? []) + ['serie_id' => 0, 'matiere_id' => 0, 'type' => '', 'q' => ''];
+$pagination      = ($pagination ?? []) + [
+    'page' => 1, 'par_page' => 48, 'total' => count($ressources),
+    'total_pages' => 1, 'debut' => 1, 'fin' => count($ressources), 'options' => [24, 48, 96, 200],
+];
+$filtresActifs   = $filtres['serie_id'] > 0 || $filtres['matiere_id'] > 0 || $filtres['type'] !== '' || $filtres['q'] !== '';
+
+// URL de la bibliothèque en conservant les filtres courants
+$ctnUrl = static function (array $over = []) use ($filtres, $pagination): string {
+    $p = [
+        'serie_id'   => $filtres['serie_id'] ?: null,
+        'matiere_id' => $filtres['matiere_id'] ?: null,
+        'type'       => $filtres['type'] ?: null,
+        'q'          => $filtres['q'] ?: null,
+        'par_page'   => $pagination['par_page'] === 48 ? null : $pagination['par_page'],
+        'page'       => $pagination['page'] > 1 ? $pagination['page'] : null,
+    ];
+    foreach ($over as $k => $v) $p[$k] = $v;
+    if (($p['par_page'] ?? null) === 0) $p['par_page'] = '0'; // « tout afficher » explicite
+    $p = array_filter($p, static fn ($v): bool => $v !== null && $v !== '' && $v !== 0);
+    return url('/admin/contenu') . ($p ? '?' . http_build_query($p) : '');
+};
+
+// Matières du filtre : celles de la série sélectionnée, sinon toutes (groupées)
+$serieNoms = [];
+foreach ($series as $s) $serieNoms[(int)$s['id']] = $s['nom'];
 
 $typeBg = [
     'cours'            => ['bg' => '#F0FDF4', 'color' => '#16A34A', 'label' => 'COURS'],
@@ -33,44 +59,70 @@ $typeBg = [
   </div>
 </div>
 
-<!-- Filtres -->
+<!-- Filtres — soumis au serveur : la recherche porte sur TOUTE la bibliothèque,
+     pas seulement sur les cartes de la page affichée -->
 <div class="admin-card mb-16">
-  <div style="padding:14px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-    <input type="text" placeholder="Rechercher un cours, un sujet…"
+  <form method="GET" action="<?= url('/admin/contenu') ?>"
+        style="padding:14px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <input type="text" name="q" value="<?= e($filtres['q']) ?>" placeholder="Rechercher un cours, un sujet…"
            data-search-table="ressources-grid-container"
            style="flex:1;min-width:180px;padding:9px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:13px;background:var(--bg);outline:none;">
-    <select class="form-select" style="width:auto;padding:9px 14px;" id="filter-serie">
+    <select class="form-select" style="width:auto;padding:9px 14px;" id="filter-serie" name="serie_id">
       <option value="">Toutes les séries ▾</option>
       <?php foreach ($series as $s): ?>
-      <option value="<?= $s['id'] ?>">Terminale <?= e($s['nom']) ?></option>
+      <option value="<?= $s['id'] ?>" <?= $filtres['serie_id'] === (int)$s['id'] ? 'selected' : '' ?>>Terminale <?= e($s['nom']) ?></option>
       <?php endforeach; ?>
     </select>
-    <select class="form-select" style="width:auto;padding:9px 14px;" id="filter-matiere">
+    <select class="form-select" style="width:auto;padding:9px 14px;" id="filter-matiere" name="matiere_id">
       <option value="">Toutes les matières ▾</option>
-      <option value="Mathématiques">Mathématiques</option>
-      <option value="Physique-Chimie">Physique-Chimie</option>
-      <option value="SVT">SVT</option>
-      <option value="Français">Français</option>
-      <option value="Anglais">Anglais</option>
-      <option value="Historique-Géographie">Historique-Géographie</option>
-      <option value="Philosophie">Philosophie</option>
-      <option value="Espagnol">Espagnol</option>
-      <option value="Economie">Economie</option>
-
-
+      <?php foreach ($matieresBySerie as $sid => $mats): ?>
+        <?php if ($filtres['serie_id'] > 0 && $filtres['serie_id'] !== (int)$sid) continue; ?>
+        <optgroup label="Terminale <?= e($serieNoms[(int)$sid] ?? '—') ?>">
+          <?php foreach ($mats as $m): ?>
+          <option value="<?= (int)$m['id'] ?>" <?= $filtres['matiere_id'] === (int)$m['id'] ? 'selected' : '' ?>><?= e($m['nom']) ?></option>
+          <?php endforeach; ?>
+        </optgroup>
+      <?php endforeach; ?>
     </select>
-    <select class="form-select" style="width:auto;padding:9px 14px;" id="filter-type">
+    <select class="form-select" style="width:auto;padding:9px 14px;" id="filter-type" name="type">
       <option value="">Tous les types ▾</option>
-      <option value="cours">Cours</option>
-      <option value="td">TD</option>
-      <option value="ancienne_epreuve">Sujets</option>
-      <option value="corrige">Méthodologies</option>
+      <option value="cours"            <?= $filtres['type'] === 'cours'            ? 'selected' : '' ?>>Cours</option>
+      <option value="td"               <?= $filtres['type'] === 'td'               ? 'selected' : '' ?>>TD</option>
+      <option value="ancienne_epreuve" <?= $filtres['type'] === 'ancienne_epreuve' ? 'selected' : '' ?>>Sujets</option>
+      <option value="corrige"          <?= $filtres['type'] === 'corrige'          ? 'selected' : '' ?>>Méthodologies</option>
     </select>
-    <button class="btn-ghost">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>
-      Trier · Plus vue
+    <select class="form-select" style="width:auto;padding:9px 14px;" name="par_page"
+            onchange="this.form.querySelector('input[name=page]')?.remove(); this.form.submit();">
+      <?php foreach ($pagination['options'] as $opt): ?>
+      <option value="<?= $opt ?>" <?= (int)$pagination['par_page'] === $opt ? 'selected' : '' ?>><?= $opt ?> / page</option>
+      <?php endforeach; ?>
+      <option value="0" <?= (int)$pagination['par_page'] === 0 ? 'selected' : '' ?>>Tout afficher</option>
+    </select>
+    <button type="submit" class="btn-primary">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Filtrer
     </button>
+    <?php if ($filtresActifs): ?>
+    <a href="<?= url('/admin/contenu') ?>" class="btn-ghost" style="text-decoration:none;">Réinitialiser</a>
+    <?php endif; ?>
+  </form>
+</div>
+
+<!-- Compteur d'affichage — vérité sur ce qui est visible vs total en base -->
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+  <div style="font-size:12.5px;color:var(--txt-m);">
+    <?php if ($pagination['total'] === 0): ?>
+      Aucune ressource ne correspond aux filtres.
+    <?php else: ?>
+      Affichage <strong style="color:var(--txt);"><?= number_format($pagination['debut']) ?>–<?= number_format($pagination['fin']) ?></strong>
+      sur <strong style="color:var(--txt);"><?= number_format($pagination['total']) ?></strong>
+      ressource<?= $pagination['total'] > 1 ? 's' : '' ?><?= $filtresActifs ? ' filtrée' . ($pagination['total'] > 1 ? 's' : '') : '' ?>
+      <?php if ($filtresActifs): ?><span style="color:var(--txt-l);">· <?= number_format($totalRessources) ?> au total</span><?php endif; ?>
+    <?php endif; ?>
   </div>
+  <?php if ($pagination['total_pages'] > 1): ?>
+  <div style="font-size:12.5px;color:var(--txt-l);">Page <?= $pagination['page'] ?> / <?= $pagination['total_pages'] ?></div>
+  <?php endif; ?>
 </div>
 
 <!-- Grille ressources -->
@@ -137,11 +189,68 @@ $typeBg = [
   <?php if (empty($ressources)): ?>
   <div style="grid-column:1/-1;" class="empty-state">
     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    <?php if ($filtresActifs): ?>
+    <h3>Aucun résultat</h3>
+    <p>Aucune ressource ne correspond à ces filtres — <a href="<?= url('/admin/contenu') ?>" style="color:var(--ap);font-weight:600;">tout afficher</a>.</p>
+    <?php else: ?>
     <h3>Aucune ressource publiée</h3>
     <p>Cliquez sur <strong>Nouvelle ressource</strong> pour commencer.</p>
+    <?php endif; ?>
   </div>
   <?php endif; ?>
 </div>
+
+<!-- Pagination serveur — aucune ressource n'est plus masquée par un LIMIT -->
+<?php if ($pagination['total_pages'] > 1): ?>
+<nav class="ctn-pager" aria-label="Pagination des ressources">
+  <?php if ($pagination['page'] > 1): ?>
+  <a class="ctn-pager-btn" href="<?= e($ctnUrl(['page' => $pagination['page'] - 1])) ?>" rel="prev">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Précédent
+  </a>
+  <?php else: ?>
+  <span class="ctn-pager-btn is-off">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Précédent
+  </span>
+  <?php endif; ?>
+
+  <?php
+    // Fenêtre de pages : 1 … p-2 p-1 [p] p+1 p+2 … N
+    $tp = (int)$pagination['total_pages'];
+    $cp = (int)$pagination['page'];
+    $pages = array_unique(array_filter(
+        array_merge([1, 2], range(max(1, $cp - 2), min($tp, $cp + 2)), [$tp - 1, $tp]),
+        static fn (int $n): bool => $n >= 1 && $n <= $tp
+    ));
+    sort($pages);
+    $prev = 0;
+  ?>
+  <?php foreach ($pages as $n): ?>
+    <?php if ($prev && $n > $prev + 1): ?><span class="ctn-pager-gap">…</span><?php endif; ?>
+    <?php if ($n === $cp): ?>
+    <span class="ctn-pager-num is-current" aria-current="page"><?= $n ?></span>
+    <?php else: ?>
+    <a class="ctn-pager-num" href="<?= e($ctnUrl(['page' => $n])) ?>"><?= $n ?></a>
+    <?php endif; ?>
+    <?php $prev = $n; ?>
+  <?php endforeach; ?>
+
+  <?php if ($pagination['page'] < $tp): ?>
+  <a class="ctn-pager-btn" href="<?= e($ctnUrl(['page' => $pagination['page'] + 1])) ?>" rel="next">
+    Suivant
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </a>
+  <?php else: ?>
+  <span class="ctn-pager-btn is-off">
+    Suivant
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </span>
+  <?php endif; ?>
+
+  <a class="ctn-pager-all" href="<?= e($ctnUrl(['par_page' => 0, 'page' => null])) ?>">Tout afficher (<?= number_format($pagination['total']) ?>)</a>
+</nav>
+<?php endif; ?>
 
 <!-- ── MODAL UPLOAD ───────────────────────────────────────── -->
 <div class="admin-modal-overlay" id="modal-upload">
@@ -299,6 +408,26 @@ $typeBg = [
 
 <style>
 .ressource-card:hover .card-actions { opacity: 1 !important; }
+
+/* Pagination bibliothèque — hairlines, pilules, tabular-nums */
+.ctn-pager { display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; margin:24px 0 8px; }
+.ctn-pager-btn, .ctn-pager-num, .ctn-pager-all {
+  display:inline-flex; align-items:center; gap:5px;
+  height:34px; padding:0 12px; border-radius:999px;
+  border:1px solid var(--border-strong); background:var(--card);
+  font-family:var(--font-body); font-size:12.5px; font-weight:600;
+  color:var(--txt-m); text-decoration:none;
+  transition:border-color .13s, color .13s, background .13s;
+}
+.ctn-pager-num { min-width:34px; justify-content:center; padding:0 10px; font-variant-numeric:tabular-nums; }
+.ctn-pager-btn:hover, .ctn-pager-num:hover, .ctn-pager-all:hover { border-color:var(--ap); color:var(--ap); background:var(--ap-lt); }
+.ctn-pager-num.is-current { background:var(--ap); border-color:var(--ap); color:#fff; }
+.ctn-pager-btn.is-off { opacity:.4; pointer-events:none; }
+.ctn-pager-gap { padding:0 2px; color:var(--txt-l); font-size:12.5px; }
+.ctn-pager-all { margin-left:8px; border-style:dashed; }
+@media (max-width:640px) {
+  .ctn-pager-all { margin-left:0; width:100%; justify-content:center; }
+}
 </style>
 
 <script>

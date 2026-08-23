@@ -12,16 +12,30 @@ $types = [
 ];
 
 function typeIconRes(string $type): string {
-    return match($type) {
-        'cours'            => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
-        'td'               => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
-        'ancienne_epreuve' => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>',
-        'corrige'          => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
-        default            => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>',
+    $icon = match($type) {
+        'cours'            => 'book-open',
+        'td'               => 'file-text',
+        'ancienne_epreuve' => 'clipboard-list',
+        'corrige'          => 'check-square',
+        default            => 'file',
     };
+    return '<i data-lucide="' . $icon . '" style="width:20px;height:20px"></i>';
 }
 
 $typeLabel = fn(string $t) => $types[$t] ?? ucfirst(str_replace('_', ' ', $t));
+
+function matiereIconHero(string $nom): string {
+    $n = mb_strtolower($nom, 'UTF-8');
+    if (str_contains($n, 'math'))                                                                        return 'calculator';
+    if (str_contains($n, 'physique') || str_contains($n, 'chimie'))                                     return 'flask-conical';
+    if (str_contains($n, 'svt') || str_contains($n, 'biolog') || (str_contains($n, 'vie') && str_contains($n, 'terre'))) return 'leaf';
+    if (str_contains($n, 'philo'))                                                                       return 'lightbulb';
+    if (str_contains($n, 'histoire') || str_contains($n, 'géographie') || str_contains($n, 'geographie')) return 'globe';
+    if (str_contains($n, 'français') || str_contains($n, 'francais') || str_contains($n, 'litt'))       return 'pen-line';
+    if (str_contains($n, 'anglais') || str_contains($n, 'espagnol') || str_contains($n, 'allemand') || str_contains($n, 'langues vivantes')) return 'languages';
+    if (str_contains($n, 'économie') || str_contains($n, 'economie'))                                   return 'trending-up';
+    return 'book-open';
+}
 ?>
 
 <div class="appr-page">
@@ -29,45 +43,43 @@ $typeLabel = fn(string $t) => $types[$t] ?? ucfirst(str_replace('_', ' ', $t));
   <!-- ── Sous-navigation ───────────────────────────────── -->
   <nav class="appr-subnav">
     <a href="<?= url('/apprentissage') ?>" class="appr-subnav__link">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <i data-lucide="layout-dashboard" style="width:15px;height:15px;flex-shrink:0"></i>
       Tableau de bord
     </a>
     <a href="<?= url('/apprentissage/matieres') ?>" class="appr-subnav__link active">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <i data-lucide="book-copy" style="width:15px;height:15px;flex-shrink:0"></i>
       Mes matières
     </a>
     <a href="<?= url('/apprentissage/progression') ?>" class="appr-subnav__link">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <i data-lucide="bar-chart-3" style="width:15px;height:15px;flex-shrink:0"></i>
       Progression
     </a>
     <a href="<?= url('/apprentissage/favoris') ?>" class="appr-subnav__link">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <i data-lucide="star" style="width:15px;height:15px;flex-shrink:0"></i>
       Favoris
     </a>
   </nav>
 
   <!-- ── Breadcrumb ─────────────────────────────────────── -->
-  <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px;font-size:13px;color:#6B7280;flex-wrap:wrap">
-    <a href="<?= url('/apprentissage/matieres') ?>" style="color:#6B7280;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:color .15s" onmouseover="this.style.color='#8B52FA'" onmouseout="this.style.color='#6B7280'">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+  <div class="appr-breadcrumb">
+    <a href="<?= url('/apprentissage/matieres') ?>">
+      <i data-lucide="chevron-left" style="width:13px;height:13px"></i>
       Mes matières
     </a>
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-    <span style="color:#1F1C2C;font-weight:500"><?= e($matiere['nom'] ?? 'Ressources') ?></span>
+    <i data-lucide="chevron-right" style="width:12px;height:12px"></i>
+    <span><?= e($matiere['nom'] ?? 'Ressources') ?></span>
   </div>
 
   <!-- ── Hero ──────────────────────────────────────────── -->
   <div class="appr-hero">
-    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-      <?php if (!empty($matiere['icone'])): ?>
-        <div style="width:52px;height:52px;background:#F3EFFF;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">
-          <?= e($matiere['icone']) ?>
-        </div>
-      <?php endif; ?>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div class="appr-hero__icon-cap">
+        <i data-lucide="<?= matiereIconHero($matiere['nom'] ?? '') ?>" style="width:24px;height:24px"></i>
+      </div>
       <div>
         <h1 style="margin:0"><?= e($matiere['nom'] ?? 'Ressources') ?></h1>
         <?php if (!empty($matiere['serie'])): ?>
-          <div style="margin-top:6px">
+          <div style="margin-top:8px">
             <span class="badge badge-serie-<?= e($matiere['serie']) ?>">Terminale <?= e($matiere['serie']) ?></span>
           </div>
         <?php endif; ?>
@@ -139,7 +151,7 @@ $typeLabel = fn(string $t) => $types[$t] ?? ucfirst(str_replace('_', ' ', $t));
               <div style="min-width:0;flex:1">
                 <div class="resource-card__title"><?= e($r['titre']) ?></div>
                 <?php if (!empty($r['chapitre'])): ?>
-                  <div style="font-size:12px;color:#9CA3AF;margin-top:2px"><?= e($r['chapitre']) ?></div>
+                  <div class="ca-caption" style="margin-top:2px"><?= e($r['chapitre']) ?></div>
                 <?php endif; ?>
               </div>
             </div>
@@ -152,8 +164,8 @@ $typeLabel = fn(string $t) => $types[$t] ?? ucfirst(str_replace('_', ' ', $t));
                 <span class="badge badge-en_cours">En cours</span>
               <?php endif; ?>
               <?php if (!empty($r['nb_vues'])): ?>
-                <span style="margin-left:auto;display:flex;align-items:center;gap:3px;font-size:11px;color:#9CA3AF">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <span style="margin-left:auto;display:flex;align-items:center;gap:3px;font-size:11px;color:var(--text-muted)">
+                  <i data-lucide="eye" style="width:11px;height:11px"></i>
                   <?= (int)$r['nb_vues'] ?>
                 </span>
               <?php endif; ?>
@@ -166,16 +178,16 @@ $typeLabel = fn(string $t) => $types[$t] ?? ucfirst(str_replace('_', ' ', $t));
                     <div class="progress-bar-fill" style="width:<?= $pct ?>%"></div>
                   </div>
                 </div>
-                <span style="font-size:12px;font-weight:700;color:#8B52FA;white-space:nowrap"><?= $pct ?>%</span>
+                <span style="font-size:12px;font-weight:700;color:var(--purple-neon);white-space:nowrap"><?= $pct ?>%</span>
               </div>
             <?php else: ?>
               <div class="resource-card__footer">
-                <span style="font-size:12px;color:#9CA3AF">
+                <span class="ca-caption">
                   <?= $statut === 'termine' ? '' : 'Non commencé' ?>
                 </span>
-                <span style="font-size:12px;color:#8B52FA;font-weight:600;display:flex;align-items:center;gap:4px">
+                <span class="matiere-card__cta">
                   Consulter
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                  <i data-lucide="arrow-right" style="width:13px;height:13px"></i>
                 </span>
               </div>
             <?php endif; ?>
@@ -188,51 +200,3 @@ $typeLabel = fn(string $t) => $types[$t] ?? ucfirst(str_replace('_', ' ', $t));
 
 </div>
 
-<style>
-/* ── AJOUT RESPONSIVE GRILLE ET TITRES LONGS ── */
-.appr-page {
-  max-width: 100% !important;
-  overflow-x: hidden !important;
-  padding: 12px !important;
-  box-sizing: border-box !important;
-}
-
-/* Rendre la barre d'onglets de filtrage défilable horizontalement sur mobile si trop d'éléments */
-.filter-tabs {
-  display: flex !important;
-  gap: 8px !important;
-  overflow-x: auto !important;
-  white-space: nowrap !important;
-  padding-bottom: 8px !important;
-  -webkit-overflow-scrolling: touch;
-}
-.filter-tab {
-  flex-shrink: 0 !important;
-}
-
-/* Sécurité d'affichage pour la structure des cartes */
-.grid-cards {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
-  gap: 16px !important;
-  width: 100% !important;
-}
-
-.resource-card {
-  min-width: 0 !important; /* Très important pour empêcher la carte de pousser la grille */
-  word-wrap: break-word !important;
-}
-
-.resource-card__meta {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  gap: 6px !important;
-}
-
-/* Ajustement sur petit écran */
-@media (max-width: 480px) {
-  .grid-cards {
-    grid-template-columns: 1fr !important; /* Une seule colonne propre sur mobile */
-  }
-}
-</style>

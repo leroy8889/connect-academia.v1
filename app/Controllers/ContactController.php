@@ -15,6 +15,13 @@ class ContactController
         $this->model = new ContactMessage();
     }
 
+    public function index(): void
+    {
+        Response::view('contact/index', [
+            'pageTitle' => "Contact - Connect'Academia",
+        ], '');
+    }
+
     public function submit(): void
     {
         $payload = $this->jsonOrPost();

@@ -15,6 +15,7 @@ class CsrfMiddleware
 
         $token = $_SERVER['HTTP_X_CSRF_TOKEN']
               ?? $_POST['_csrf_token']
+              ?? $_POST['csrf_token']
               ?? '';
 
         if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {

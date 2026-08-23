@@ -189,7 +189,18 @@ const Feed = (() => {
     async function loadPosts() {
         if (isLoading || !hasMore) return;
         isLoading = true;
-        showLoading(true);
+
+        // Premier chargement (conteneur vide) : skeleton screen du fil.
+        // Chargements suivants (scroll infini) : simple spinner en bas.
+        const isInitialLoad = !oldestPostId && elements.feedContainer
+            && elements.feedContainer.children.length === 0;
+        if (isInitialLoad && window.App?.skeleton) {
+            elements.feedContainer.setAttribute('aria-busy', 'true');
+            elements.feedContainer.innerHTML =
+                `<div data-feed-skeleton>${App.skeleton.feed(3)}</div>`;
+        } else {
+            showLoading(true);
+        }
 
         try {
             const params = new URLSearchParams();
@@ -200,6 +211,11 @@ const Feed = (() => {
             const response = await API.get(`/api/communaute/posts?${params}`);
             const posts = response.data?.posts || [];
             const serverHasMore = response.data?.has_more ?? true;
+
+            // Retire le skeleton du premier chargement avant d'injecter le résultat.
+            const skel = elements.feedContainer?.querySelector('[data-feed-skeleton]');
+            if (skel) skel.remove();
+            elements.feedContainer?.removeAttribute('aria-busy');
 
             if (posts.length === 0) {
                 hasMore = false;
@@ -222,6 +238,9 @@ const Feed = (() => {
         } finally {
             isLoading = false;
             showLoading(false);
+            // Filet de sécurité : jamais de skeleton résiduel (ex. erreur réseau).
+            elements.feedContainer?.querySelector('[data-feed-skeleton]')?.remove();
+            elements.feedContainer?.removeAttribute('aria-busy');
         }
     }
 
@@ -364,8 +383,8 @@ const Feed = (() => {
         }
 
         let badgeHtml = '';
-        if (post.user_role === 'enseignant') {
-            badgeHtml = '<span class="post-card__badge post-card__badge--teacher">Enseignant</span>';
+        if (post.user_role === 'gestionnaire' || post.user_role === 'enseignant') {
+            badgeHtml = '<span class="post-card__badge post-card__badge--teacher">Gestionnaire</span>';
         }
         if (post.is_resolved) {
             badgeHtml += '<span class="post-card__badge post-card__badge--resolved">✓ Résolu</span>';

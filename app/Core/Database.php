@@ -26,6 +26,13 @@ class Database
             PDO::ATTR_EMULATE_PREPARES   => false,
         ];
 
+        // Connexions persistantes (opt-in production : DB_PERSISTENT=true dans .env).
+        // Réutilise la connexion MySQL entre requêtes sur le même worker PHP-FPM —
+        // supprime le coût du handshake sous forte charge simultanée.
+        if (($_ENV['DB_PERSISTENT'] ?? 'false') === 'true') {
+            $options[PDO::ATTR_PERSISTENT] = true;
+        }
+
         // Essaye le socket Unix si disponible, sinon bascule sur TCP
         if (!empty($socket) && file_exists($socket)) {
             try {

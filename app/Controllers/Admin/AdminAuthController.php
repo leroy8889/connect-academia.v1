@@ -73,6 +73,7 @@ class AdminAuthController
         if (!$admin || !$this->model()->verifyPassword($password, $admin['password_hash'])) {
             RateLimiter::hit($rlKey, self::LOCKOUT_SECONDS);
             $this->model()->logConnection($admin['id'] ?? null, $email, $ip, $agent, 'echec');
+            \Core\SecurityMonitor::loginFailure($email, $ip);
 
             // Compteur session : incrémente et vérifie le seuil
             $attempts  = (int) Session::get('admin_login_attempts', 0) + 1;
@@ -110,13 +111,17 @@ class AdminAuthController
             'otp'     => $otp,
             'expires' => time() + 600 // 10 minutes
         ]);
+        // Nouveau code = compteur de tentatives OTP remis à zéro
+        Session::remove('admin_2fa_attempts');
 
-        // Envoi de l'email
-        if ($this->sendOTPEmail($admin['email'], $otp)) {
+        // Envoi du code de sécurité par email (jamais affiché à l'écran)
+        $emailSent = $this->sendOTPEmail($admin['email'], $otp);
+
+        if ($emailSent) {
             Session::flash('success', 'Un code de sécurité a été envoyé à votre adresse email.');
-            Response::redirect('/Administratorconnect/login'); // La vue détectera 'admin_2fa_pending' et affichera l'OTP
+            Response::redirect('/Administratorconnect/login');
         } else {
-            Session::flash('error', "Erreur lors de l'envoi du code de sécurité.");
+            Session::flash('error', "Erreur lors de l'envoi du code de sécurité. Réessayez.");
             Response::redirect('/Administratorconnect/login');
         }
     }
@@ -128,26 +133,49 @@ class AdminAuthController
             Response::redirect('/Administratorconnect/login');
         }
 
-        // On privilégie 'otp_code_val' qui est le champ caché contenant le code complet (6 chiffres)
-        $code = trim((string)($_POST['otp_code_val'] ?? $_POST['otp_code'] ?? ''));
+        // Code expiré → on invalide tout, l'admin doit se reconnecter (nouveau code).
+        if (time() >= (int)($pending['expires'] ?? 0)) {
+            Session::remove('admin_2fa_pending');
+            Session::remove('admin_2fa_attempts');
+            Session::flash('error', 'Votre code de sécurité a expiré. Reconnectez-vous pour en recevoir un nouveau.');
+            Response::redirect('/Administratorconnect/login');
+            return;
+        }
 
-        if (empty($code) || strlen($code) !== 6) {
+        // On privilégie 'otp_code_val' qui est le champ caché contenant le code complet (6 chiffres)
+        $code = preg_replace('/\D/', '', (string)($_POST['otp_code_val'] ?? $_POST['otp_code'] ?? ''));
+
+        if (strlen($code) !== 6) {
             Session::flash('error', 'Veuillez entrer le code complet à 6 chiffres.');
             Response::redirect('/Administratorconnect/login');
             return;
         }
 
-        // Vérification de l'OTP, de la correspondance et de l'expiration
-        if ($code === (string)$pending['otp'] && time() < $pending['expires']) {
+        // ── Anti-brute-force OTP : 5 essais maximum par code envoyé ────────
+        // Sans ce garde, 10⁶ combinaisons seraient testables tant que le code
+        // reste valide (10 min). Au 5ᵉ échec on détruit le code en attente.
+        $attempts = (int) Session::get('admin_2fa_attempts', 0);
+        if ($attempts >= self::MAX_ATTEMPTS) {
+            Session::remove('admin_2fa_pending');
+            Session::remove('admin_2fa_attempts');
+            Session::flash('error', 'Trop de tentatives sur le code de sécurité. Reconnectez-vous pour recevoir un nouveau code.');
+            Response::redirect('/Administratorconnect/login');
+            return;
+        }
+
+        // Comparaison à temps constant (anti-timing)
+        if (hash_equals((string)$pending['otp'], $code)) {
             $admin = $this->model()->findById((int) $pending['id']);
-            
+
             if (!$admin) {
                 Session::remove('admin_2fa_pending');
+                Session::remove('admin_2fa_attempts');
                 Response::redirect('/Administratorconnect/login');
                 return;
             }
 
             Session::remove('admin_2fa_pending');
+            Session::remove('admin_2fa_attempts');
             $this->startAdminSession($admin);
 
             $this->model()->logConnection(
@@ -159,19 +187,32 @@ class AdminAuthController
             );
             Response::redirect(AdminPermissions::getDefaultPath($admin['role'] ?? 'admin'));
         } else {
-            Session::flash('error', 'Code de sécurité invalide ou expiré.');
+            $attempts++;
+            $remaining = max(0, self::MAX_ATTEMPTS - $attempts);
+            if ($remaining === 0) {
+                Session::remove('admin_2fa_pending');
+                Session::remove('admin_2fa_attempts');
+                Session::flash('error', 'Trop de tentatives sur le code de sécurité. Reconnectez-vous pour recevoir un nouveau code.');
+            } else {
+                Session::set('admin_2fa_attempts', $attempts);
+                Session::flash('error', "Code de sécurité invalide. Il vous reste {$remaining} tentative(s).");
+            }
             Response::redirect('/Administratorconnect/login');
         }
     }
 
     /**
-     * Envoi de l'OTP via PHPMailer
+     * Envoi de l'OTP via PHPMailer.
+     * Le code est toujours envoyé par email (SMTP) — jamais affiché à l'écran
+     * ni court-circuité, quel que soit l'environnement.
      */
     private function sendOTPEmail(string $email, string $otp): bool
     {
+        // ── Envoi SMTP ────────────────────────────────────────────────────
         $mail = new PHPMailer(true);
         try {
             $mail->isSMTP();
+            $mail->Timeout    = 10; // ne bloque jamais plus de 10 secondes
             $mail->Host       = $_ENV['MAIL_HOST'] ?? 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
             $mail->Username   = $_ENV['MAIL_USERNAME'] ?? '';
@@ -186,38 +227,33 @@ class AdminAuthController
             );
             $mail->addAddress($email);
             $mail->isHTML(true);
-            $mail->Subject = "Code d'accès Administrateur - $otp";
+            $mail->Subject = "Code d'accès Administrateur — Connect'Academia";
 
             $mail->Body = "
-            <div style='background-color: #1c1c1e; padding: 40px 20px; font-family: Arial, sans-serif; text-align: center;'>
-                <div style='max-width: 500px; margin: 0 auto; background-color: #2c2c2e; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);'>
-                    <div style='background-color: #8C52FF; padding: 25px; color: #ffffff;'>
-                        <h2 style='margin: 0; font-size: 20px; text-transform: uppercase;'>Portail Administratif</h2>
-                    </div>
-                    <div style='padding: 40px 30px;'>
-                        <p style='color: #ffffff;'>Votre code de sécurité temporaire :</p>
-                        <div style='margin: 30px 0; border: 2px dashed #8C52FF; padding: 20px; display: inline-block;'>
-                            <span style='font-size: 42px; font-weight: bold; letter-spacing: 10px; color: #8C52FF;'>$otp</span>
-                        </div>
-                        <p style='font-size: 13px; color: #b0b0b0;'>Ce code expire dans 10 minutes.</p>
-                    </div>
+            <div style='background-color:#1c1c1e;padding:40px 20px;font-family:Arial,sans-serif;text-align:center;'>
+              <div style='max-width:500px;margin:0 auto;background-color:#2c2c2e;border-radius:15px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.5);'>
+                <div style='background-color:#8B52FA;padding:25px;color:#ffffff;'>
+                  <h2 style='margin:0;font-size:20px;text-transform:uppercase;'>Portail Administratif</h2>
                 </div>
+                <div style='padding:40px 30px;'>
+                  <p style='color:#ffffff;'>Votre code de sécurité temporaire :</p>
+                  <div style='margin:30px 0;border:2px dashed #8B52FA;padding:20px;display:inline-block;'>
+                    <span style='font-size:42px;font-weight:bold;letter-spacing:10px;color:#8B52FA;'>$otp</span>
+                  </div>
+                  <p style='font-size:13px;color:#b0b0b0;'>Ce code expire dans 10 minutes.</p>
+                </div>
+              </div>
             </div>";
 
             return $mail->send();
         } catch (Exception $e) {
-            error_log("Erreur PHPMailer SMTP : " . $mail->ErrorInfo);
+            error_log("Erreur PHPMailer SMTP (OTP admin) : " . $mail->ErrorInfo);
             return false;
         }
     }
 
     public function logout(): void
     {
-        $redis = Redis::getInstance();
-        if ($redis->isAvailable()) {
-            $redis->del('admin:activity:' . session_id());
-        }
-
         Session::remove('admin_id');
         Session::remove('admin_2fa_ok');
         Session::remove('admin_name');
@@ -237,12 +273,8 @@ class AdminAuthController
         Session::set('admin_name',  trim(($admin['prenom'] ?? '') . ' ' . ($admin['nom'] ?? '')));
         Session::set('admin_email', $admin['email']);
         Session::set('admin_role',  $admin['role']);
-
-        $redis = Redis::getInstance();
-        if ($redis->isAvailable()) {
-            $timeout = (int)($_ENV['ADMIN_INACTIVITY_TIMEOUT'] ?? 1800);
-            $redis->set('admin:activity:' . session_id(), (string)time(), $timeout);
-        }
+        // Plus de clé Redis d'inactivité : la session admin ne se déconnecte
+        // plus automatiquement (voir AdminMiddleware).
     }
 
     /**
@@ -268,26 +300,31 @@ class AdminAuthController
             return;
         }
 
-        $admin = $this->model()->findByEmail($email);
-
-        // --- AJOUT : Si l'email n'existe pas dans la base ---
-        if (!$admin) {
-            Session::flash('error', "Cette adresse email n'est pas enregistrée dans notre base de données.");
+        // Rate limiting par IP : 5 demandes / 15 min (anti-abus / anti-spam)
+        $rlKey = RateLimiter::ipKey('admin_forgot');
+        if (RateLimiter::tooManyAttempts($rlKey, 5)) {
+            // Même réponse générique — on ne divulgue jamais l'état du compte
+            Session::flash('success', 'Si votre compte existe, un lien de réinitialisation vous a été envoyé.');
             Response::redirect('/Administratorconnect/forgot-password');
             return;
         }
+        RateLimiter::hit($rlKey, 900);
 
+        $admin = $this->model()->findByEmail($email);
+
+        // IMPORTANT : aucune divulgation de l'existence du compte (anti-énumération).
+        // Qu'un admin existe ou non, on envoie éventuellement l'email en silence et
+        // on affiche toujours le même message générique en bas de méthode.
         if ($admin) {
             $token = bin2hex(random_bytes(32));
-            // Ici, vous devriez idéalement avoir une méthode dans votre modèle 
-            // pour stocker ce token en base de données avec une expiration.
-            
-            // --- AJOUT : Sauvegarde réelle du token ---
+
+            // Token stocké HASHÉ (SHA-256) en base — jamais en clair.
             $this->model()->setResetToken((int)$admin['id'], $token);
 
             $mail = new PHPMailer(true);
             try {
                 $mail->isSMTP();
+                $mail->Timeout    = 10; // ne bloque jamais plus de 10 secondes
                 $mail->Host       = $_ENV['MAIL_HOST'] ?? 'smtp.gmail.com';
                 $mail->SMTPAuth   = true;
                 $mail->Username   = $_ENV['MAIL_USERNAME'] ?? '';
@@ -344,9 +381,11 @@ class AdminAuthController
         $admin = $this->model()->findByResetToken($token);
 
         Response::view('admin/auth/reset', [
-            'pageTitle' => "Nouveau mot de passe — Connect'Academia",
-            'token'     => $token,
-            'email'     => $admin['email'] ?? null // On passe l'email à la vue
+            'pageTitle'  => "Nouveau mot de passe — Connect'Academia",
+            'token'      => $token,
+            'email'      => $admin['email'] ?? null, // On passe l'email à la vue
+            // Le flash est consommé ici : une vue ne lit jamais la session.
+            'flashError' => Session::getFlash('error'),
         ], 'admin-auth');
     }
 
@@ -359,14 +398,26 @@ class AdminAuthController
         $password = $_POST['password'] ?? '';
         $confirm  = $_POST['confirm_password'] ?? '';
 
+        // Format token attendu : 64 caractères hexadécimaux (bin2hex(random_bytes(32)))
+        if (!is_string($token) || strlen($token) !== 64 || !ctype_xdigit($token)) {
+            Session::flash('error', 'Lien de réinitialisation invalide.');
+            Response::redirect('/Administratorconnect/forgot-password');
+            return;
+        }
+
         if (empty($password) || $password !== $confirm) {
             Session::flash('error', 'Les mots de passe sont vides ou ne correspondent pas.');
             Response::redirect("/Administratorconnect/reset-password?token=$token");
+            return;
         }
 
-        // Note: Vous devrez implémenter la logique de vérification du token 
-        // et de mise à jour du hash dans votre modèle Admin.
-        
+        // Robustesse minimale du mot de passe administrateur
+        if (strlen($password) < 10) {
+            Session::flash('error', 'Le mot de passe administrateur doit contenir au moins 10 caractères.');
+            Response::redirect("/Administratorconnect/reset-password?token=$token");
+            return;
+        }
+
         // --- VÉRIFICATION ET MISE À JOUR ---
         $admin = $this->model()->findByResetToken($token);
 
@@ -376,7 +427,7 @@ class AdminAuthController
             return;
         }
 
-        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+        $hashedPassword = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
         
         if ($this->model()->updatePassword((int)$admin['id'], $hashedPassword)) {
             // Suppression du token après usage pour la sécurité

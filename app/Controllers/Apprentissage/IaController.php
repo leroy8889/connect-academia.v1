@@ -257,13 +257,10 @@ Réponds aux questions de l'élève de manière pédagogique, bienveillante et a
             return null;
         }
 
-        $candidate   = BASE_PATH . '/public/' . ltrim($path, '/');
-        $absPath     = realpath($candidate);
-        $allowedBase = realpath(BASE_PATH . '/public/');
-        if (!$absPath || !$allowedBase || !str_starts_with($absPath, $allowedBase . DIRECTORY_SEPARATOR)) {
-            return null;
-        }
-        if (!file_exists($absPath)) {
+        // Résolution + confinement dans les racines autorisées (public/uploads
+        // ou le repli storage/uploads) — cf. Core\RessourceStorage.
+        $absPath = \Core\RessourceStorage::absolutePath($path);
+        if ($absPath === null) {
             return null;
         }
 

@@ -17,16 +17,13 @@ class AuthController
             Response::redirect('/hub');
         }
 
-        $redirect  = $_GET['redirect']    ?? '';
-        $paymentOk = isset($_GET['payment_ok']);
+        $redirect = $_GET['redirect'] ?? '';
 
         Response::view('auth/connexion', [
             'pageTitle'  => "Connexion — Connect'Academia",
             'errors'     => Session::getFlash('errors', []),
             'old'        => Session::getFlash('old', []),
-            'success'    => $paymentOk
-                ? '✅ Paiement confirmé ! Connectez-vous pour accéder à votre abonnement.'
-                : Session::getFlash('success'),
+            'success'    => Session::getFlash('success'),
             'redirectAfter' => $redirect,
         ], 'auth');
     }
@@ -53,7 +50,18 @@ class AuthController
         $userModel = new User();
         $user      = $userModel->findByEmail($email);
 
-        if (!$user || !$userModel->verifyPassword($password, $user['password_hash'])) {
+        // Anti-timing / anti-énumération : si l'email est inconnu, on vérifie
+        // quand même le mot de passe contre un hash factice afin que la durée
+        // de réponse soit identique à celle d'un email existant.
+        if (!$user) {
+            $userModel->verifyPassword($password, '$2y$12$tax65kQnF8SZ0g1rGGuP2eo5P.g4uc2QDRQ74VlrP9Fz/KzVok7ym');
+            RateLimiter::hit($rlKey, 900);
+            Session::flash('errors', ['general' => 'Email ou mot de passe incorrect.']);
+            Session::flash('old', ['email' => $email]);
+            Response::redirect('/auth/connexion' . ($redirectAfter ? '?redirect=' . urlencode($redirectAfter) : ''));
+        }
+
+        if (!$userModel->verifyPassword($password, $user['password_hash'])) {
             RateLimiter::hit($rlKey, 900);
             Session::flash('errors', ['general' => 'Email ou mot de passe incorrect.']);
             Session::flash('old', ['email' => $email]);
@@ -70,9 +78,17 @@ class AuthController
         $this->setUserSession($user);
         $userModel->updateLastLogin((int) $user['id']);
 
+        // Rattache les dossiers orientation déposés avec cet email avant le compte
+        try {
+            (new \Models\Orientation\Dossier())->claimByEmail((int) $user['id'], (string) $user['email']);
+        } catch (\Throwable $e) {
+            error_log('[Auth] claimByEmail échoué : ' . $e->getMessage());
+        }
+
         // Redirect vers la page demandée — whitelist stricte + protection open redirect
-        $allowed = ['/abonnement/confirmation', '/abonnement/choisir', '/hub'];
-        $dest    = '/hub';
+        $allowed = ['/hub', '/apprentissage', '/communaute', '/eleve/orientation', '/orientation'];
+        // Les comptes visiteur (grand public orientation) vont dans leur espace, pas au hub élève
+        $dest    = ($user['role'] ?? '') === 'visiteur' ? '/eleve/orientation' : '/hub';
         if ($redirectAfter) {
             // Refuser toute URL externe ou protocol-relative
             if (str_starts_with($redirectAfter, '/') && !str_starts_with($redirectAfter, '//')) {
@@ -86,6 +102,23 @@ class AuthController
         }
 
         Response::redirect($dest);
+    }
+
+    /**
+     * Choix du profil avant inscription : élève (plateforme) ou visiteur
+     * (grand public orientation). Accessible depuis le lien « S'inscrire »
+     * de la page de connexion. Un visiteur peut aussi se connecter d'emblée
+     * via le formulaire de connexion partagé (redirigé vers son espace).
+     */
+    public function showChoixInscription(): void
+    {
+        if (Session::isLoggedIn()) {
+            Response::redirect('/hub');
+        }
+
+        Response::view('auth/choisir', [
+            'pageTitle' => "S'inscrire — Connect'Academia",
+        ], '');
     }
 
     public function showInscription(): void
@@ -110,6 +143,7 @@ class AuthController
             'nom'            => trim($_POST['nom'] ?? ''),
             'prenom'         => trim($_POST['prenom'] ?? ''),
             'email'          => trim(strtolower($_POST['email'] ?? '')),
+            'telephone'      => trim($_POST['telephone'] ?? ''),
             'password'       => $_POST['password'] ?? '',
             'password_confirmation' => $_POST['password_confirmation'] ?? '',
             'serie_id'       => !empty($_POST['serie_id']) ? (int) $_POST['serie_id'] : null,
@@ -118,15 +152,19 @@ class AuthController
 
         $validator = new Validator();
         if (!$validator->validate($data, [
-            'nom'      => 'required|min:2|max:100|alpha',
-            'prenom'   => 'required|min:2|max:100|alpha',
-            'email'    => 'required|email|max:255',
-            'password' => 'required|min:8|max:128|confirmed',
+            'nom'       => 'required|min:2|max:100|alpha',
+            'prenom'    => 'required|min:2|max:100|alpha',
+            'email'     => 'required|email|max:255',
+            'telephone' => 'required|phoneGabon',
+            'password'  => 'required|min:8|max:128|confirmed',
         ])) {
             Session::flash('errors', $validator->getErrors());
             Session::flash('old', array_merge($data, ['password' => '', 'password_confirmation' => '']));
             Response::redirect('/auth/inscription');
         }
+
+        // Format national 9 chiffres (0XXXXXXXX) — la règle phoneGabon garantit la validité
+        $data['telephone'] = \Core\Phone::normalizeGabon($data['telephone']);
 
         $userModel = new User();
         if ($userModel->findByEmail($data['email'])) {
@@ -202,6 +240,11 @@ class AuthController
             try {
                 $db = \Core\Database::getInstance()->getConnection();
 
+                // Filet : une base restée au schéma d'origine (`token`,
+                // `expires_at` NOT NULL) faisait échouer l'INSERT ci-dessous,
+                // l'erreur était avalée et aucun email ne partait.
+                \Core\PasswordResetSchema::ensure($db);
+
                 // Supprime tout token précédent (un seul reset actif par compte)
                 $db->prepare("DELETE FROM password_resets WHERE email = ?")
                    ->execute([$email]);
@@ -211,9 +254,10 @@ class AuthController
 
                 $this->sendResetEmail($email, $token, $user['prenom'] ?? '');
 
-            } catch (\Exception $e) {
-                error_log("Forgot password error: " . $e->getMessage());
-                // Erreur silencieuse — réponse identique (anti-énumération)
+            } catch (\Throwable $e) {
+                // Réponse identique qu'un compte existe ou non (anti-énumération) :
+                // l'erreur ne remonte JAMAIS à l'utilisateur, seulement au journal.
+                error_log('[AuthController] Forgot password error: ' . $e->getMessage());
             }
         }
 
@@ -227,6 +271,7 @@ class AuthController
         $mail = new PHPMailer(true);
         try {
             $mail->isSMTP();
+            $mail->Timeout  = 10; // ne bloque jamais plus de 10 secondes
             $mail->Host     = $_ENV['MAIL_HOST']     ?? 'smtp.gmail.com';
             $mail->SMTPAuth = true;
             $mail->Username = $_ENV['MAIL_USERNAME']  ?? '';

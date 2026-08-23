@@ -129,6 +129,10 @@
           <?php endif; ?>
         </div>
 
+        <div class="forgot-password-row">
+          <a href="<?= url('/auth/mot-de-passe-oublie') ?>" class="forgot-password-link">Mot de passe oublié ?</a>
+        </div>
+
         <div class="toggle-container">
           <label class="switch">
             <input type="checkbox" id="remember-me" name="remember_me" value="1" checked>
@@ -142,7 +146,7 @@
 
       <div class="footer-links">
         
-        <p class="signup-text">Pas encore membre ? <a href="<?= url('/auth/inscription') ?>">S'inscrire</a></p>
+        <p class="signup-text">Pas encore membre ? <a href="<?= url('/auth/choisir') ?>">S'inscrire</a></p>
         <p class="copyright">Tous droits réservés - Connect'Academia</p>
       </div>
 

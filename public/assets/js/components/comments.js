@@ -182,8 +182,8 @@ const Comments = (() => {
         const isLiked = comment.is_liked_by_me ? 'comment__action-btn--liked' : '';
 
         let badgeHtml = '';
-        if (comment.user_role === 'enseignant') {
-            badgeHtml = '<span class="comment__badge comment__badge--teacher">Enseignant</span>';
+        if (comment.user_role === 'gestionnaire' || comment.user_role === 'enseignant') {
+            badgeHtml = '<span class="comment__badge comment__badge--teacher">Gestionnaire</span>';
         }
         if (isBest) {
             badgeHtml += '<span class="comment__badge comment__badge--best">✓ Meilleure réponse</span>';

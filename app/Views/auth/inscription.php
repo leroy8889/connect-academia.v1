@@ -64,6 +64,40 @@
         color: #6366f1; /* Couleur primary de ton dégradé */
       }
 
+      /* Téléphone gabonais (+241) */
+      .phone-wrapper {
+        display: flex;
+        align-items: stretch;
+      }
+      .phone-prefix {
+        display: flex;
+        align-items: center;
+        padding: 0 14px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-right: none;
+        border-radius: 8px 0 0 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #6b7280;
+        white-space: nowrap;
+      }
+      .phone-wrapper input {
+        border-radius: 0 8px 8px 0 !important;
+        flex: 1;
+        min-width: 0;
+      }
+      .phone-wrapper input.phone-invalid {
+        border-color: #ef4444;
+      }
+      .phone-hint {
+        display: block;
+        margin-top: 5px;
+        font-size: 11.5px;
+        color: #9ca3af;
+      }
+      .phone-hint.phone-hint--error { color: #ef4444; }
+
       /* reCAPTCHA */
       .g-recaptcha {
         margin: 20px 0;
@@ -131,6 +165,22 @@
         <div class="form-group">
           <label for="email">Email <span class="required">*</span></label>
           <input type="email" id="email" name="email" placeholder="Entrez votre adresse email" value="<?= e($old['email'] ?? '') ?>" required<?= !empty($errors['email']) ? ' class="input-field--warning"' : '' ?>>
+        </div>
+
+        <div class="form-group">
+          <label for="telephone">Numéro de téléphone <span class="required">*</span></label>
+          <div class="phone-wrapper">
+            <span class="phone-prefix">🇬🇦 +241</span>
+            <input type="tel" id="telephone" name="telephone"
+                   placeholder="074 12 34 56"
+                   value="<?= e($old['telephone'] ?? '') ?>"
+                   inputmode="numeric" autocomplete="tel-national"
+                   maxlength="12" required>
+          </div>
+          <?php if (!empty($errors['telephone'])): ?>
+          <span class="field-error"><?= e($errors['telephone']) ?></span>
+          <?php endif; ?>
+          <span class="phone-hint" id="telephone-hint">Numéro gabonais uniquement — commence par 01, 06 ou 07.</span>
         </div>
 
         <div class="form-group">
@@ -227,6 +277,56 @@ function togglePassword(inputId, btnEl) {
         btnEl.innerHTML = eyeOpen;
     }
 }
+
+// Masque + validation du numéro gabonais (01 / 06 / 07, 9 chiffres)
+(function () {
+    const tel  = document.getElementById('telephone');
+    const hint = document.getElementById('telephone-hint');
+    const form = document.getElementById('register-form');
+    if (!tel) return;
+
+    const HINT_DEFAULT = hint ? hint.textContent : '';
+
+    function normalize(raw) {
+        let d = raw.replace(/\D/g, '');
+        if (d.startsWith('00241')) d = d.slice(5);
+        else if (d.startsWith('241')) d = d.slice(3);
+        if (d.length === 8 && d[0] !== '0') d = '0' + d;
+        return d;
+    }
+
+    function isValid(raw) {
+        return /^0[167]\d{7}$/.test(normalize(raw));
+    }
+
+    // Saisie : chiffres uniquement, groupés 0XX XX XX XX
+    tel.addEventListener('input', () => {
+        const d = normalize(tel.value).slice(0, 9);
+        let out = d;
+        if (d.length > 3) out = d.slice(0, 3) + ' ' + d.slice(3).replace(/(\d{2})(?=\d)/g, '$1 ');
+        tel.value = out;
+        tel.classList.remove('phone-invalid');
+        if (hint) { hint.textContent = HINT_DEFAULT; hint.classList.remove('phone-hint--error'); }
+    });
+
+    tel.addEventListener('blur', () => {
+        if (tel.value.trim() !== '' && !isValid(tel.value)) {
+            tel.classList.add('phone-invalid');
+            if (hint) {
+                hint.textContent = 'Numéro invalide — 9 chiffres commençant par 01, 06 ou 07 (ex : 074 12 34 56).';
+                hint.classList.add('phone-hint--error');
+            }
+        }
+    });
+
+    form?.addEventListener('submit', (e) => {
+        if (!isValid(tel.value)) {
+            e.preventDefault();
+            tel.dispatchEvent(new Event('blur'));
+            tel.focus();
+        }
+    });
+})();
 
 // Ta fonction de contraintes existante
 function checkConstraints(val) {

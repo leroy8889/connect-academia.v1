@@ -114,7 +114,7 @@ class CommentController
         if (!$comment) Response::json(['success' => false, 'error' => ['message' => 'Commentaire introuvable']], 404);
 
         $post = (new Post())->findById((int) $comment['post_id']);
-        if (!$post || ((int) $post['user_id'] !== $userId && !in_array(Session::userRole(), ['enseignant', 'admin'], true))) {
+        if (!$post || ((int) $post['user_id'] !== $userId && !in_array(Session::userRole(), ['gestionnaire', 'admin'], true))) {
             Response::json(['success' => false, 'error' => ['message' => 'Non autorisé']], 403);
         }
 

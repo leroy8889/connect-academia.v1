@@ -40,39 +40,95 @@ class ContenuController
         $where  = ['r.is_deleted = 0'];
         $params = [];
 
-        if (!empty($_GET['serie_id'])) {
+        $fSerie   = (int) ($_GET['serie_id'] ?? 0);
+        $fMatiere = (int) ($_GET['matiere_id'] ?? 0);
+        $fType    = (string) ($_GET['type'] ?? '');
+        $fQ       = trim((string) ($_GET['q'] ?? ''));
+
+        if ($fSerie > 0) {
             $where[]  = 'r.serie_id = ?';
-            $params[] = (int) $_GET['serie_id'];
+            $params[] = $fSerie;
         }
-        if (!empty($_GET['matiere_id'])) {
+        if ($fMatiere > 0) {
             $where[]  = 'r.matiere_id = ?';
-            $params[] = (int) $_GET['matiere_id'];
+            $params[] = $fMatiere;
         }
-        if (!empty($_GET['type'])) {
+        if (in_array($fType, ['cours', 'td', 'ancienne_epreuve', 'corrige'], true)) {
             $where[]  = 'r.type = ?';
-            $params[] = $_GET['type'];
+            $params[] = $fType;
+        } else {
+            $fType = '';
+        }
+        if ($fQ !== '') {
+            $where[]  = '(r.titre LIKE ? OR r.description LIKE ?)';
+            $like     = '%' . str_replace(['%', '_'], ['\%', '\_'], $fQ) . '%';
+            $params[] = $like;
+            $params[] = $like;
         }
 
-        // Requête principale avec récupération du chemin du fichier
+        $whereSql = implode(' AND ', $where);
+
+        // Nombre total de ressources correspondant aux filtres — base de la
+        // pagination (le LIMIT 100 en dur masquait tout au-delà de la 100e).
+        // nosemgrep: php.lang.security.injection.tainted-sql-string.tainted-sql-string
+        // Justification : $whereSql ne contient que des fragments à placeholders '?'
+        // (voir construction de $where ci-dessus) ; toutes les valeurs utilisateur
+        // sont liées via execute($params). Aucune concaténation de valeur brute.
+        $countStmt = $this->db->prepare(
+            "SELECT COUNT(*)
+             FROM ressources r
+             JOIN matieres m ON m.id = r.matiere_id
+             JOIN series s ON s.id = r.serie_id
+             WHERE {$whereSql}"
+        );
+        $countStmt->execute($params);
+        $totalFiltre = (int) $countStmt->fetchColumn();
+
+        // Pagination — « tout » possible via par_page=0 (aucune ressource cachée)
+        $allowedPerPage = [24, 48, 96, 200];
+        $perPage = isset($_GET['par_page']) ? (int) $_GET['par_page'] : 48;
+        if ($perPage === 0) {
+            $perPage = max(1, $totalFiltre); // tout afficher
+            $showAll = true;
+        } else {
+            if (!in_array($perPage, $allowedPerPage, true)) $perPage = 48;
+            $showAll = false;
+        }
+
+        $totalPages = max(1, (int) ceil($totalFiltre / $perPage));
+        $page       = max(1, (int) ($_GET['page'] ?? 1));
+        if ($page > $totalPages) $page = $totalPages;
+        $offset     = ($page - 1) * $perPage;
+
+        // Requête principale avec récupération du chemin du fichier.
+        // Justification : $whereSql = uniquement des placeholders '?' (valeurs liées
+        // via execute($params)) ; $perPage et $offset sont garantis entiers (cast
+        // (int) plus haut), donc l'interpolation LIMIT/OFFSET est sûre.
         $stmt = $this->db->prepare(
-            "SELECT r.id, r.titre, r.type, r.nb_vues, r.created_at, r.fichier_path,
+            // nosemgrep: php.lang.security.injection.tainted-sql-string.tainted-sql-string, php.lang.security.injection.tainted-callable.tainted-callable
+            "SELECT r.id, r.titre, r.description, r.type, r.annee, r.nb_vues,
+                    r.created_at, r.fichier_path,
                     m.nom AS matiere, s.nom AS serie
              FROM ressources r
              JOIN matieres m ON m.id = r.matiere_id
              JOIN series s ON s.id = r.serie_id
-             WHERE " . implode(' AND ', $where) . "
-             ORDER BY r.created_at DESC
-             LIMIT 100"
+             WHERE {$whereSql}
+             ORDER BY r.created_at DESC, r.id DESC
+             LIMIT {$perPage} OFFSET {$offset}"
         );
         $stmt->execute($params);
         $ressources = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Normalisation URLs — fichier_path stocké comme "uploads/ressources/xxx.pdf"
-        // url() helper ajoute BASE_URL, public/ est accessible depuis la racine web
+        // Normalisation URLs — `fichier_path` vaut "uploads/ressources/xxx.pdf"
+        // (servi en direct) ou "storage/uploads/ressources/xxx.pdf" (repli privé,
+        // servi par /ressources/fichier/{id}). RessourceStorage tranche.
         foreach ($ressources as &$res) {
-            $path = $res['fichier_path'] ?? '';
-            $res['file_url'] = !empty($path) ? url('public/' . ltrim($path, '/')) : '#';
+            $res['file_url'] = \Core\RessourceStorage::url(
+                (int) ($res['id'] ?? 0),
+                (string) ($res['fichier_path'] ?? '')
+            );
         }
+        unset($res);
 
         // Statistiques du mois
         $totalRessources = (int) $this->db->query(
@@ -94,6 +150,21 @@ class ContenuController
             'totalRessources'   => $totalRessources,
             'totalVues'         => $totalVues,
             'totalPdf'          => $totalRessources,
+            'filtres'           => [
+                'serie_id'   => $fSerie,
+                'matiere_id' => $fMatiere,
+                'type'       => $fType,
+                'q'          => $fQ,
+            ],
+            'pagination'        => [
+                'page'        => $page,
+                'par_page'    => $showAll ? 0 : $perPage,
+                'total'       => $totalFiltre,
+                'total_pages' => $showAll ? 1 : $totalPages,
+                'debut'       => $totalFiltre === 0 ? 0 : $offset + 1,
+                'fin'         => min($offset + count($ressources), $totalFiltre),
+                'options'     => $allowedPerPage,
+            ],
         ], 'admin');
     }
 
@@ -154,20 +225,26 @@ class ContenuController
             }
 
             // 3. Préparation du dossier de destination
-            $uploadDir = BASE_PATH . '/public/uploads/ressources/';
-            if (!is_dir($uploadDir)) {
-                if (!mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
-                    error_log('[ContenuController] Impossible de créer le dossier: ' . $uploadDir);
-                    Response::json(['success' => false, 'message' => 'Erreur de configuration du serveur.'], 500);
-                    return;
-                }
-            }
-
-            if (!is_writable($uploadDir)) {
-                error_log('[ContenuController] Dossier non accessible en écriture: ' . $uploadDir . ' owner=' . fileowner($uploadDir) . ' perms=' . decoct(fileperms($uploadDir)));
-                Response::json(['success' => false, 'message' => 'Dossier de destination non accessible.'], 500);
+            // RessourceStorage tente public/uploads/ressources/, corrige les
+            // permissions si possible, puis retombe sur storage/uploads/ressources/
+            // (toujours accessible en écriture par PHP, servi via une route
+            // contrôlée). Corrige le « Dossier de destination non accessible »
+            // observé en production, où public/ appartient à l'utilisateur de
+            // déploiement et non à PHP-FPM.
+            try {
+                $destination = \Core\RessourceStorage::destination();
+            } catch (\RuntimeException $e) {
+                error_log('[ContenuController] ' . $e->getMessage());
+                Response::json([
+                    'success' => false,
+                    'message' => "Le stockage des ressources n'est pas accessible sur le serveur. "
+                               . "Contactez l'administrateur technique.",
+                ], 500);
                 return;
             }
+
+            $uploadDir   = $destination['dir'];
+            $storePrefix = $destination['prefix'];
 
             $filename = bin2hex(random_bytes(12)) . '.pdf';
             $destPath = $uploadDir . $filename;
@@ -197,7 +274,10 @@ class ContenuController
             }
 
             if ($moved) {
-                $filePath    = 'uploads/ressources/' . $filename;
+                // 0644 : lisible par le serveur web, non exécutable.
+                @chmod($destPath, 0644);
+
+                $filePath    = $storePrefix . $filename;
                 $fileNom     = $upload['name'] ?? $filename;
                 $tailleOctet = $upload['size'] ?? 0;
 

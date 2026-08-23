@@ -7,10 +7,13 @@
   <title><?= e($pageTitle ?? "Admin — Connect'Academia") ?></title>
   <link rel="icon" href="<?= asset('images/logo-officiel.png') ?>" type="image/png">
   <link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
+  <link rel="stylesheet" href="<?= asset('css/admin-claude.css') ?>">
+  <link rel="stylesheet" href="<?= asset('css/loading.css') ?>">
 </head>
 <body class="admin-auth-body">
 
   <?= $content ?>
 
+  <script src="<?= asset('js/loading.js') ?>"></script>
 </body>
 </html>

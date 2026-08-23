@@ -39,16 +39,18 @@
   --font-size-lg:   18px;
   --font-size-xl:   22px;
 
-  /* Bordure / ombre */
+  /* Bordure / ombre — radii 8 / 12 / 16 / 20 (langage Claude, pas de glass) */
   --radius-full: 999px;
+  --radius-xl:   20px;
   --radius-lg:   16px;
   --radius-md:   12px;
+  --radius-sm:    8px;
 
-  /* Glass effect */
-  --glass-bg:     rgba(255,255,255,0.85);
-  --glass-blur:   blur(10px);
-  --glass-border: 1px solid rgba(255,255,255,0.6);
-  --glass-shadow: 0 4px 24px rgba(0,0,0,0.07);
+  /* Surfaces plates — aplats + hairlines (glassmorphism retiré, cf. direction CTO) */
+  --glass-bg:     #FFFFFF;
+  --glass-blur:   none;
+  --glass-border: 1px solid var(--color-gray-200);
+  --glass-shadow: 0 1px 2px rgba(31,28,44,0.04), 0 4px 16px rgba(31,28,44,0.05);
 
   /* Transitions */
   --transition-base:   all 0.2s ease;
@@ -56,8 +58,14 @@
   --transition-spring: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 
   /* Couleurs supplémentaires */
+  --color-gray-300:  #D1D5DB;
+  --color-gray-400:  #9CA3AF;
   --color-gray-700:  #374151;
+  --color-gray-800:  #1F2937;
   --color-success:   #10B981;
+
+  /* Largeur du fil central */
+  --feed-max-width:  640px;
 
   /* Typo supplémentaire */
   --font-size-2xl:   24px;
@@ -2549,5 +2557,62 @@
 @media (max-width: 768px) {
     .chat-sidebar { display: none; }
     .chat-header__back { display: flex !important; }
+}
+
+/* ============================================================
+   RAFFINEMENT UI — refonte communauté
+   Langage : aplats plats, hairlines, accent unique #8B52FA,
+   micro-interactions sobres. Aucune classe existante renommée
+   (le feed JS reste intact) — ce bloc ne fait que polir.
+   ============================================================ */
+
+/* Cartes du fil : lift discret, hairline qui vire au violet au survol */
+.post-card {
+    transition: transform 260ms cubic-bezier(.2,.8,.2,1), box-shadow 260ms ease, border-color 260ms ease;
+}
+.post-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--color-primary) 30%, var(--color-gray-200));
+    box-shadow: 0 8px 24px rgba(139,82,250,0.09);
+}
+
+/* Carte utilisateur : fin bandeau d'accent en tête + halo avatar */
+.sidebar__user-card { position: relative; overflow: hidden; padding-top: var(--space-6); }
+.sidebar__user-card::before {
+    content: ''; position: absolute; inset: 0 0 auto 0; height: 4px;
+    background: linear-gradient(90deg, var(--color-primary), #B79BFF);
+}
+.sidebar__user-avatar { box-shadow: 0 0 0 4px var(--color-lavender); border-width: 2px; }
+
+/* Navigation : filet vertical sur l'item actif */
+.sidebar__nav-item { position: relative; }
+.sidebar__nav-item--active::before {
+    content: ''; position: absolute; left: 2px; top: 50%; transform: translateY(-50%);
+    width: 3px; height: 18px; border-radius: var(--radius-full); background: var(--color-primary);
+}
+
+/* Barre de filtres : hover doux + relief sur l'actif */
+.feed-filters__btn:hover:not(.feed-filters__btn--active) {
+    background: var(--color-lavender); color: var(--color-primary);
+}
+.feed-filters__btn--active { box-shadow: 0 4px 14px rgba(139,82,250,0.26); }
+
+/* Composer : encadré qui s'anime au focus */
+.post-composer { transition: border-color 200ms ease, box-shadow 200ms ease; }
+.post-composer:focus-within {
+    border-color: color-mix(in srgb, var(--color-primary) 42%, var(--color-gray-200));
+    box-shadow: 0 4px 18px rgba(139,82,250,0.08);
+}
+
+/* Scrollbars sobres dans les colonnes latérales */
+.sidebar--left::-webkit-scrollbar { width: 6px; }
+.sidebar--left::-webkit-scrollbar-thumb {
+    background: var(--color-gray-200); border-radius: var(--radius-full);
+}
+.sidebar--left::-webkit-scrollbar-thumb:hover { background: var(--color-gray-300); }
+
+/* Respect des préférences de mouvement réduit */
+@media (prefers-reduced-motion: reduce) {
+    .post-card, .post-card:hover { transform: none; transition: none; }
 }
 

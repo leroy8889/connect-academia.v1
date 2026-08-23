@@ -1,0 +1,308 @@
+/* ============================================================
+   Connect'Academia — Admin · Liquid Glass
+   Couche d'override chargée APRÈS admin.css.
+
+   Couleurs & typo = design system Connect'Academia (admin.css :
+   Purple Neon #8B52FA seul accent, Montserrat unique, coins 24px).
+   Ce fichier n'ajoute QUE le langage "liquid glass" :
+   · Surfaces translucides — blur + saturation, jamais opaques
+   · Reflet spéculaire 1px en haut des surfaces en verre
+   · Ombres douces et diffuses — l'élément flotte
+   · Sidebar en chrome sombre encré (#1A1A1A), accents violets
+   · Boutons pilule, wash violet subtil derrière le verre
+   ============================================================ */
+
+/* ── Tokens verre (les couleurs de marque restent dans admin.css) */
+:root {
+  /* Canvas « blanc cassé » façon Claude — override du gris froid d'admin.css.
+     Toutes les pages fonctionnelles rendues dans .admin-content en héritent. */
+  --bg: #FAF9F5;          /* crème chaud Claude (remplace #F5F5F7) */
+  --bg-2: #F3F1EA;        /* crème légèrement plus dense */
+
+  /* Recette verre — mode clair */
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-line: rgba(26, 26, 26, 0.08);
+  --glass-specular: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+
+  /* Recette verre — chrome sombre (sidebar) */
+  --glass-dark-bg: rgba(26, 26, 26, 0.92);
+  --glass-dark-line: rgba(255, 255, 255, 0.10);
+  --ink: #FFFFFF;
+  --ink-dim: rgba(255, 255, 255, 0.66);
+  --ink-faint: rgba(255, 255, 255, 0.42);
+
+  /* Ombres flottantes — douces, diffuses, jamais dures */
+  --shadow-md: 0 8px 24px -8px rgba(26, 26, 26, 0.10), 0 1px 2px rgba(26, 26, 26, 0.04);
+  --shadow-lg: 0 20px 48px -16px rgba(26, 26, 26, 0.16), 0 2px 6px rgba(26, 26, 26, 0.05);
+}
+
+/* ── Canvas — blanc cassé « Claude » : crème chaud, tint de marque infime ─
+   Fond uniforme sur TOUTES les pages fonctionnelles du dashboard admin.
+   Les washes violets d'origine sont réduits à un voile pour garder la
+   lecture « papier crème » (Claude) sans virer au gris ni au violet.        */
+/* PERF/STABILITÉ (juil. 2026) — `background-attachment: fixed` obligeait le
+   compositeur à repeindre le fond plein écran à CHAQUE frame de scroll ; combiné
+   aux `backdrop-filter` des cartes, cela saturait le budget GPU (verre qui
+   disparaît puis revient, curseur système qui vire au noir le temps que le
+   plan matériel se recompose). Le wash est désormais attaché au flux normal :
+   deux radiales à 3 % d'opacité, la différence visuelle est nulle. */
+.admin-content {
+  background:
+    radial-gradient(1000px 480px at 88% -10%, rgba(217, 119, 87, 0.035), transparent 60%),
+    radial-gradient(820px 440px at -6% 20%, rgba(139, 82, 250, 0.028), transparent 55%),
+    var(--bg);
+  background-attachment: scroll;
+}
+
+/* ── Surfaces verre — cartes flottantes ────────────────────── */
+/* Ces surfaces sont RÉPÉTÉES (jusqu'à ~30 `.ressource-card` par page) et posées
+   sur un fond opaque : un `backdrop-filter` par carte crée autant de couches de
+   composition à re-flouter à chaque frame, pour un rendu quasi identique à un
+   simple aplat translucide. Le flou est donc réservé aux surfaces qui se
+   superposent VRAIMENT à du contenu qui défile (topbar, modales, pastille de
+   sidebar, carte de login) — voir plus bas. Le langage verre est conservé :
+   aplat translucide + hairline + reflet spéculaire. */
+.admin-card,
+.kpi-card,
+.chart-wrap,
+.admin-table-wrap,
+.ressource-card,
+.settings-section,
+.settings-tabs,
+.settings-tabs-v2 {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-line);
+  box-shadow: var(--shadow-md), var(--glass-specular);
+}
+.kpi-card:hover {
+  background: rgba(255, 255, 255, 0.80);
+  box-shadow: var(--shadow-lg), var(--glass-specular);
+}
+
+/* Carte vedette — halo violet discret */
+.chart-wrap-hero {
+  border-color: var(--ap-glow-20);
+  box-shadow: var(--shadow-md), 0 0 0 1px var(--ap-glow-20) inset, var(--glass-specular);
+}
+
+/* ── Sidebar — blanc cassé « Claude », logo + admin figés, nav scrollable ─
+   Identique à l'espace gestionnaire : canvas crème, encres sombres,
+   pastille de verre liquide au survol (voir sidebar-glass.js).             */
+:root {
+  --sidebar-bg:    #FAF9F5;
+  --sidebar-bg-2:  #F2F0E9;
+  --sidebar-ink:   #1F1E1D;
+  --sidebar-ink-2: #605D57;
+  --sidebar-ink-3: #97938B;
+  --sidebar-line:  rgba(31, 30, 29, 0.08);
+}
+.admin-sidebar {
+  background: linear-gradient(180deg, var(--sidebar-bg), var(--sidebar-bg-2));
+  border-right: 1px solid var(--sidebar-line);
+  box-shadow: 1px 0 0 rgba(255, 255, 255, 0.55), 6px 0 30px rgba(31, 30, 29, 0.05);
+  overflow: hidden;              /* logo + admin figés, seul .sidebar-nav défile */
+}
+.admin-sidebar::before {         /* matière derrière le verre : halo ambiant */
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(420px 300px at 18% -6%, rgba(139, 82, 250, 0.08), transparent 70%),
+    radial-gradient(360px 320px at 96% 10%, rgba(217, 119, 87, 0.05), transparent 72%);
+}
+.sidebar-logo, .sidebar-nav, .sidebar-admin { position: relative; z-index: 2; }
+
+.sidebar-logo { border-bottom-color: var(--sidebar-line); }
+.sidebar-logo-icon img { box-shadow: 0 2px 8px rgba(31, 30, 29, 0.14); border-radius: 8px; }
+.sidebar-logo-text strong { color: var(--sidebar-ink); }
+.sidebar-logo-text span { color: var(--sidebar-ink-3); }
+
+/* Nav scrollable — head/foot figés (parité gestionnaire) */
+.sidebar-nav {
+  /* position:relative = bloc contenant de la pastille de verre ET référentiel
+     d'offsetTop des liens : la pastille suit le défilement de la nav. */
+  position: relative;
+  min-height: 0; overflow-y: auto; overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin; scrollbar-color: rgba(31, 30, 29, 0.22) transparent;
+}
+.sidebar-nav::-webkit-scrollbar { width: 9px; display: block; }
+.sidebar-nav::-webkit-scrollbar-thumb { background: rgba(31, 30, 29, 0.14); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+.sidebar-nav:hover::-webkit-scrollbar-thumb { background: rgba(31, 30, 29, 0.24); background-clip: padding-box; }
+
+.sidebar-section-label { color: var(--sidebar-ink-3); }
+
+.sidebar-link { color: var(--sidebar-ink-2); position: relative; z-index: 1; }
+.sidebar-link svg { color: inherit; }
+/* Fallback (JS/verre indisponible) : surbrillance CSS classique */
+.sidebar-link:hover {
+  background: rgba(31, 30, 29, 0.05);
+  color: var(--sidebar-ink);
+}
+.sidebar-link:hover svg { color: var(--ap); }
+/* Verre prêt : la pastille liquide gère la surbrillance, on retire le fond CSS */
+.admin-sidebar.g-glass-ready .sidebar-link:hover { background: transparent; }
+.sidebar-link.active {
+  background: rgba(139, 82, 250, 0.10);
+  color: var(--ap-dk);
+  box-shadow: inset 0 0 0 1px rgba(139, 82, 250, 0.20),
+              inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.sidebar-link.active svg { color: var(--ap); }
+.sidebar-link.active::before {
+  content: '';
+  position: absolute;
+  left: -8px; top: 8px; bottom: 8px;
+  width: 3px;
+  border-radius: var(--r-pill);
+  background: var(--ap);
+}
+
+/* ── Pastille de verre liquide (hover, style Apple) — parité gestionnaire ── */
+.sidebar-nav-glass {
+  position: absolute; left: 8px; top: 0; height: 38px; width: auto;
+  border-radius: var(--r-xs); opacity: 0; pointer-events: none; z-index: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.44));
+  -webkit-backdrop-filter: blur(11px) saturate(185%);
+  backdrop-filter: blur(11px) saturate(185%);
+  border: 1px solid rgba(255,255,255,0.9);
+  box-shadow:
+    0 8px 22px rgba(31,30,29,0.13), 0 1px 3px rgba(31,30,29,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -8px 16px rgba(139,82,250,0.07);
+}
+.sidebar-nav-glass::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 55%;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,0.55), transparent);
+  pointer-events: none;
+}
+.sidebar-nav-glass.on { opacity: 1; }
+.sidebar-nav-glass-webgl { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.sidebar-nav-glass-webgl::before { opacity: .7; }
+.sidebar-nav-glass-webgl canvas { box-shadow: none !important; }
+@supports not (backdrop-filter: blur(1px)) {
+  .sidebar-nav-glass { background: rgba(255,255,255,0.9); }
+}
+
+.sidebar-admin { border-top-color: var(--sidebar-line); }
+.sidebar-admin-avatar { background: var(--ap); }
+.sidebar-admin-info strong { color: var(--sidebar-ink); }
+.sidebar-admin-info span { color: var(--sidebar-ink-3); }
+
+/* ── Topbar — verre blanc translucide ──────────────────────── */
+.admin-topbar {
+  background: rgba(255, 255, 255, 0.72);
+  border-bottom: 1px solid var(--border);
+}
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .admin-topbar {
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+  }
+}
+.topbar-search input {
+  background: rgba(26, 26, 26, 0.045);
+  border-radius: var(--r-pill);
+}
+.topbar-search input:focus {
+  background: var(--card);
+  box-shadow: 0 0 0 3px var(--ap-glow-20);
+}
+.topbar-icon-btn { background: rgba(26, 26, 26, 0.045); border-radius: var(--r-pill); }
+.topbar-icon-btn:hover { background: rgba(26, 26, 26, 0.09); }
+.btn-topbar-outline { border-radius: var(--r-pill); }
+.topbar-avatar { border-color: var(--ap-lt); }
+.topbar-notif-dot { border-color: var(--card); }
+
+/* ── Boutons — pilule, halo violet doux au survol ──────────── */
+.btn-primary:hover { box-shadow: 0 4px 14px var(--ap-glow-20); }
+.btn-primary,
+.btn-outline,
+.btn-ghost,
+.btn-danger,
+.pagination-btn { border-radius: var(--r-pill); }
+
+/* ── Modales — verre renforcé au-dessus de l'overlay ───────── */
+.admin-modal {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--glass-line);
+  box-shadow: var(--shadow-lg), var(--glass-specular);
+  border-radius: var(--r);
+}
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .admin-modal {
+    backdrop-filter: blur(30px) saturate(160%);
+    -webkit-backdrop-filter: blur(30px) saturate(160%);
+  }
+  .admin-modal-overlay {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+}
+
+/* ── Page de connexion — carte en verre sur la photo ───────── */
+.admin-auth-card {
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 24px 64px rgba(20, 20, 43, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .admin-auth-card {
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+  }
+}
+
+/* ── Détails de lisibilité sur verre ───────────────────────── */
+.period-tab.active {
+  background: var(--card);
+  box-shadow: 0 1px 4px rgba(26, 26, 26, 0.10);
+}
+.kpi-trend-neutral { background: rgba(26, 26, 26, 0.05); }
+.matiere-progress-bar { background: rgba(26, 26, 26, 0.07); }
+
+/* Scrollbar discrète */
+.admin-body ::-webkit-scrollbar { width: 10px; height: 10px; }
+.admin-body ::-webkit-scrollbar-thumb {
+  background: rgba(26, 26, 26, 0.16);
+  border-radius: var(--r-pill);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.admin-body ::-webkit-scrollbar-track { background: transparent; }
+
+/* ── Garde-fou compositing (juil. 2026) ─────────────────────────────────────
+   Symptôme corrigé : sur certaines machines, le curseur système virait au noir
+   et le verre disparaissait une fraction de seconde avant de revenir. Cause :
+   trop de couches `backdrop-filter` simultanées → le compositeur GPU dépasse
+   son budget, abandonne les couches puis les recrée (le plan matériel du
+   curseur est recomposé au passage, d'où le carré noir).
+
+   1. Sur un écran/GPU lent ou si l'utilisateur demande moins de transparence,
+      on retombe sur des aplats opaques — zéro flou, zéro couche.
+   2. `.no-glass` (posé par sidebar-glass.js après une perte de contexte WebGL)
+      coupe le flou pour toute la page : la session reste stable au lieu de
+      boucler sur des pertes/restaurations de contexte. */
+@media (prefers-reduced-transparency: reduce), (update: slow) {
+  .admin-topbar,
+  .admin-modal,
+  .admin-modal-overlay,
+  .admin-auth-card,
+  .sidebar-nav-glass {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .admin-topbar    { background: rgba(255, 255, 255, 0.97); }
+  .admin-modal     { background: #FFFFFF; }
+  .admin-auth-card { background: #FFFFFF; }
+  .sidebar-nav-glass { background: rgba(255, 255, 255, 0.92); }
+}
+
+.admin-body.no-glass .admin-topbar,
+.admin-body.no-glass .admin-modal,
+.admin-body.no-glass .admin-modal-overlay,
+.admin-body.no-glass .admin-auth-card,
+.admin-body.no-glass .sidebar-nav-glass {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.admin-body.no-glass .admin-topbar    { background: rgba(255, 255, 255, 0.97); }
+.admin-body.no-glass .admin-modal     { background: #FFFFFF; }
+.admin-body.no-glass .sidebar-nav-glass { background: rgba(255, 255, 255, 0.92); }

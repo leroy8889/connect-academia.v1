@@ -101,9 +101,12 @@ const Notifications = (() => {
 
         elements.list.innerHTML = notifications.map(notif => {
             const baseUrl = window.CA?.baseUrl || '';
-            const avatar = notif.actor_photo
-                ? (notif.actor_photo.startsWith('http') ? notif.actor_photo : `${baseUrl}${notif.actor_photo}`)
-                : `${baseUrl}/public/assets/images/default-avatar.svg`;
+            const isOfficial = notif.type === 'announcement' && !notif.actor_id;
+            const avatar = isOfficial
+                ? `${baseUrl}/public/assets/images/logo-removebg.png`
+                : (notif.actor_photo
+                    ? (notif.actor_photo.startsWith('http') ? notif.actor_photo : `${baseUrl}${notif.actor_photo}`)
+                    : `${baseUrl}/public/assets/images/default-avatar.svg`);
             const time = App.timeAgo(notif.created_at);
             const unreadClass = !notif.is_read ? 'notif-item--unread' : '';
 
@@ -138,7 +141,10 @@ const Notifications = (() => {
             case 'reply':
                 return `${name} a répondu à votre commentaire`;
             case 'announcement':
-                return `${name} a publié une annonce`;
+                // Message officiel de l'administration (actor_id NULL) : afficher le contenu
+                return notif.message
+                    ? `<strong>Connect'Academia</strong> — ${App.escapeHtml(notif.message)}`
+                    : `${name} a publié une annonce`;
             default:
                 return notif.message ? App.escapeHtml(notif.message) : `${name} a interagi avec vous`;
         }

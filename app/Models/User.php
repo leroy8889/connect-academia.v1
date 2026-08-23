@@ -47,13 +47,14 @@ class User extends BaseModel
         $emailToken   = bin2hex(random_bytes(32));
 
         $this->query(
-            "INSERT INTO users (uuid, nom, prenom, email, password_hash, serie_id, role, etablissement, email_token)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO users (uuid, nom, prenom, email, telephone, password_hash, serie_id, role, etablissement, email_token)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 $uuid,
                 $data['nom'],
                 $data['prenom'],
                 $data['email'],
+                $data['telephone'] ?? null,
                 $passwordHash,
                 $data['serie_id'] ?? null,
                 $data['role'] ?? 'eleve',
@@ -89,6 +90,10 @@ class User extends BaseModel
     {
         if (empty($path)) return null;
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) return $path;
+        // Avatar tombé dans le repli privé : route interne /media/avatars/{fichier}.
+        if (\Core\MediaStorage::isPrivate($path)) {
+            return \Core\MediaStorage::url('avatars', $path);
+        }
         if (!str_starts_with($path, '/public/uploads/avatars') && !str_starts_with($path, 'public/uploads/avatars')) {
             $path = '/public/uploads/avatars/' . ltrim($path, '/');
         }
@@ -115,6 +120,23 @@ class User extends BaseModel
         return $this->query(
             "UPDATE users SET " . implode(', ', $fields) . ", updated_at = NOW() WHERE id = ? AND is_deleted = 0",
             $params
+        )->rowCount() > 0;
+    }
+
+    public function updateEmail(int $userId, string $email): bool
+    {
+        return $this->query(
+            "UPDATE users SET email = ?, updated_at = NOW() WHERE id = ? AND is_deleted = 0",
+            [$email, $userId]
+        )->rowCount() > 0;
+    }
+
+    public function updatePassword(int $userId, string $password): bool
+    {
+        $hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+        return $this->query(
+            "UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ? AND is_deleted = 0",
+            [$hash, $userId]
         )->rowCount() > 0;
     }
 

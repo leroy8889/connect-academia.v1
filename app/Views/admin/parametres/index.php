@@ -74,6 +74,51 @@ function sv(array $s, string $key, mixed $default = ''): mixed {
 
     <div class="settings-panel-v2" id="spanel-general" style="<?= $activeTab !== 'general' ? 'display:none;' : '' ?>">
 
+      <?php if (\Core\Session::adminRole() === 'super_admin'):
+        $maintenanceOn = sv($settings, 'maintenance_mode', '0') == '1';
+      ?>
+      <!-- Mode maintenance (super-admin uniquement) -->
+      <div class="settings-section-v2" id="maintenance-card"
+           style="border:1.5px solid <?= $maintenanceOn ? 'var(--ap)' : 'var(--border)' ?>;
+                  <?= $maintenanceOn ? 'box-shadow:0 0 0 4px var(--ap-xl);' : '' ?>">
+        <div class="settings-section-v2-header" style="display:flex;align-items:center;gap:10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ap)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+          <div>
+            <h3 style="margin:0;">Mode maintenance</h3>
+            <p style="margin:0;">Coupe l'accès à toute la plateforme sauf le back-office</p>
+          </div>
+        </div>
+        <div class="settings-section-v2-body">
+
+          <div class="settings-field-v2 settings-toggle-v2">
+            <div class="settings-field-v2-label">
+              <label>Activer la maintenance</label>
+              <span>Élèves et gestionnaires d'établissement voient la page de maintenance. Toi (super-admin) et le back-office restez accessibles.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="hidden" name="maintenance_mode" value="0">
+              <input type="checkbox" name="maintenance_mode" value="1" id="maintenance-toggle"
+                     onchange="document.getElementById('maintenance-card').style.borderColor = this.checked ? 'var(--ap)' : 'var(--border)'; document.getElementById('maintenance-card').style.boxShadow = this.checked ? '0 0 0 4px var(--ap-xl)' : 'none';"
+                     <?= $maintenanceOn ? 'checked' : '' ?>>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="settings-field-v2" style="flex-direction:column;align-items:stretch;">
+            <div class="settings-field-v2-label" style="margin-bottom:8px;">
+              <label for="maintenance_message">Message affiché aux visiteurs</label>
+              <span>Facultatif — laisse vide pour le message par défaut</span>
+            </div>
+            <textarea id="maintenance_message" name="maintenance_message" class="form-textarea" rows="2"
+                      placeholder="On revient très vite avec des améliorations…"><?= e(sv($settings, 'maintenance_message', '')) ?></textarea>
+          </div>
+
+        </div>
+      </div>
+      <?php endif; ?>
+
       <!-- Informations générales -->
       <div class="settings-section-v2">
         <div class="settings-section-v2-header">

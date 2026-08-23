@@ -14,6 +14,11 @@ class Post extends BaseModel
     {
         if (empty($path)) return null;
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) return $path;
+        // Image tombée dans le repli privé (public/uploads non inscriptible en
+        // prod) : servie par la route interne /media/posts/{fichier}.
+        if (\Core\MediaStorage::isPrivate($path)) {
+            return \Core\MediaStorage::url('posts', $path);
+        }
         if (!str_starts_with($path, '/public/uploads/posts') && !str_starts_with($path, 'public/uploads/posts')) {
             $path = '/public/uploads/posts/' . ltrim($path, '/');
         }

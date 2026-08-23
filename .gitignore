@@ -10,6 +10,7 @@
 
 # Logs
 storage/logs/
+storage/dompdf/
 *.log
 
 # Uploads utilisateurs
@@ -25,3 +26,13 @@ public/uploads/
 # Dépendances
 vendor/
 node_modules/
+
+# Dumps de base — données réelles (emails, hash de mots de passe, secrets TOTP).
+# Les migrations, elles, DOIVENT être versionnées : elles sont rejouées en prod.
+Database/*.sql
+!Database/migration_*.sql
+
+# Rapport d'audit interne : liste des vulnérabilités et de leur statut.
+# Le dépôt étant public, le publier revient à donner la carte des faiblesses.
+# Retirer cette ligne si le dépôt passe en privé.
+Brief_Remediation_Round2_ConnectAcademia.md

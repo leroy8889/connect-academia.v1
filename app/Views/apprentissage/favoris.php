@@ -47,9 +47,7 @@ $typeLabels = [
     <div class="fav-hero-row">
       <h1 class="fav-h1">Mes favoris</h1>
       <?php if (!empty($favoris)): ?>
-        
-          <?= count($favoris) ?> ressource<?= count($favoris) > 1 ? 's' : '' ?>
-      
+        <span class="fav-count-chip"><?= count($favoris) ?> ressource<?= count($favoris) > 1 ? 's' : '' ?></span>
       <?php endif; ?>
     </div>
     <p class="fav-subtitle">Retrouve ici toutes tes ressources sauvegardées.</p>
@@ -59,7 +57,9 @@ $typeLabels = [
   <?php if (empty($favoris)): ?>
 
     <div class="empty-state">
-      
+      <div class="empty-state__icon">
+        <i data-lucide="star" style="width:32px;height:32px"></i>
+      </div>
       <h3>Aucun favori pour l'instant</h3>
       <p>Ajoute des ressources à tes favoris depuis la page des cours pour les retrouver ici.</p>
       <a href="<?= url('/apprentissage/matieres') ?>" class="btn-appr btn-appr--primary" style="margin-top:20px">
@@ -129,13 +129,13 @@ $typeLabels = [
               <span class="fav-card-status">
                 <?php if ($pct >= 100): ?>
                   
-                  <span style="color:#059669;font-weight:600">Terminé</span>
+                  <span style="color:#007A33;font-weight:600">Terminé</span>
                 <?php elseif ($pct > 0): ?>
-                  <i data-lucide="play-circle" style="width:13px;height:13px;color:#8B52FA"></i>
-                  <span style="color:#8B52FA;font-weight:600">En cours</span>
+                  <i data-lucide="play-circle" style="width:13px;height:13px;color:var(--purple-neon)"></i>
+                  <span style="color:var(--purple-neon);font-weight:600">En cours</span>
                 <?php else: ?>
-                  <i data-lucide="circle" style="width:13px;height:13px;color:#9CA3AF"></i>
-                  <span style="color:#9CA3AF">Non commencé</span>
+                  <i data-lucide="circle" style="width:13px;height:13px;color:var(--text-muted)"></i>
+                  <span style="color:var(--text-muted)">Non commencé</span>
                 <?php endif; ?>
               </span>
               <span class="fav-card-cta">
@@ -155,36 +155,40 @@ $typeLabels = [
 
 <style>
 /* ═══════════════════════════════════════════════════════
-   FAVORIS PAGE — Design System Connect'Academia
+   FAVORIS PAGE — langage Claude, tokens Connect'Academia
    ═══════════════════════════════════════════════════════ */
 
 /* ── Hero ─────────────────────────────────────────────── */
-.fav-hero { margin-bottom: 40px; }
+.fav-hero {
+  margin-bottom: 48px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--appr-hairline, var(--border-subtle));
+}
 
 .fav-eyebrow {
   font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--appr-primary);
-  margin-bottom: 6px;
+  color: var(--purple-neon);
+  margin-bottom: 12px;
 }
 
 .fav-hero-row {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 14px;
   flex-wrap: wrap;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .fav-h1 {
   font-family: var(--font-sans);
-  font-size: clamp(24px, 4vw, 32px);
-  font-weight: 800;
-  color: #1A1A1A;
-  line-height: 1.15;
+  font-size: clamp(32px, 5vw, 46px);
+  font-weight: var(--fw-regular);
+  color: var(--text-primary);
+  line-height: 1.12;
   letter-spacing: -0.03em;
   margin: 0;
 }
@@ -195,20 +199,19 @@ $typeLabels = [
   gap: 6px;
   font-family: var(--font-sans);
   font-size: 13px;
-  font-weight: 600;
-  color: #8B52FA;
-  background: #F3EFFF;
+  font-weight: var(--fw-semibold);
+  color: var(--purple-press);
+  background: var(--purple-tint);
   padding: 6px 14px;
-  border-radius: 999px;
-  border: 1px solid #E0D0FF;
+  border-radius: var(--radius-pill);
 }
 
 .fav-subtitle {
   font-family: var(--font-sans);
-  font-size: 14px;
-  color: #6B7280;
+  font-size: 15px;
+  color: var(--text-secondary);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 /* ── Grille ──────────────────────────────────────────── */
@@ -218,26 +221,23 @@ $typeLabels = [
   gap: 16px;
 }
 
-/* ── Card ────────────────────────────────────────────── */
+/* ── Card — aplat blanc hairline, ombre à peine au survol ── */
 .fav-card {
-  background: #FFFFFF;
-  border-radius: 18px;
+  background: var(--bg-main);
+  border-radius: var(--radius-md);
   padding: 22px;
-  border: 1px solid rgba(26,26,26,0.07);
-  box-shadow: 0 1px 4px rgba(26,26,26,0.06), 0 1px 2px rgba(26,26,26,0.04);
+  border: 1px solid var(--appr-hairline, var(--border-subtle));
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   gap: 0;
   position: relative;
-  transition: transform 0.2s cubic-bezier(0.2,0.8,0.2,1),
-              box-shadow 0.2s cubic-bezier(0.2,0.8,0.2,1),
-              border-color 0.2s cubic-bezier(0.2,0.8,0.2,1);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
   cursor: pointer;
 }
 .fav-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 28px rgba(139,82,250,0.14), 0 2px 10px rgba(139,82,250,0.07);
-  border-color: rgba(139,82,250,0.22);
+  border-color: var(--border-strong);
+  box-shadow: var(--appr-shadow-hover, 0 1px 3px rgba(26,26,26,0.08));
 }
 /* Lien principal */
 .fav-card-link {
@@ -257,18 +257,18 @@ $typeLabels = [
 }
 
 .fav-card-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.fav-card-icon--cours            { background: #F3F4F6; color: #6B7280; }
-.fav-card-icon--td               { background: #F3F4F6; color: #6B7280; }
-.fav-card-icon--ancienne_epreuve { background: #F3F4F6; color: #6B7280; }
-.fav-card-icon--corrige          { background: #F3F4F6; color: #6B7280; }
+.fav-card-icon--cours,
+.fav-card-icon--td,
+.fav-card-icon--ancienne_epreuve,
+.fav-card-icon--corrige { background: var(--purple-tint); color: var(--purple-neon); }
 
 .fav-card-title-block {
   min-width: 0;
@@ -277,8 +277,8 @@ $typeLabels = [
 .fav-card-title {
   font-family: var(--font-sans);
   font-size: 14px;
-  font-weight: 700;
-  color: #1A1A1A;
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
   line-height: 1.45;
   letter-spacing: -0.01em;
   display: -webkit-box;
@@ -292,7 +292,7 @@ $typeLabels = [
   gap: 4px;
   font-family: var(--font-sans);
   font-size: 11px;
-  color: #9CA3AF;
+  color: var(--text-muted);
   margin-top: 4px;
 }
 
@@ -315,13 +315,13 @@ $typeLabels = [
   border-radius: 999px;
   letter-spacing: 0.01em;
 }
-.fav-badge--cours            { background: #F3EFFF; color: #8B52FA; }
-.fav-badge--td               { background: #EFF6FF; color: #3B82F6; }
-.fav-badge--ancienne_epreuve { background: #FFF7ED; color: #E85D04; }
-.fav-badge--corrige          { background: #ECFDF5; color: #059669; }
-.fav-badge--serie            { background: #F9FAFB; color: #6B7280; border: 1px solid #E5E7EB; }
-.fav-badge--done             { background: #ECFDF5; color: #059669; }
-.fav-badge--progress         { background: #FFF7ED; color: #D97706; }
+.fav-badge--cours            { background: var(--purple-tint); color: var(--purple-press); }
+.fav-badge--td               { background: var(--purple-tint); color: var(--purple-press); }
+.fav-badge--ancienne_epreuve { background: rgba(255,171,0,0.14); color: #8A5C00; }
+.fav-badge--corrige          { background: rgba(0,200,83,0.12); color: #007A33; }
+.fav-badge--serie            { background: var(--purple-tint); color: var(--purple-press); }
+.fav-badge--done             { background: rgba(0,200,83,0.12); color: #007A33; }
+.fav-badge--progress         { background: rgba(255,171,0,0.16); color: #8A5C00; }
 
 /* Barre de progression */
 .fav-progress-row {
@@ -332,21 +332,21 @@ $typeLabels = [
 .fav-progress-track {
   flex: 1;
   height: 6px;
-  background: #EDEAFF;
-  border-radius: 999px;
+  background: rgba(var(--purple-neon-rgb), 0.12);
+  border-radius: var(--radius-pill);
   overflow: hidden;
 }
 .fav-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #8B52FA, #A374FC);
-  border-radius: 999px;
+  background: var(--purple-neon);
+  border-radius: var(--radius-pill);
   transition: width 0.5s cubic-bezier(0.2,0.8,0.2,1);
 }
 .fav-progress-pct {
   font-family: var(--font-sans);
   font-size: 12px;
-  font-weight: 700;
-  color: #8B52FA;
+  font-weight: var(--fw-bold);
+  color: var(--purple-neon);
   min-width: 34px;
   text-align: right;
 }
@@ -358,7 +358,7 @@ $typeLabels = [
   justify-content: space-between;
   gap: 8px;
   padding-top: 14px;
-  border-top: 1px solid #F3F4F6;
+  border-top: 1px solid var(--border-subtle);
   margin-top: auto;
 }
 .fav-card-status {
@@ -374,8 +374,8 @@ $typeLabels = [
   gap: 4px;
   font-family: var(--font-sans);
   font-size: 12px;
-  font-weight: 700;
-  color: #8B52FA;
+  font-weight: var(--fw-semibold);
+  color: var(--purple-neon);
   white-space: nowrap;
   letter-spacing: 0.01em;
 }

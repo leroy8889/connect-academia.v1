@@ -1,6 +1,10 @@
 <?php
 use Core\Session;
-$__navAcces = \Middleware\AbonneMiddleware::hasAccess(Session::userId());
+$__navVisiteur = Session::isVisiteur();
+// Un compte visiteur (grand public orientation) n'a pas accès aux modules
+// élèves ; pour les élèves, la plateforme est entièrement gratuite.
+$__navAcces    = !$__navVisiteur;
+$__navHome     = $__navVisiteur ? '/eleve/orientation' : '/hub';
 ?>
 <!DOCTYPE html>
 <html lang="fr" data-theme="light">
@@ -29,6 +33,7 @@ $__navAcces = \Middleware\AbonneMiddleware::hasAccess(Session::userId());
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="<?= asset('css/global.css') ?>">
   <link rel="stylesheet" href="<?= asset('css/colors_and_type.css') ?>">
+  <link rel="stylesheet" href="<?= asset('css/loading.css') ?>">
   <?php if (!empty($extraCss)): foreach ($extraCss as $css): ?>
   <?php if ($css === 'colors_and_type.css') continue; ?>
   <link rel="stylesheet" href="<?= asset('css/' . $css) ?>">
@@ -51,42 +56,39 @@ $__navAcces = \Middleware\AbonneMiddleware::hasAccess(Session::userId());
     <div class="navbar__container">
 
       <!-- Logo -->
-      <a href="<?= url('/hub') ?>" class="navbar__logo">
+      <a href="<?= url($__navHome) ?>" class="navbar__logo">
         <img src="<?= asset('images/logo-officiel.png') ?>" alt="Connect'Academia" class="navbar__logo-img">
       </a>
 
       <!-- Navigation centrale -->
       <div class="navbar__nav">
+        <?php if ($__navVisiteur): ?>
+        <a href="<?= url('/eleve/orientation') ?>" class="navbar__nav-link <?= str_contains($_SERVER['REQUEST_URI'] ?? '', '/eleve/orientation') ? 'active' : '' ?>">
+          <i data-lucide="layout-dashboard"></i>
+          Mon espace
+        </a>
+        <a href="<?= url('/orientation') ?>" class="navbar__nav-link">
+          <i data-lucide="compass"></i>
+          Orientation
+        </a>
+        <?php else: ?>
         <a href="<?= url('/hub') ?>" class="navbar__nav-link <?= str_contains($_SERVER['REQUEST_URI'] ?? '', '/hub') ? 'active' : '' ?>">
           <i data-lucide="home"></i>
           Hub
         </a>
-        <?php if ($__navAcces): ?>
         <a href="<?= url('/apprentissage') ?>" class="navbar__nav-link <?= str_contains($_SERVER['REQUEST_URI'] ?? '', '/apprentissage') ? 'active' : '' ?>">
           <i data-lucide="book-open"></i>
           Apprentissage
         </a>
-        <?php else: ?>
-        <a href="<?= url('/abonnement/choisir') ?>" class="navbar__nav-link navbar__nav-link--locked" title="Abonnement requis pour accéder à l'apprentissage">
-          <i data-lucide="lock"></i>
-          Apprentissage
-        </a>
-        <?php endif; ?>
-        <?php if ($__navAcces): ?>
         <a href="<?= url('/communaute') ?>" class="navbar__nav-link <?= str_contains($_SERVER['REQUEST_URI'] ?? '', '/communaute') ? 'active' : '' ?>">
           <i data-lucide="users"></i>
           Communauté
         </a>
-        <?php else: ?>
-        <a href="<?= url('/abonnement/choisir') ?>" class="navbar__nav-link navbar__nav-link--locked" title="Abonnement requis pour accéder à la communauté">
-          <i data-lucide="lock"></i>
-          Communauté
-        </a>
-        <?php endif; ?>
-        <a href="<?= BASE_URL ?>/public/orientation/orientation.html" class="navbar__nav-link">
+        <a href="<?= url('/orientation') ?>" class="navbar__nav-link">
           <i data-lucide="compass"></i>
           Orientation
         </a>
+        <?php endif; ?>
       </div>
 
       <!-- Actions droite -->
@@ -110,23 +112,27 @@ $__navAcces = \Middleware\AbonneMiddleware::hasAccess(Session::userId());
         <div class="navbar__user-dropdown hidden" id="user-dropdown">
           <div class="navbar__user-dropdown-header">
             <strong><?= e(Session::get('user_name', '')) ?></strong>
-            <span><?= e(Session::userRole() ?? '') ?></span>
+            <span><?= e($__navVisiteur ? 'candidat' : (Session::userRole() ?? '')) ?></span>
           </div>
-          <?php if ($__navAcces): ?>
+          <?php if ($__navVisiteur): ?>
+          <a href="<?= url('/eleve/orientation/profil') ?>" class="navbar__user-dropdown-item">
+            <i data-lucide="user"></i>
+            Mon profil
+          </a>
+          <a href="<?= url('/eleve/orientation') ?>" class="navbar__user-dropdown-item">
+            <i data-lucide="folder-open"></i>
+            Mes candidatures
+          </a>
+          <?php else: ?>
           <a href="<?= url('/communaute/mon-profil') ?>" class="navbar__user-dropdown-item">
             <i data-lucide="user"></i>
             Mon profil
           </a>
-          <?php else: ?>
-          <a href="<?= url('/abonnement/choisir') ?>" class="navbar__user-dropdown-item navbar__user-dropdown-item--locked" title="Abonnement requis">
-            <i data-lucide="lock"></i>
-            Mon profil
+          <a href="<?= url('/eleve/orientation') ?>" class="navbar__user-dropdown-item">
+            <i data-lucide="folder-open"></i>
+            Mes candidatures
           </a>
           <?php endif; ?>
-          <a href="<?= url('/abonnement/choisir') ?>" class="navbar__user-dropdown-item">
-            <i data-lucide="credit-card"></i>
-            Abonnement
-          </a>
           <div class="navbar__user-dropdown-divider"></div>
           <form action="<?= url('/auth/deconnexion') ?>" method="POST" class="navbar__logout-form">
             <input type="hidden" name="_csrf_token" value="<?= Session::getCsrfToken() ?>">
@@ -147,38 +153,36 @@ $__navAcces = \Middleware\AbonneMiddleware::hasAccess(Session::userId());
 
   <!-- Menu mobile -->
   <div class="mobile-nav hidden" id="mobile-nav">
-    <a href="<?= url('/hub') ?>" class="mobile-nav__link">
-      <i data-lucide="home"></i> Hub
+    <?php if ($__navVisiteur): ?>
+    <a href="<?= url('/eleve/orientation') ?>" class="mobile-nav__link">
+      <i data-lucide="layout-dashboard"></i> Mon espace
     </a>
-    <?php if ($__navAcces): ?>
-    <a href="<?= url('/apprentissage') ?>" class="mobile-nav__link">
-      <i data-lucide="book-open"></i> Apprentissage
-    </a>
-    <?php else: ?>
-    <a href="<?= url('/abonnement/choisir') ?>" class="mobile-nav__link mobile-nav__link--locked">
-      <i data-lucide="lock"></i> Apprentissage
-    </a>
-    <?php endif; ?>
-    <?php if ($__navAcces): ?>
-    <a href="<?= url('/communaute') ?>" class="mobile-nav__link">
-      <i data-lucide="users"></i> Communauté
-    </a>
-    <?php else: ?>
-    <a href="<?= url('/abonnement/choisir') ?>" class="mobile-nav__link mobile-nav__link--locked">
-      <i data-lucide="lock"></i> Communauté
-    </a>
-    <?php endif; ?>
-    <a href="<?= BASE_URL ?>/public/orientation/orientation.html" class="mobile-nav__link">
+    <a href="<?= url('/orientation') ?>" class="mobile-nav__link">
       <i data-lucide="compass"></i> Orientation
     </a>
     <div class="mobile-nav__divider"></div>
-    <?php if ($__navAcces): ?>
-    <a href="<?= url('/communaute/mon-profil') ?>" class="mobile-nav__link">
+    <a href="<?= url('/eleve/orientation/profil') ?>" class="mobile-nav__link">
       <i data-lucide="user"></i> Mon profil
     </a>
     <?php else: ?>
-    <a href="<?= url('/abonnement/choisir') ?>" class="mobile-nav__link mobile-nav__link--locked">
-      <i data-lucide="lock"></i> Mon profil
+    <a href="<?= url('/hub') ?>" class="mobile-nav__link">
+      <i data-lucide="home"></i> Hub
+    </a>
+    <a href="<?= url('/apprentissage') ?>" class="mobile-nav__link">
+      <i data-lucide="book-open"></i> Apprentissage
+    </a>
+    <a href="<?= url('/communaute') ?>" class="mobile-nav__link">
+      <i data-lucide="users"></i> Communauté
+    </a>
+    <a href="<?= url('/orientation') ?>" class="mobile-nav__link">
+      <i data-lucide="compass"></i> Orientation
+    </a>
+    <div class="mobile-nav__divider"></div>
+    <a href="<?= url('/eleve/orientation') ?>" class="mobile-nav__link">
+      <i data-lucide="folder-open"></i> Mes candidatures
+    </a>
+    <a href="<?= url('/communaute/mon-profil') ?>" class="mobile-nav__link">
+      <i data-lucide="user"></i> Mon profil
     </a>
     <?php endif; ?>
     <form action="<?= url('/auth/deconnexion') ?>" method="POST">
@@ -209,13 +213,13 @@ $__navAcces = \Middleware\AbonneMiddleware::hasAccess(Session::userId());
 
   <!-- ── FOOTER ────────────────────────────────────────────────────────────── -->
   <?php if (empty($hideFooter)): ?>
-  <footer class="hub-footer" style="background-image: url('<?= BASE_URL ?>/assets/images/footer-bg.png')">
+  <footer class="hub-footer" style="background-image: url('<?= css_safe(BASE_URL) ?>/assets/images/footer-bg.png')">
     <div class="hub-footer__top">
       <div class="hub-footer__container">
 
         <!-- Brand -->
         <div class="hub-footer__brand">
-          <a href="<?= url('/hub') ?>">
+          <a href="<?= url($__navHome) ?>">
             <img src="<?= BASE_URL ?>/assets/images/logo-officiel.png" width="162" height="50" alt="Connect'Academia logo" class="hub-footer__logo">
           </a>
           <p class="hub-footer__brand-text">
@@ -234,18 +238,23 @@ $__navAcces = \Middleware\AbonneMiddleware::hasAccess(Session::userId());
         <!-- Plateforme -->
         <ul class="hub-footer__list">
           <li><p class="hub-footer__list-title">Plateforme</p></li>
-          <li><a href="<?= url('/hub') ?>" class="hub-footer__link">Accueil</a></li>
-          <li><a href="<?= url($__navAcces ? '/apprentissage' : '/abonnement/choisir') ?>" class="hub-footer__link">Apprentissage</a></li>
-          <li><a href="<?= url($__navAcces ? '/communaute' : '/abonnement/choisir') ?>" class="hub-footer__link">Communauté</a></li>
-          <li><a href="<?= url('/abonnement/choisir') ?>" class="hub-footer__link">Abonnement</a></li>
+          <li><a href="<?= url($__navHome) ?>" class="hub-footer__link">Accueil</a></li>
+          <?php if ($__navVisiteur): ?>
+          <li><a href="<?= url('/orientation') ?>" class="hub-footer__link">Orientation</a></li>
+          <li><a href="<?= url('/eleve/orientation') ?>" class="hub-footer__link">Mes candidatures</a></li>
+          <?php else: ?>
+          <li><a href="<?= url('/apprentissage') ?>" class="hub-footer__link">Apprentissage</a></li>
+          <li><a href="<?= url('/communaute') ?>" class="hub-footer__link">Communauté</a></li>
+          <li><a href="<?= url('/orientation') ?>" class="hub-footer__link">Orientation</a></li>
+          <?php endif; ?>
         </ul>
 
         <!-- Liens -->
         <ul class="hub-footer__list">
           <li><p class="hub-footer__list-title">Liens</p></li>
-          <li><a href="<?= BASE_URL ?>/assets/lib/contact.html" class="hub-footer__link">Contact</a></li>
+          <li><a href="<?= BASE_URL ?>/contact" class="hub-footer__link">Contact</a></li>
           <li><a href="<?= url('') ?>" class="hub-footer__link">À propos</a></li>
-          <li><a href="<?= url($__navAcces ? '/communaute/mon-profil' : '/abonnement/choisir') ?>" class="hub-footer__link">Mon profil</a></li>
+          <li><a href="<?= url($__navVisiteur ? '/eleve/orientation/profil' : '/communaute/mon-profil') ?>" class="hub-footer__link">Mon profil</a></li>
           <li><a href="<?= BASE_URL ?>/assets/lib/mentions-legales.html" class="hub-footer__link">Mentions légales</a></li>
         </ul>
 
@@ -288,6 +297,7 @@ $__navAcces = \Middleware\AbonneMiddleware::hasAccess(Session::userId());
   <!--── TOAST ──────────────────────────────────────────────────────────── -->
   <div class="toast-container" id="toast-container"></div>
 
+  <script src="<?= asset('js/loading.js') ?>"></script>
   <script src="<?= asset('js/app.js') ?>"></script>
   <?php if (!empty($extraJs)): foreach ($extraJs as $js): ?>
   <script src="<?= asset('js/' . $js) ?>"></script>
@@ -416,8 +426,10 @@ $__navAcces = \Middleware\AbonneMiddleware::hasAccess(Session::userId());
     // ── Service Worker ─────────────────────────────────────
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('<?= BASE_URL ?>/sw.js', {
-          scope: '<?= BASE_URL ?>/'
+        // json_encode : BASE_URL peut contenir une apostrophe (dossier
+        // « connect'academia » en local) — un littéral '…' casserait le script.
+        navigator.serviceWorker.register(<?= json_encode(BASE_URL . '/sw.js', JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>, {
+          scope: <?= json_encode(BASE_URL . '/', JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>
         }).then(function (reg) {
           reg.addEventListener('updatefound', function () {
             var newWorker = reg.installing;

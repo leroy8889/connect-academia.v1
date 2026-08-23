@@ -6,22 +6,617 @@ namespace Composer\Autoload;
 
 class ComposerStaticInit2185d2f99bcd56787481d9357a5972d3
 {
+    public static $files = array (
+        '88254829cb0eed057c30eaabb6d8edc4' => __DIR__ . '/..' . '/amphp/amp/src/functions.php',
+        '429ae5f14a13a9076791c19422e10996' => __DIR__ . '/..' . '/amphp/amp/src/Future/functions.php',
+        'c8601a4144b50a7b548da082c89c4dc1' => __DIR__ . '/..' . '/amphp/amp/src/Internal/functions.php',
+        '3da389f428d8ee50333e4391c3f45046' => __DIR__ . '/..' . '/amphp/serialization/src/functions.php',
+        'bcb7d4fc55f4b1a7e10f5806723e9892' => __DIR__ . '/..' . '/amphp/sync/src/functions.php',
+        '6c2681bc13923b80242cc286856cab22' => __DIR__ . '/..' . '/amphp/byte-stream/src/functions.php',
+        '4ee21bf8253a2272056aefb41f7f0116' => __DIR__ . '/..' . '/amphp/byte-stream/src/Internal/functions.php',
+        '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
+        '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
+        '107d0b55c0ad2d07d8643394552ac029' => __DIR__ . '/..' . '/amphp/process/src/functions.php',
+        '320cde22f66dd4f5d3fd621d3e88b98f' => __DIR__ . '/..' . '/symfony/polyfill-ctype/bootstrap.php',
+        'a4a119a56e50fbb293281d9a48007e0e' => __DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php',
+        '445532134d762b3cbc25500cac266092' => __DIR__ . '/..' . '/daverandom/libdns/src/functions.php',
+        '7b11c4dc42b3b3023073cb14e519683c' => __DIR__ . '/..' . '/ralouphie/getallheaders/src/getallheaders.php',
+        'f4c761ca07639428acc28ba36643243e' => __DIR__ . '/..' . '/amphp/dns/src/functions.php',
+        '8825ede83f2f289127722d4e842cf7e8' => __DIR__ . '/..' . '/symfony/polyfill-intl-grapheme/bootstrap.php',
+        'e69f7f6ee287b969198c3c9d6777bd38' => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer/bootstrap.php',
+        '72243e5536b63e298acb6476f01f1aff' => __DIR__ . '/..' . '/thecodingmachine/safe/lib/special_cases.php',
+        '3f648889e687f31c52f949ba8a9d0873' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/apache.php',
+        'eeb4581d958421a4244aaa4167c6a575' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/apcu.php',
+        '04cb0b3c1dac5b5ddb23c14e3d66dbe9' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/array.php',
+        '450b332a74a9a21e043c5e953485a791' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/bzip2.php',
+        '6e9b7954ecfd7cbb9ca239319d1acdb6' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/calendar.php',
+        '2c6d7e8bd2de9a272a9d4d43b0a4304a' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/classobj.php',
+        '0b8231c1ad0865447c988a4c16b4001f' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/com.php',
+        '7643a71fe1c3256058c8fee234cb86e5' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/cubrid.php',
+        '68e1365710575942efc1d55000032cee' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/curl.php',
+        '02fd26bca803106c5b942a7197c3ad8b' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/datetime.php',
+        'f4817dcbd956cd221b1c31f6fbd5749c' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/dir.php',
+        '51c3f2d10ca61a70dbcea0e38d8e902d' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/eio.php',
+        '1d34f34327ca3e81535963016e3be2c3' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/errorfunc.php',
+        '4fd0ba2d3717b0424d474bebfdafa2b4' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/exec.php',
+        '98f4dae054bc7fb19c13be14935cbdd3' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/fileinfo.php',
+        '5530ae063ba88323eaf0a07904efdf85' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/filesystem.php',
+        '633f4f134975d70e97bddad83348e91a' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/filter.php',
+        'fbd163fc68c5faf73d5ed4002ffd836d' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/fpm.php',
+        '21b511999d61411fab0692ff8795bbed' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/ftp.php',
+        '85fbd73fc92365cd90526b0ea03cae3a' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/funchand.php',
+        'a2e4c6dfdbf36f56f1945ddcbd54e289' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/gettext.php',
+        '51df9c146e0b7dcbdf358d8abd24dbdc' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/gmp.php',
+        '93bb7fe678d7dcfb1322f8e3475a48b0' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/gnupg.php',
+        'c171ba99cf316379ff66468392bf4950' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/hash.php',
+        '5ab4aad4c28e468209fbfcceb2e5e6a5' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/ibase.php',
+        '4d57409c5e8e576b0c64c08d9d731cfb' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/ibmDb2.php',
+        'eeb246d5403972a9d62106e4a4883496' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/iconv.php',
+        'c28a05f498c01b810a714f7214b7a8da' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/image.php',
+        '8063cd92acdf00fd978b5599eb7cc142' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/imap.php',
+        '8bd26dbe768e9c9599edad7b198e5446' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/info.php',
+        'd4362910bde43c0f956b52527effd7d4' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/inotify.php',
+        '696ba49197d9b55f0428a12bb5a818e1' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/json.php',
+        '9818aaa99c8647c63f8ef62b7a368160' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/ldap.php',
+        'bcf523ff2a195eb08e0fbb668ed784d0' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/libxml.php',
+        '68be68a9a8b95bb56cab6109ff03bc88' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/lzf.php',
+        'bdca804bb0904ea9f53f328dfc0bb8a5' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/mailparse.php',
+        'b0a3fcac3eaf55445796d6af26b89366' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/mbstring.php',
+        '98de16b8db03eb0cb4d318b4402215a6' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/misc.php',
+        '7cefd81607cd21b8b3a15656eb6465f5' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/mysql.php',
+        'aaf438b080089c6d0686679cd34aa72e' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/mysqli.php',
+        'cbac956836b72483dcff1ac39d5c0a0f' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/network.php',
+        '6c8f89dfbdc117d7871f572269363f25' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/oci8.php',
+        '169a669966a45c06bf55ed029122729b' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/opcache.php',
+        'def61bf4fecd4d4bca7354919cd69302' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/openssl.php',
+        '26bb010649a6d32d4120181458aa6ef2' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/outcontrol.php',
+        '002ebcb842e2c0d5b7f67fe64cc93158' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/pcntl.php',
+        '86df38612982dade72c7085ce7eca81f' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/pcre.php',
+        '1fc22f445c69ea8706e82fce301c0831' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/pgsql.php',
+        'c70b42561584f7144bff38cd63c4eef3' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/posix.php',
+        '9923214639c32ca5173db03a177d3b63' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/ps.php',
+        '7e9c3f8eae2b5bf42205c4f1295cb7a7' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/pspell.php',
+        '91aa91f6245c349c2e2e88bd0025f199' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/readline.php',
+        'ccf972e9e1fd8935f45f95e13b54ad59' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/rnp.php',
+        'd43773cacb9e5e8e897aa255e32007d1' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/rpminfo.php',
+        'f053a3849e9e8383762b34b91db0320b' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/rrd.php',
+        '775b964f72f827a1bf87c65ab5b10800' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/sem.php',
+        '816428bd69c29ab5e1ed622af5dca0cd' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/session.php',
+        '5093e233bedbefaef0df262bfbab0a5c' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/shmop.php',
+        'b080617b1d949683c2e37f8f01dc0e15' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/sockets.php',
+        '2708aa182ddcfe6ce27c96acaaa40f69' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/sodium.php',
+        'f1b96cb260a5baeea9a7285cda82a1ec' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/solr.php',
+        '3fd8853757d0fe3557c179efb807afeb' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/spl.php',
+        '9312ce96a51c846913fcda5f186d58dd' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/sqlsrv.php',
+        'd3eb383ad0b8b962b29dc4afd29d6715' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/ssdeep.php',
+        '42a09bc448f441a0b9f9367ea975c0bf' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/ssh2.php',
+        'ef711077d356d1b33ca0b10b67b0be8f' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/stream.php',
+        '764b09f6df081cbb2807b97c6ace3866' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/strings.php',
+        'ef241678769fee4a44aaa288f3b78aa1' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/swoole.php',
+        '0efc8f6778cba932b9e2a89e28de2452' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/uodbc.php',
+        'd383d32907b98af53ee9208c62204fd0' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/uopz.php',
+        '2fd2e4060f7fe772660f002ce38f0b71' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/url.php',
+        '782249e03deebeaf57b9991ff5493aa0' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/var.php',
+        '344440cd1cd7200fdb4f12af0d3c587f' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/xdiff.php',
+        '3599f369219c658a5fb6c4fe66832f62' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/xml.php',
+        '7fcd313da9fae337051b091b3492c21b' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/xmlrpc.php',
+        'd668c74cfa92d893b582356733d9a80e' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/yaml.php',
+        '4af1dca6db8c527c6eed27bff85ff0e5' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/yaz.php',
+        'fe43ca06499ac37bc2dedd823af71eb5' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/zip.php',
+        '356736db98a6834f0a886b8d509b0ecd' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/zlib.php',
+        'd4e415514e4352172d58f02433fa50e4' => __DIR__ . '/..' . '/amphp/socket/src/functions.php',
+        '1c2dcb9d6851a7abaae89f9586ddd460' => __DIR__ . '/..' . '/amphp/socket/src/Internal/functions.php',
+        '7fec264e4908bd2976476a6241c3f4d0' => __DIR__ . '/..' . '/amphp/socket/src/SocketAddress/functions.php',
+        '0174385c3be07e86008907d06ee66531' => __DIR__ . '/..' . '/sabberworm/php-css-parser/src/Rule/Rule.php',
+        '98aea6e41b9cb79b379b10f37ba1f0b7' => __DIR__ . '/..' . '/sabberworm/php-css-parser/src/RuleSet/RuleContainer.php',
+        '606a39d89246991a373564698c2d8383' => __DIR__ . '/..' . '/symfony/polyfill-php85/bootstrap.php',
+        'b6b991a57620e2fb6b2f66f03fe9ddc2' => __DIR__ . '/..' . '/symfony/string/Resources/functions.php',
+        '5d92623b88cbe7c988a6aca6fa79ebce' => __DIR__ . '/..' . '/amphp/parallel/src/Context/functions.php',
+        'c20d640a0b06382af5bbe7e0c7475adf' => __DIR__ . '/..' . '/amphp/parallel/src/Context/Internal/functions.php',
+        '42a785d14bae29c606457755ffd1653b' => __DIR__ . '/..' . '/amphp/parallel/src/Ipc/functions.php',
+        '805558626a43dc52f2afc82368f8d62e' => __DIR__ . '/..' . '/amphp/parallel/src/Worker/functions.php',
+        '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
+        'b067bc7112e384b61c701452d53a14a8' => __DIR__ . '/..' . '/mtdowling/jmespath.php/src/JmesPath.php',
+        '9d2b9fc6db0f153a0a149fefb182415e' => __DIR__ . '/..' . '/symfony/polyfill-php84/bootstrap.php',
+        '8a9dc1de0ca7e01f3e08231539562f61' => __DIR__ . '/..' . '/aws/aws-sdk-php/src/functions.php',
+    );
+
     public static $prefixLengthsPsr4 = array (
+        'p' =>
+        array (
+            'phpDocumentor\\Reflection\\' => 25,
+        ),
+        'c' =>
+        array (
+            'chillerlan\\Settings\\' => 20,
+            'chillerlan\\QRCode\\' => 18,
+        ),
+        'X' =>
+        array (
+            'XdgBaseDir\\' => 11,
+        ),
+        'W' =>
+        array (
+            'Webmozart\\Assert\\' => 17,
+        ),
+        'S' =>
+        array (
+            'Symfony\\Polyfill\\Php85\\' => 23,
+            'Symfony\\Polyfill\\Php84\\' => 23,
+            'Symfony\\Polyfill\\Php80\\' => 23,
+            'Symfony\\Polyfill\\Mbstring\\' => 26,
+            'Symfony\\Polyfill\\Intl\\Normalizer\\' => 33,
+            'Symfony\\Polyfill\\Intl\\Grapheme\\' => 31,
+            'Symfony\\Polyfill\\Ctype\\' => 23,
+            'Symfony\\Contracts\\Service\\' => 26,
+            'Symfony\\Component\\String\\' => 25,
+            'Symfony\\Component\\Filesystem\\' => 29,
+            'Symfony\\Component\\Console\\' => 26,
+            'Svg\\' => 4,
+            'Spatie\\ArrayToXml\\' => 18,
+            'Sabberworm\\CSS\\' => 15,
+        ),
+        'R' =>
+        array (
+            'Revolt\\' => 7,
+        ),
         'P' =>
         array (
+            'Psr\\Log\\' => 8,
+            'Psr\\Http\\Message\\' => 17,
+            'Psr\\Http\\Client\\' => 16,
+            'Psr\\Container\\' => 14,
+            'Psalm\\' => 6,
+            'PhpParser\\' => 10,
+            'PHPStan\\PhpDocParser\\' => 21,
             'PHPMailer\\PHPMailer\\' => 20,
+        ),
+        'M' =>
+        array (
+            'Masterminds\\' => 12,
+        ),
+        'L' =>
+        array (
+            'LibDNS\\' => 7,
+            'League\\Uri\\' => 11,
+            'LanguageServerProtocol\\' => 23,
+        ),
+        'K' =>
+        array (
+            'Kelunik\\Certificate\\' => 20,
+        ),
+        'J' =>
+        array (
+            'JmesPath\\' => 9,
+        ),
+        'G' =>
+        array (
+            'GuzzleHttp\\Psr7\\' => 16,
+            'GuzzleHttp\\Promise\\' => 19,
+            'GuzzleHttp\\' => 11,
+        ),
+        'F' =>
+        array (
+            'FontLib\\' => 8,
+            'Fidry\\CpuCoreCounter\\' => 21,
+        ),
+        'D' =>
+        array (
+            'Dompdf\\' => 7,
+            'Doctrine\\Deprecations\\' => 22,
+        ),
+        'C' =>
+        array (
+            'Composer\\XdebugHandler\\' => 23,
+            'Composer\\Semver\\' => 16,
+            'Composer\\Pcre\\' => 14,
+        ),
+        'A' =>
+        array (
+            'Aws\\' => 4,
+            'Amp\\Sync\\' => 9,
+            'Amp\\Socket\\' => 11,
+            'Amp\\Serialization\\' => 18,
+            'Amp\\Process\\' => 12,
+            'Amp\\Pipeline\\' => 13,
+            'Amp\\Parser\\' => 11,
+            'Amp\\Parallel\\' => 13,
+            'Amp\\Dns\\' => 8,
+            'Amp\\Cache\\' => 10,
+            'Amp\\ByteStream\\' => 15,
+            'Amp\\' => 4,
+            'AdvancedJsonRpc\\' => 16,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
+        'phpDocumentor\\Reflection\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/phpdocumentor/reflection-docblock/src',
+            1 => __DIR__ . '/..' . '/phpdocumentor/type-resolver/src',
+            2 => __DIR__ . '/..' . '/phpdocumentor/reflection-common/src',
+        ),
+        'chillerlan\\Settings\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/chillerlan/php-settings-container/src',
+        ),
+        'chillerlan\\QRCode\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/chillerlan/php-qrcode/src',
+        ),
+        'XdgBaseDir\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/dnoegel/php-xdg-base-dir/src',
+        ),
+        'Webmozart\\Assert\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/webmozart/assert/src',
+        ),
+        'Symfony\\Polyfill\\Php85\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/symfony/polyfill-php85',
+        ),
+        'Symfony\\Polyfill\\Php84\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/symfony/polyfill-php84',
+        ),
+        'Symfony\\Polyfill\\Php80\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/symfony/polyfill-php80',
+        ),
+        'Symfony\\Polyfill\\Mbstring\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/symfony/polyfill-mbstring',
+        ),
+        'Symfony\\Polyfill\\Intl\\Normalizer\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer',
+        ),
+        'Symfony\\Polyfill\\Intl\\Grapheme\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/symfony/polyfill-intl-grapheme',
+        ),
+        'Symfony\\Polyfill\\Ctype\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/symfony/polyfill-ctype',
+        ),
+        'Symfony\\Contracts\\Service\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/symfony/service-contracts',
+        ),
+        'Symfony\\Component\\String\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/symfony/string',
+        ),
+        'Symfony\\Component\\Filesystem\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/symfony/filesystem',
+        ),
+        'Symfony\\Component\\Console\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/symfony/console',
+        ),
+        'Svg\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/dompdf/php-svg-lib/src/Svg',
+        ),
+        'Spatie\\ArrayToXml\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/spatie/array-to-xml/src',
+        ),
+        'Sabberworm\\CSS\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/sabberworm/php-css-parser/src',
+        ),
+        'Revolt\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/revolt/event-loop/src',
+        ),
+        'Psr\\Log\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/psr/log/src',
+        ),
+        'Psr\\Http\\Message\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/psr/http-factory/src',
+            1 => __DIR__ . '/..' . '/psr/http-message/src',
+        ),
+        'Psr\\Http\\Client\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/psr/http-client/src',
+        ),
+        'Psr\\Container\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/psr/container/src',
+        ),
+        'Psalm\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/vimeo/psalm/src/Psalm',
+        ),
+        'PhpParser\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/nikic/php-parser/lib/PhpParser',
+        ),
+        'PHPStan\\PhpDocParser\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/phpstan/phpdoc-parser/src',
+        ),
         'PHPMailer\\PHPMailer\\' =>
         array (
             0 => __DIR__ . '/..' . '/phpmailer/phpmailer/src',
         ),
+        'Masterminds\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/masterminds/html5/src',
+        ),
+        'LibDNS\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/daverandom/libdns/src',
+        ),
+        'League\\Uri\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/league/uri',
+            1 => __DIR__ . '/..' . '/league/uri-interfaces',
+        ),
+        'LanguageServerProtocol\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/felixfbecker/language-server-protocol/src',
+        ),
+        'Kelunik\\Certificate\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/kelunik/certificate/src',
+        ),
+        'JmesPath\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/mtdowling/jmespath.php/src',
+        ),
+        'GuzzleHttp\\Psr7\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/guzzlehttp/psr7/src',
+        ),
+        'GuzzleHttp\\Promise\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/guzzlehttp/promises/src',
+        ),
+        'GuzzleHttp\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/guzzlehttp/guzzle/src',
+        ),
+        'FontLib\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/dompdf/php-font-lib/src/FontLib',
+        ),
+        'Fidry\\CpuCoreCounter\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/fidry/cpu-core-counter/src',
+        ),
+        'Dompdf\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/dompdf/dompdf/src',
+        ),
+        'Doctrine\\Deprecations\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/doctrine/deprecations/src',
+        ),
+        'Composer\\XdebugHandler\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/composer/xdebug-handler/src',
+        ),
+        'Composer\\Semver\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/composer/semver/src',
+        ),
+        'Composer\\Pcre\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/composer/pcre/src',
+        ),
+        'Aws\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/aws/aws-sdk-php/src',
+        ),
+        'Amp\\Sync\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/amphp/sync/src',
+        ),
+        'Amp\\Socket\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/amphp/socket/src',
+        ),
+        'Amp\\Serialization\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/amphp/serialization/src',
+        ),
+        'Amp\\Process\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/amphp/process/src',
+        ),
+        'Amp\\Pipeline\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/amphp/pipeline/src',
+        ),
+        'Amp\\Parser\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/amphp/parser/src',
+        ),
+        'Amp\\Parallel\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/amphp/parallel/src',
+        ),
+        'Amp\\Dns\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/amphp/dns/src',
+        ),
+        'Amp\\Cache\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/amphp/cache/src',
+        ),
+        'Amp\\ByteStream\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/amphp/byte-stream/src',
+        ),
+        'Amp\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/amphp/amp/src',
+        ),
+        'AdvancedJsonRpc\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/danog/advanced-json-rpc/lib',
+        ),
+    );
+
+    public static $prefixesPsr0 = array (
+        'J' =>
+        array (
+            'JsonMapper' =>
+            array (
+                0 => __DIR__ . '/..' . '/netresearch/jsonmapper/src',
+            ),
+        ),
     );
 
     public static $classMap = array (
+        'AWS\\CRT\\Auth\\AwsCredentials' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Auth/AwsCredentials.php',
+        'AWS\\CRT\\Auth\\CredentialsProvider' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Auth/CredentialsProvider.php',
+        'AWS\\CRT\\Auth\\Signable' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Auth/Signable.php',
+        'AWS\\CRT\\Auth\\SignatureType' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Auth/SignatureType.php',
+        'AWS\\CRT\\Auth\\SignedBodyHeaderType' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Auth/SignedBodyHeaderType.php',
+        'AWS\\CRT\\Auth\\Signing' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Auth/Signing.php',
+        'AWS\\CRT\\Auth\\SigningAlgorithm' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Auth/SigningAlgorithm.php',
+        'AWS\\CRT\\Auth\\SigningConfigAWS' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Auth/SigningConfigAWS.php',
+        'AWS\\CRT\\Auth\\SigningResult' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Auth/SigningResult.php',
+        'AWS\\CRT\\Auth\\StaticCredentialsProvider' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Auth/StaticCredentialsProvider.php',
+        'AWS\\CRT\\CRT' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/CRT.php',
+        'AWS\\CRT\\HTTP\\Headers' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/HTTP/Headers.php',
+        'AWS\\CRT\\HTTP\\Message' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/HTTP/Message.php',
+        'AWS\\CRT\\HTTP\\Request' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/HTTP/Request.php',
+        'AWS\\CRT\\HTTP\\Response' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/HTTP/Response.php',
+        'AWS\\CRT\\IO\\EventLoopGroup' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/IO/EventLoopGroup.php',
+        'AWS\\CRT\\IO\\InputStream' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/IO/InputStream.php',
+        'AWS\\CRT\\Internal\\Encoding' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Internal/Encoding.php',
+        'AWS\\CRT\\Internal\\Extension' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Internal/Extension.php',
+        'AWS\\CRT\\Log' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Log.php',
+        'AWS\\CRT\\NativeResource' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/NativeResource.php',
+        'AWS\\CRT\\OptionValue' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Options.php',
+        'AWS\\CRT\\Options' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Options.php',
+        'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'DelayedTargetValidation' => __DIR__ . '/..' . '/symfony/polyfill-php85/Resources/stubs/DelayedTargetValidation.php',
+        'Deprecated' => __DIR__ . '/..' . '/symfony/polyfill-php84/Resources/stubs/Deprecated.php',
+        'Dompdf\\Cpdf' => __DIR__ . '/..' . '/dompdf/dompdf/lib/Cpdf.php',
+        'Filter\\FilterException' => __DIR__ . '/..' . '/symfony/polyfill-php85/Resources/stubs/Filter/FilterException.php',
+        'Filter\\FilterFailedException' => __DIR__ . '/..' . '/symfony/polyfill-php85/Resources/stubs/Filter/FilterFailedException.php',
+        'NoDiscard' => __DIR__ . '/..' . '/symfony/polyfill-php85/Resources/stubs/NoDiscard.php',
+        'Normalizer' => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php',
+        'Pdo\\Dblib' => __DIR__ . '/..' . '/symfony/polyfill-php84/Resources/stubs/Pdo/Dblib.php',
+        'Pdo\\Firebird' => __DIR__ . '/..' . '/symfony/polyfill-php84/Resources/stubs/Pdo/Firebird.php',
+        'Pdo\\Mysql' => __DIR__ . '/..' . '/symfony/polyfill-php84/Resources/stubs/Pdo/Mysql.php',
+        'Pdo\\Odbc' => __DIR__ . '/..' . '/symfony/polyfill-php84/Resources/stubs/Pdo/Odbc.php',
+        'Pdo\\Pgsql' => __DIR__ . '/..' . '/symfony/polyfill-php84/Resources/stubs/Pdo/Pgsql.php',
+        'Pdo\\Sqlite' => __DIR__ . '/..' . '/symfony/polyfill-php84/Resources/stubs/Pdo/Sqlite.php',
+        'PhpToken' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/PhpToken.php',
+        'ReflectionConstant' => __DIR__ . '/..' . '/symfony/polyfill-php84/Resources/stubs/ReflectionConstant.php',
+        'RoundingMode' => __DIR__ . '/..' . '/symfony/polyfill-php84/Resources/stubs/RoundingMode.php',
+        'Safe\\DateTime' => __DIR__ . '/..' . '/thecodingmachine/safe/lib/DateTime.php',
+        'Safe\\DateTimeImmutable' => __DIR__ . '/..' . '/thecodingmachine/safe/lib/DateTimeImmutable.php',
+        'Safe\\Exceptions\\ApacheException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/ApacheException.php',
+        'Safe\\Exceptions\\ApcuException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/ApcuException.php',
+        'Safe\\Exceptions\\ArrayException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/ArrayException.php',
+        'Safe\\Exceptions\\Bzip2Exception' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/Bzip2Exception.php',
+        'Safe\\Exceptions\\CalendarException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/CalendarException.php',
+        'Safe\\Exceptions\\ClassobjException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/ClassobjException.php',
+        'Safe\\Exceptions\\ComException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/ComException.php',
+        'Safe\\Exceptions\\CubridException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/CubridException.php',
+        'Safe\\Exceptions\\CurlException' => __DIR__ . '/..' . '/thecodingmachine/safe/lib/Exceptions/CurlException.php',
+        'Safe\\Exceptions\\DatetimeException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/DatetimeException.php',
+        'Safe\\Exceptions\\DirException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/DirException.php',
+        'Safe\\Exceptions\\EioException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/EioException.php',
+        'Safe\\Exceptions\\ErrorfuncException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/ErrorfuncException.php',
+        'Safe\\Exceptions\\ExecException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/ExecException.php',
+        'Safe\\Exceptions\\FileinfoException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/FileinfoException.php',
+        'Safe\\Exceptions\\FilesystemException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/FilesystemException.php',
+        'Safe\\Exceptions\\FilterException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/FilterException.php',
+        'Safe\\Exceptions\\FpmException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/FpmException.php',
+        'Safe\\Exceptions\\FtpException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/FtpException.php',
+        'Safe\\Exceptions\\FunchandException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/FunchandException.php',
+        'Safe\\Exceptions\\GettextException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/GettextException.php',
+        'Safe\\Exceptions\\GmpException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/GmpException.php',
+        'Safe\\Exceptions\\GnupgException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/GnupgException.php',
+        'Safe\\Exceptions\\HashException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/HashException.php',
+        'Safe\\Exceptions\\IbaseException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/IbaseException.php',
+        'Safe\\Exceptions\\IbmDb2Exception' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/IbmDb2Exception.php',
+        'Safe\\Exceptions\\IconvException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/IconvException.php',
+        'Safe\\Exceptions\\ImageException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/ImageException.php',
+        'Safe\\Exceptions\\ImapException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/ImapException.php',
+        'Safe\\Exceptions\\InfoException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/InfoException.php',
+        'Safe\\Exceptions\\InotifyException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/InotifyException.php',
+        'Safe\\Exceptions\\JsonException' => __DIR__ . '/..' . '/thecodingmachine/safe/lib/Exceptions/JsonException.php',
+        'Safe\\Exceptions\\LdapException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/LdapException.php',
+        'Safe\\Exceptions\\LibxmlException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/LibxmlException.php',
+        'Safe\\Exceptions\\LzfException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/LzfException.php',
+        'Safe\\Exceptions\\MailparseException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/MailparseException.php',
+        'Safe\\Exceptions\\MbstringException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/MbstringException.php',
+        'Safe\\Exceptions\\MiscException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/MiscException.php',
+        'Safe\\Exceptions\\MysqlException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/MysqlException.php',
+        'Safe\\Exceptions\\MysqliException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/MysqliException.php',
+        'Safe\\Exceptions\\NetworkException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/NetworkException.php',
+        'Safe\\Exceptions\\Oci8Exception' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/Oci8Exception.php',
+        'Safe\\Exceptions\\OpcacheException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/OpcacheException.php',
+        'Safe\\Exceptions\\OpensslException' => __DIR__ . '/..' . '/thecodingmachine/safe/lib/Exceptions/OpensslException.php',
+        'Safe\\Exceptions\\OutcontrolException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/OutcontrolException.php',
+        'Safe\\Exceptions\\PcntlException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/PcntlException.php',
+        'Safe\\Exceptions\\PcreException' => __DIR__ . '/..' . '/thecodingmachine/safe/lib/Exceptions/PcreException.php',
+        'Safe\\Exceptions\\PgsqlException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/PgsqlException.php',
+        'Safe\\Exceptions\\PosixException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/PosixException.php',
+        'Safe\\Exceptions\\PsException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/PsException.php',
+        'Safe\\Exceptions\\PspellException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/PspellException.php',
+        'Safe\\Exceptions\\ReadlineException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/ReadlineException.php',
+        'Safe\\Exceptions\\RnpException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/RnpException.php',
+        'Safe\\Exceptions\\RpminfoException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/RpminfoException.php',
+        'Safe\\Exceptions\\RrdException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/RrdException.php',
+        'Safe\\Exceptions\\SafeExceptionInterface' => __DIR__ . '/..' . '/thecodingmachine/safe/lib/Exceptions/SafeExceptionInterface.php',
+        'Safe\\Exceptions\\SemException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/SemException.php',
+        'Safe\\Exceptions\\SessionException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/SessionException.php',
+        'Safe\\Exceptions\\ShmopException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/ShmopException.php',
+        'Safe\\Exceptions\\SimplexmlException' => __DIR__ . '/..' . '/thecodingmachine/safe/lib/Exceptions/SimplexmlException.php',
+        'Safe\\Exceptions\\SocketsException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/SocketsException.php',
+        'Safe\\Exceptions\\SodiumException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/SodiumException.php',
+        'Safe\\Exceptions\\SolrException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/SolrException.php',
+        'Safe\\Exceptions\\SplException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/SplException.php',
+        'Safe\\Exceptions\\SqlsrvException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/SqlsrvException.php',
+        'Safe\\Exceptions\\SsdeepException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/SsdeepException.php',
+        'Safe\\Exceptions\\Ssh2Exception' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/Ssh2Exception.php',
+        'Safe\\Exceptions\\StreamException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/StreamException.php',
+        'Safe\\Exceptions\\StringsException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/StringsException.php',
+        'Safe\\Exceptions\\SwooleException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/SwooleException.php',
+        'Safe\\Exceptions\\UodbcException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/UodbcException.php',
+        'Safe\\Exceptions\\UopzException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/UopzException.php',
+        'Safe\\Exceptions\\UrlException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/UrlException.php',
+        'Safe\\Exceptions\\VarException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/VarException.php',
+        'Safe\\Exceptions\\XdiffException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/XdiffException.php',
+        'Safe\\Exceptions\\XmlException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/XmlException.php',
+        'Safe\\Exceptions\\XmlrpcException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/XmlrpcException.php',
+        'Safe\\Exceptions\\YamlException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/YamlException.php',
+        'Safe\\Exceptions\\YazException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/YazException.php',
+        'Safe\\Exceptions\\ZipException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/ZipException.php',
+        'Safe\\Exceptions\\ZlibException' => __DIR__ . '/..' . '/thecodingmachine/safe/generated/Exceptions/ZlibException.php',
+        'SebastianBergmann\\Diff\\Chunk' => __DIR__ . '/..' . '/sebastian/diff/src/Chunk.php',
+        'SebastianBergmann\\Diff\\ConfigurationException' => __DIR__ . '/..' . '/sebastian/diff/src/Exception/ConfigurationException.php',
+        'SebastianBergmann\\Diff\\Diff' => __DIR__ . '/..' . '/sebastian/diff/src/Diff.php',
+        'SebastianBergmann\\Diff\\Differ' => __DIR__ . '/..' . '/sebastian/diff/src/Differ.php',
+        'SebastianBergmann\\Diff\\Exception' => __DIR__ . '/..' . '/sebastian/diff/src/Exception/Exception.php',
+        'SebastianBergmann\\Diff\\Line' => __DIR__ . '/..' . '/sebastian/diff/src/Line.php',
+        'SebastianBergmann\\Diff\\LongestCommonSubsequenceCalculator' => __DIR__ . '/..' . '/sebastian/diff/src/LongestCommonSubsequenceCalculator.php',
+        'SebastianBergmann\\Diff\\MemoryEfficientLongestCommonSubsequenceCalculator' => __DIR__ . '/..' . '/sebastian/diff/src/MemoryEfficientLongestCommonSubsequenceCalculator.php',
+        'SebastianBergmann\\Diff\\Output\\AbstractChunkOutputBuilder' => __DIR__ . '/..' . '/sebastian/diff/src/Output/AbstractChunkOutputBuilder.php',
+        'SebastianBergmann\\Diff\\Output\\DiffOnlyOutputBuilder' => __DIR__ . '/..' . '/sebastian/diff/src/Output/DiffOnlyOutputBuilder.php',
+        'SebastianBergmann\\Diff\\Output\\DiffOutputBuilderInterface' => __DIR__ . '/..' . '/sebastian/diff/src/Output/DiffOutputBuilderInterface.php',
+        'SebastianBergmann\\Diff\\Output\\StrictUnifiedDiffOutputBuilder' => __DIR__ . '/..' . '/sebastian/diff/src/Output/StrictUnifiedDiffOutputBuilder.php',
+        'SebastianBergmann\\Diff\\Output\\UnifiedDiffOutputBuilder' => __DIR__ . '/..' . '/sebastian/diff/src/Output/UnifiedDiffOutputBuilder.php',
+        'SebastianBergmann\\Diff\\Parser' => __DIR__ . '/..' . '/sebastian/diff/src/Parser.php',
+        'SebastianBergmann\\Diff\\TimeEfficientLongestCommonSubsequenceCalculator' => __DIR__ . '/..' . '/sebastian/diff/src/TimeEfficientLongestCommonSubsequenceCalculator.php',
+        'Stringable' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Stringable.php',
+        'UnhandledMatchError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/UnhandledMatchError.php',
+        'ValueError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/ValueError.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
@@ -29,6 +624,7 @@ class ComposerStaticInit2185d2f99bcd56787481d9357a5972d3
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInit2185d2f99bcd56787481d9357a5972d3::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInit2185d2f99bcd56787481d9357a5972d3::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit2185d2f99bcd56787481d9357a5972d3::$prefixesPsr0;
             $loader->classMap = ComposerStaticInit2185d2f99bcd56787481d9357a5972d3::$classMap;
 
         }, null, ClassLoader::class);

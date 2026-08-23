@@ -37,9 +37,9 @@ class AnalyticsController
     {
         $counts = $this->model->getUserCountsByRole();
         return [
-            'eleve'      => (int) ($counts['eleve'] ?? 0),
-            'enseignant' => (int) ($counts['enseignant'] ?? 0),
-            'admin'      => (int) ($counts['admin'] ?? 0),
+            'eleve'        => (int) ($counts['eleve'] ?? 0),
+            'gestionnaire' => (int) ($counts['gestionnaire'] ?? 0),
+            'admin'        => (int) ($counts['admin'] ?? 0),
         ];
     }
 }

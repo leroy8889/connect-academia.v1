@@ -398,6 +398,24 @@ body.auth-page html {
     color: #ffffff;
 }
 
+/* ── Lien mot de passe oublié ─────────────────────────────── */
+.forgot-password-row {
+    display: flex;
+    justify-content: flex-end;
+    margin: -6px 0 4px;
+}
+.forgot-password-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: #7c3aed;
+    text-decoration: none;
+    transition: color 0.2s ease, opacity 0.2s ease;
+}
+.forgot-password-link:hover {
+    color: #9b51e0;
+    text-decoration: underline;
+}
+
 /* ── Liens de bas de page ─────────────────────────────────── */
 .footer-links {
     margin-top: 35px;
@@ -513,4 +531,12 @@ body.auth-page html {
 @media (max-width: 480px) {
     .title-main { font-size: 24px; }
     .form-section { padding: 16px; }
+}
+
+/* Empêche le zoom auto iOS au focus des champs : 16px = seuil minimum sans zoom */
+@media (max-width: 768px) {
+    .form-group input,
+    .form-group select {
+        font-size: 16px;
+    }
 }

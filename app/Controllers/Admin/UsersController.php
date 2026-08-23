@@ -6,6 +6,8 @@ namespace Controllers\Admin;
 use Core\{Response, Session, Database, AdminPermissions, Cache};
 use Models\Admin;
 use Models\User;
+use Models\Notification;
+use Models\Orientation\NotificationOrientation;
 use PDO;
 
 class UsersController
@@ -94,7 +96,7 @@ class UsersController
     {
         $id   = (int) ($params['id'] ?? 0);
         $stmt = $this->db->prepare(
-            "SELECT u.id, u.nom, u.prenom, u.email, u.role, u.serie_id, u.is_active,
+            "SELECT u.id, u.nom, u.prenom, u.email, u.telephone, u.role, u.serie_id, u.is_active,
                     u.bio, u.etablissement, u.photo_profil, u.created_at, u.last_login,
                     s.nom AS serie_nom
              FROM users u
@@ -121,6 +123,7 @@ class UsersController
         $prenom  = trim($_POST['prenom'] ?? '');
         $nom     = trim($_POST['nom'] ?? '');
         $email   = trim($_POST['email'] ?? '');
+        $telRaw  = trim($_POST['telephone'] ?? '');
         $role    = $_POST['role'] ?? 'eleve';
         $serieId = !empty($_POST['serie_id']) ? (int) $_POST['serie_id'] : null;
         $mdp     = $_POST['password'] ?? '';
@@ -133,7 +136,15 @@ class UsersController
             Response::json(['success' => false, 'message' => 'Email invalide.'], 422);
         }
 
-        if (!in_array($role, ['eleve', 'enseignant'], true)) {
+        $telephone = null;
+        if ($telRaw !== '') {
+            $telephone = \Core\Phone::normalizeGabon($telRaw);
+            if ($telephone === null) {
+                Response::json(['success' => false, 'message' => 'Numéro gabonais invalide — ex : 074 12 34 56 (01, 06 ou 07).'], 422);
+            }
+        }
+
+        if (!in_array($role, ['eleve', 'gestionnaire'], true)) {
             Response::json(['success' => false, 'message' => 'Rôle invalide.'], 422);
         }
 
@@ -162,17 +173,20 @@ class UsersController
         );
 
         $this->db->prepare(
-            "INSERT INTO users (uuid, nom, prenom, email, password_hash, serie_id, role, is_active, is_verified)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1)"
-        )->execute([$uuid, $nom, $prenom, $email, $hash, $serieId, $role]);
+            "INSERT INTO users (uuid, nom, prenom, email, telephone, password_hash, serie_id, role, is_active, is_verified)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1)"
+        )->execute([$uuid, $nom, $prenom, $email, $telephone, $hash, $serieId, $role]);
 
         $id = (int) $this->db->lastInsertId();
 
+        // Sécurité (WEB-03) — le mot de passe n'est JAMAIS renvoyé au client
+        // (risque de journalisation/cache). L'admin le transmet via le champ
+        // du formulaire s'il l'a saisi ; un mot de passe auto-généré doit être
+        // communiqué à l'utilisateur par un canal dédié (email).
         Response::json([
             'success' => true,
             'message' => "Utilisateur {$prenom} {$nom} créé avec succès.",
             'id'      => $id,
-            'tmp_password' => $mdp,
         ]);
     }
 
@@ -187,6 +201,7 @@ class UsersController
         $prenom  = trim($_POST['prenom'] ?? '');
         $nom     = trim($_POST['nom'] ?? '');
         $email   = trim($_POST['email'] ?? '');
+        $telRaw  = trim($_POST['telephone'] ?? '');
         $role    = $_POST['role'] ?? '';
         $serieId = !empty($_POST['serie_id']) ? (int) $_POST['serie_id'] : null;
         $bio     = trim($_POST['bio'] ?? '');
@@ -200,7 +215,15 @@ class UsersController
             Response::json(['success' => false, 'message' => 'Email invalide.'], 422);
         }
 
-        if (!in_array($role, ['eleve', 'enseignant'], true)) {
+        $telephone = null;
+        if ($telRaw !== '') {
+            $telephone = \Core\Phone::normalizeGabon($telRaw);
+            if ($telephone === null) {
+                Response::json(['success' => false, 'message' => 'Numéro gabonais invalide — ex : 074 12 34 56 (01, 06 ou 07).'], 422);
+            }
+        }
+
+        if (!in_array($role, ['eleve', 'gestionnaire'], true)) {
             Response::json(['success' => false, 'message' => 'Rôle invalide.'], 422);
         }
 
@@ -212,9 +235,9 @@ class UsersController
         }
 
         $this->db->prepare(
-            "UPDATE users SET nom=?, prenom=?, email=?, role=?, serie_id=?, bio=?, etablissement=?, updated_at=NOW()
+            "UPDATE users SET nom=?, prenom=?, email=?, telephone=?, role=?, serie_id=?, bio=?, etablissement=?, updated_at=NOW()
              WHERE id=? AND is_deleted=0"
-        )->execute([$nom, $prenom, $email, $role, $serieId, $bio ?: null, $etab ?: null, $id]);
+        )->execute([$nom, $prenom, $email, $telephone, $role, $serieId, $bio ?: null, $etab ?: null, $id]);
 
         Response::json(['success' => true, 'message' => "Utilisateur mis à jour."]);
     }
@@ -254,11 +277,62 @@ class UsersController
             Response::json(['success' => false, 'message' => 'Utilisateur introuvable.'], 404);
         }
 
-        $this->db->prepare(
-            "UPDATE users SET is_deleted = 1, is_active = 0, updated_at = NOW() WHERE id = ?"
-        )->execute([$id]);
+        // Purge définitive : le compte ET tout ce qui le concerne (posts,
+        // commentaires, likes, avis, favoris, notifications, accès gestionnaire…)
+        // partent en cascade ; ses dossiers d'inscription restent archivés
+        // côté établissements. Sa session meurt à sa prochaine requête.
+        $ok = (new \Services\DeletionService())->purgeUser($id, Session::adminId());
 
-        Response::json(['success' => true, 'message' => "Utilisateur {$row['prenom']} {$row['nom']} supprimé."]);
+        if (!$ok) {
+            Response::json(['success' => false, 'message' => 'La suppression a échoué — consultez les logs.'], 500);
+        }
+
+        Response::json(['success' => true, 'message' => "Utilisateur {$row['prenom']} {$row['nom']} supprimé définitivement, ainsi que tout son contenu."]);
+    }
+
+    // ── POST /admin/api/utilisateurs/{id}/message ─────────────────────────
+    // Envoie un message de l'administration à un utilisateur : il arrive
+    // comme notification in-app (cloche navbar + espace élève orientation).
+    public function sendMessage(array $params): void
+    {
+        if (AdminPermissions::isUsersReadOnly(Session::adminRole() ?? '')) {
+            Response::json(['success' => false, 'error' => ['code' => 'FORBIDDEN', 'message' => 'Accès en lecture seule pour votre rôle.']], 403);
+        }
+
+        $id      = (int) ($params['id'] ?? 0);
+        $message = trim($_POST['message'] ?? '');
+
+        if ($message === '') {
+            Response::json(['success' => false, 'message' => 'Le message est vide.'], 422);
+        }
+        if (mb_strlen($message) > 500) {
+            Response::json(['success' => false, 'message' => 'Message trop long (500 caractères max).'], 422);
+        }
+
+        $stmt = $this->db->prepare("SELECT id, prenom, nom FROM users WHERE id = ? AND is_deleted = 0");
+        $stmt->execute([$id]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user) {
+            Response::json(['success' => false, 'message' => 'Utilisateur introuvable.'], 404);
+        }
+
+        // Cloche navbar (compte communauté / hub) — actor_id NULL = message officiel
+        (new Notification())->create([
+            'user_id' => $id,
+            'type'    => 'announcement',
+            'message' => $message,
+        ]);
+
+        // Espace élève orientation (page Notifications) — même message
+        (new NotificationOrientation())->create([
+            'user_id' => $id,
+            'type'    => 'message_admin',
+            'titre'   => 'Message de l\'administration',
+            'message' => $message,
+        ]);
+
+        Response::json(['success' => true, 'message' => "Message envoyé à {$user['prenom']} {$user['nom']}."]);
     }
 
     // ── CSV export ────────────────────────────────────────────────────────
@@ -272,7 +346,7 @@ class UsersController
 
         $out = fopen('php://output', 'w');
         fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
-        fputcsv($out, ['ID', 'Prénom', 'Nom', 'Email', 'Rôle', 'Série', 'Statut', 'Inscrit le', 'Dernier login']);
+        fputcsv($out, ['ID', 'Prénom', 'Nom', 'Email', 'Téléphone', 'Rôle', 'Série', 'Établissement (inscrit)', 'Statut', 'Inscrit le', 'Dernier login']);
 
         foreach ($users as $u) {
             fputcsv($out, [
@@ -280,8 +354,10 @@ class UsersController
                 $u['prenom'],
                 $u['nom'],
                 $u['email'],
+                \Core\Phone::formatGabon($u['telephone'] ?? null),
                 ucfirst($u['role']),
                 $u['serie'] ?? '',
+                $u['etabs_inscrit'] ?? '',
                 $u['is_active'] ? 'Actif' : 'Suspendu',
                 $u['created_at'] ? date('d/m/Y', strtotime($u['created_at'])) : '',
                 $u['last_login'] ? date('d/m/Y H:i', strtotime($u['last_login'])) : '',

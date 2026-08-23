@@ -143,15 +143,20 @@ class PaiementController
         curl_close($ch);
 
         if ($err || !$raw) {
-            error_log("[Admin Sync] cURL MF error: {$err} token:{$mfPaymentToken}");
+            error_log("[Admin Sync] cURL MF error: {$err} token:" . \Core\MoneyFusion::maskToken($mfPaymentToken));
             return false;
         }
 
-        error_log("[Admin Sync] MF verify token:{$mfPaymentToken} — {$raw}");
+        // La réponse brute contient les données personnelles du payeur (nom,
+        // téléphone, montant) : on ne journalise que le statut.
         $resp = json_decode($raw, true);
-        if (!$resp || empty($resp['data'])) return false;
+        if (!$resp || empty($resp['data'])) {
+            error_log("[Admin Sync] MF verify token:" . \Core\MoneyFusion::maskToken($mfPaymentToken) . ' — réponse inexploitable');
+            return false;
+        }
 
         $status = strtolower($resp['data']['status'] ?? '');
+        error_log("[Admin Sync] MF verify token:" . \Core\MoneyFusion::maskToken($mfPaymentToken) . ' statut:' . ($status ?: 'n/a'));
         return $status === 'paid' ? $resp['data'] : false;
     }
 

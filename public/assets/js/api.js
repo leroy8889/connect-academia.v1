@@ -48,9 +48,18 @@ const API = (() => {
             }
 
             if (!response.ok) {
+                // Réponse non JSON (413 nginx, page d'erreur 5xx…) : on remonte
+                // le code HTTP plutôt qu'un « Une erreur est survenue » opaque,
+                // sinon un problème serveur est indiagnosticable côté support.
+                let message = result?.error?.message || result?.message;
+                if (!message) {
+                    message = response.status === 413
+                        ? "Fichier trop volumineux : le serveur a refusé l'envoi."
+                        : `Une erreur est survenue (HTTP ${response.status}).`;
+                }
                 throw {
                     status: response.status,
-                    message: result?.error?.message || result?.message || 'Une erreur est survenue',
+                    message,
                     errors: result?.error?.fields || result?.errors || {}
                 };
             }

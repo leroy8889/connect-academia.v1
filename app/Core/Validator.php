@@ -101,4 +101,11 @@ class Validator
             $this->addError($field, "Ce champ doit être numérique");
         }
     }
+
+    private function rulePhoneGabon(string $field, mixed $value, array $params): void
+    {
+        if ($value && Phone::normalizeGabon((string) $value) === null) {
+            $this->addError($field, "Numéro gabonais invalide — ex : 074 12 34 56 (01, 06 ou 07)");
+        }
+    }
 }
