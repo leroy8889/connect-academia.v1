@@ -138,7 +138,7 @@ class FormationController
     {
         $slug = (new Etablissement())->findSlugById($this->etabId);
         if ($slug) {
-            Redis::getInstance()->del("orientation:etab:{$slug}");
+            Redis::getInstance()->del("orientation:etab:{$slug}", "orientation:etab:v2:{$slug}");
         }
     }
 

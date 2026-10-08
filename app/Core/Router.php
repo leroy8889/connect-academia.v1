@@ -58,9 +58,17 @@ class Router
             $method = strtoupper($_POST['_method']);
         }
 
+        // HEAD est un GET sans corps (RFC 9110 §9.3.2). Aucune route n'étant
+        // déclarée en HEAD, chaque page répondait 404 : les sondes de
+        // supervision — qui interrogent en HEAD par défaut — voyaient le site
+        // entier hors service, et les vérificateurs de liens le donnaient
+        // cassé. Le corps émis est supprimé par le serveur web, pas ici : le
+        // contrôleur travaille exactement comme pour un GET.
+        $chercher = $method === 'HEAD' ? 'GET' : $method;
+
         foreach ($this->routes as $route) {
             $pattern = $this->toRegex($route['path']);
-            if ($route['method'] === $method && preg_match($pattern, $uri, $matches)) {
+            if ($route['method'] === $chercher && preg_match($pattern, $uri, $matches)) {
                 $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
                 $this->runMiddleware($route['middleware']);
                 $this->callHandler($route['handler'], $params);

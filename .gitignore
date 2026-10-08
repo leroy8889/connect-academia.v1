@@ -36,3 +36,13 @@ Database/*.sql
 # Le dépôt étant public, le publier revient à donner la carte des faiblesses.
 # Retirer cette ligne si le dépôt passe en privé.
 Brief_Remediation_Round2_ConnectAcademia.md
+
+# Cache applicatif : repli disque de Core\Cache quand Redis est absent.
+# Entièrement reconstructible, jamais versionné.
+storage/cache/
+
+# Verrous d'exécution des tâches planifiées (flock) — état d'exécution local
+storage/locks/
+
+# Miroir local des médias dérivés (logos, cachets). Reconstructible.
+storage/medias/

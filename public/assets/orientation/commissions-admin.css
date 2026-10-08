@@ -1,0 +1,319 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Suivi des commissions — console super administrateur (spec §10.3)
+   Fond crème Claude de la console admin, accent Purple Neon unique.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.cm-totaux {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.cm-total {
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .62);
+    border: 1px solid rgba(31, 30, 29, .08);
+}
+.cm-total-l {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #8D8A83;
+}
+.cm-total-v {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.15;
+    margin-top: 6px;
+    color: #1F1E1D;
+}
+.cm-total-v span { font-size: 12px; font-weight: 600; color: #8D8A83; }
+.cm-total-n { font-size: 11.5px; color: #8D8A83; margin-top: 3px; }
+
+/* Un liseré de tête plutôt qu'un aplat : quatre cartes vives côte à côte
+   deviendraient illisibles. */
+.cm-total-a_facturer { border-top: 3px solid #F59E0B; }
+.cm-total-facturee   { border-top: 3px solid #8B52FA; }
+.cm-total-reglee     { border-top: 3px solid #22C55E; }
+.cm-total-annulee    { border-top: 3px solid rgba(31, 30, 29, .20); }
+
+/* ── Filtres ─────────────────────────────────────────────────────────────── */
+.cm-filtres {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .5);
+    border: 1px solid rgba(31, 30, 29, .08);
+}
+.cm-filtres select,
+.cm-filtres input[type="date"] {
+    padding: 8px 12px;
+    border: 1.5px solid rgba(31, 30, 29, .10);
+    border-radius: 12px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    color: #1F1E1D;
+}
+.cm-filtres select:focus,
+.cm-filtres input:focus { outline: none; border-color: #8B52FA; }
+
+/* ── Tableau ─────────────────────────────────────────────────────────────── */
+.cm-table-wrap {
+    overflow-x: auto;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .58);
+    border: 1px solid rgba(31, 30, 29, .08);
+}
+
+.cm-table { width: 100%; min-width: 1020px; border-collapse: collapse; }
+.cm-table th {
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #8D8A83;
+    border-bottom: 1px solid rgba(31, 30, 29, .08);
+    white-space: nowrap;
+}
+.cm-table td {
+    padding: 12px 14px;
+    font-size: 13px;
+    color: #1F1E1D;
+    border-bottom: 1px solid rgba(31, 30, 29, .05);
+    vertical-align: middle;
+}
+.cm-table tbody tr:last-child td { border-bottom: none; }
+.cm-table tbody tr:hover td { background: rgba(255, 255, 255, .55); }
+
+/* Les montants s'alignent à droite en chiffres tabulaires : c'est ce qui rend
+   une colonne de nombres comparable d'un coup d'œil. */
+.cm-table th.num,
+.cm-table td.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.cm-montant { font-weight: 700; }
+
+.cm-ref {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #7440D9;
+    white-space: nowrap;
+}
+.cm-sec { font-size: 12px; color: #52504B; }
+
+.cm-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.cm-badge-a_facturer { background: rgba(245,158,11,.15); color: #B45309; }
+.cm-badge-facturee   { background: rgba(139,82,250,.13); color: #7440D9; }
+.cm-badge-reglee     { background: rgba(34,197,94,.14);  color: #15803d; }
+.cm-badge-annulee    { background: rgba(31,30,29,.07);   color: #8D8A83; }
+
+.cm-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.cm-actions form { display: inline; }
+
+.cm-vide {
+    padding: 40px 20px;
+    text-align: center;
+    font-size: 13.5px;
+    color: #8D8A83;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .5);
+}
+
+.cm-note {
+    margin-top: 16px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #8D8A83;
+    max-width: 78ch;
+}
+
+/* ── En-tête, boutons et bandeaux (préfixe .ac-*) ─────────────────────────
+   Ces classes étaient utilisées par la vue sans jamais être définies : la
+   page s'affichait en HTML nu. Même langage visuel que tracabilite-admin.css
+   (crème Claude, accent Purple Neon unique, radii 14-20). */
+.ac-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+}
+.ac-head h1 { font-size: 26px; font-weight: 700; line-height: 1.2; color: #1F1E1D; }
+.ac-head p  { margin-top: 5px; font-size: 13.5px; color: #605D57; max-width: 70ch; }
+
+.ac-flash { padding: 12px 16px; border-radius: 14px; font-size: 13.5px; margin-bottom: 16px; }
+.ac-flash-ok  { background: rgba(34,197,94,.12); color: #15803d; }
+.ac-flash-err { background: rgba(239,68,68,.10); color: #b91c1c; }
+
+.ac-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border: 1px solid rgba(31, 30, 29, .14);
+    border-radius: 999px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1F1E1D;
+    text-decoration: none;
+    cursor: pointer;
+}
+.ac-btn:hover { border-color: #8B52FA; color: #7440D9; }
+.ac-btn-primary { background: #8B52FA; border-color: #8B52FA; color: #fff; }
+.ac-btn-primary:hover { filter: brightness(1.07); color: #fff; }
+.ac-btn-sm { padding: 5px 11px; font-size: 11.5px; }
+
+/* ── Nouveaux statuts et recouvrement par tranches (spec §10.4 / §10.5) ───── */
+.cm-total-partiellement_reglee { border-top: 3px solid #0EA5E9; }
+.cm-total-abandonnee           { border-top: 3px solid #78716C; }
+
+.cm-badge-partiellement_reglee { background: rgba(14,165,233,.14); color: #0369A1; }
+.cm-badge-abandonnee           { background: rgba(120,113,108,.16); color: #57534E; }
+
+/* ── Trésorerie : rentré / à recouvrer / perdu ─────────────────────────────
+   Trois chiffres, une seule bande. Séparés en cartes, ils entreraient en
+   concurrence avec les totaux par statut juste au-dessus. */
+.cm-caisse {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 34px;
+    padding: 13px 18px;
+    margin-bottom: 18px;
+    border-radius: 16px;
+    background: rgba(139, 82, 250, .07);
+    border: 1px solid rgba(139, 82, 250, .16);
+}
+.cm-caisse-item { display: flex; align-items: baseline; gap: 9px; }
+.cm-caisse-l {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: #7A6FA0;
+}
+.cm-caisse-v {
+    font-size: 15.5px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: #1F1E1D;
+}
+.cm-caisse-ok   { color: #15803d; }
+.cm-caisse-mort { color: #8D8A83; }
+
+/* ── Échéancier dans la ligne ─────────────────────────────────────────────
+   Trois lignes empilées plutôt que trois colonnes : la référence de règlement
+   et le bouton d'encaissement ne tiennent pas dans une cellule étroite, et le
+   tableau doit rester lisible sans défilement horizontal permanent. */
+.cm-tranches { min-width: 300px; }
+
+.cm-tranche {
+    display: grid;
+    grid-template-columns: 74px 88px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px dashed rgba(31, 30, 29, .07);
+}
+.cm-tranche:last-child { border-bottom: none; }
+
+.cm-tranche-n {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: #8D8A83;
+    white-space: nowrap;
+}
+.cm-tranche-m {
+    font-size: 12.5px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+}
+.cm-tranche-e { font-size: 11.5px; color: #605D57; }
+
+.cm-tranche-payee .cm-tranche-n,
+.cm-tranche-payee .cm-tranche-e { color: #15803d; }
+.cm-tranche-close .cm-tranche-n,
+.cm-tranche-close .cm-tranche-m,
+.cm-tranche-close .cm-tranche-e { color: #A8A29E; text-decoration: line-through; }
+.cm-tranche-due  .cm-tranche-n  { color: #B45309; }
+
+.cm-tranche form { display: inline; }
+
+/* ── Abandon d'année ─────────────────────────────────────────────────────── */
+.cm-tr-abandon td { background: rgba(120, 113, 108, .05); }
+.cm-abandon-motif {
+    max-width: 22ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-style: italic;
+}
+
+.ac-btn-danger { border-color: rgba(239, 68, 68, .34); color: #b91c1c; }
+.ac-btn-danger:hover { border-color: #b91c1c; background: rgba(239, 68, 68, .07); color: #b91c1c; }
+
+@media (max-width: 900px) {
+    .cm-tranche { grid-template-columns: 66px 82px 1fr; }
+    .cm-tranche form { grid-column: 1 / -1; }
+}
+
+/* ── Signalement de révision ────────────────────────────────────────────────
+   La situation de bourse du candidat a changé APRÈS l'émission de la
+   commission, alors qu'elle n'était plus révisable automatiquement (une tranche
+   au moins était encaissée, ou la commission était close). Le montant n'a donc
+   pas bougé : c'est au super administrateur d'arbitrer.
+
+   Traité en ambre et non en rouge : ce n'est pas une erreur, c'est une décision
+   attendue. Un rouge d'alerte pousserait à « réparer » quelque chose qui n'est
+   pas cassé. */
+.cm-revision {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid #F5C97B;
+  border-left: 3px solid #D98B12;
+  border-radius: 8px;
+  background: rgba(217, 139, 18, .07);
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #7A4E05;
+  white-space: normal;
+}
+.cm-revision strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+.cm-revision div    { margin: 3px 0 6px; }
+.cm-revision button {
+  padding: 4px 10px;
+  border: 1px solid #D98B12;
+  border-radius: 6px;
+  background: transparent;
+  color: #7A4E05;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cm-revision button:hover { background: rgba(217, 139, 18, .14); }

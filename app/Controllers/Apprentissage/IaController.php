@@ -3,12 +3,37 @@ declare(strict_types=1);
 
 namespace Controllers\Apprentissage;
 
-use Core\{Response, Session, Cache};
+use Core\{Concurrence, Response, Session, Cache};
 use Models\{Ressource, IaConversation};
 
 class IaController
 {
     private const DAILY_LIMIT = 20;
+
+    /**
+     * Appels SIMULTANÉS autorisés vers Gemini, tous utilisateurs confondus.
+     *
+     * Un appel vaut jusqu'à trois tentatives de 60 s séparées de deux pauses de
+     * 2 s : 184 secondes de worker PHP-FPM immobilisé dans le pire cas. Le pool
+     * de production en compte 80. Sans plafond, 80 élèves posant une question
+     * pendant un ralentissement de l'API suffisent à consommer TOUT le pool —
+     * et c'est le site entier qui cesse de répondre, tunnel d'inscription
+     * compris. La limite quotidienne ne protège pas de cela : elle borne le
+     * nombre d'appels par élève et par jour, jamais leur simultanéité.
+     *
+     * 12 places ≈ 15 % du pool : l'assistant sature seul, le reste du site
+     * continue de servir.
+     */
+    private const APPELS_SIMULTANES_MAX = 12;
+
+    /**
+     * Expiration du compteur de places, un peu au-dessus du pire cas (184 s).
+     * Filet contre les places qui fuiraient si un worker était tué par l'OS.
+     */
+    private const CONCURRENCE_TTL = 240;
+
+    /** Nom de la porte de concurrence (cf. Core\Concurrence). */
+    private const PORTE = 'ia:gemini';
 
     private const ALLOWED_IMAGE_MIMES = [
         'image/jpeg', 'image/png', 'image/gif', 'image/webp',
@@ -56,6 +81,18 @@ class IaController
         $apiKey = $_ENV['GEMINI_API_KEY'] ?? '';
         if (empty($apiKey)) {
             Response::json(['success' => false, 'error' => ['message' => 'Assistant IA non configuré']], 503);
+        }
+
+        // Plafond de concurrence : au-delà, on refuse TOUT DE SUITE plutôt que
+        // d'immobiliser un worker de plus. L'assistant se dégrade seul ; la
+        // plateforme, elle, reste debout. La place est rendue par un
+        // register_shutdown_function — Response::json() se termine par exit, et
+        // un bloc finally ne s'exécute pas sur exit.
+        if (!Concurrence::acquerir(self::PORTE, self::APPELS_SIMULTANES_MAX, self::CONCURRENCE_TTL)) {
+            Response::json([
+                'success' => false,
+                'error'   => ['message' => "L'assistant traite déjà beaucoup de questions. Réessayez dans quelques secondes."],
+            ], 503);
         }
 
         $ressource = (new Ressource())->findWithProgression($ressourceId, $userId);

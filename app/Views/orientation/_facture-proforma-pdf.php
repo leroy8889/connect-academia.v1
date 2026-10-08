@@ -30,9 +30,16 @@ table.fp-tarifs { width: 100%; border-collapse: collapse; margin-bottom: 10pt; }
 table.fp-tarifs th, table.fp-tarifs td { border: 0.9pt solid #ccc; padding: 7pt 8pt; font-size: 9pt; }
 table.fp-tarifs th { background: <?= $h($navy) ?>; color: #fff; text-align: left; }
 table.fp-tarifs td.fp-montant { text-align: right; white-space: nowrap; }
-table.fp-tarifs tr.fp-total td { font-weight: bold; background: #f3f3f3; }
 table.fp-tarifs tr.fp-ttc td { font-weight: bold; background: <?= $h($navy) ?>; color: #fff; }
-.fp-arrete { font-size: 9.5pt; margin: 8pt 0; text-align: justify; }
+/* Bloc des pièces exigées — deux colonnes pour tenir sur la page même quand
+   l'établissement en demande une douzaine. Le libellé imprimé est dans le
+   markup, pas ici : le dupliquer en commentaire ferait matcher les tests de
+   présence du bloc alors que le bloc n'est pas rendu. */
+.fp-pieces { border: 0.9pt solid <?= $h($navy) ?>; border-radius: 8pt; padding: 8pt 12pt; margin: 12pt 0 10pt; }
+.fp-pieces-t { font-size: 9pt; font-weight: bold; color: <?= $h($navy) ?>; margin-bottom: 5pt; }
+table.fp-pieces-l { width: 100%; border-collapse: collapse; }
+table.fp-pieces-l td { width: 50%; vertical-align: top; padding: 2pt 8pt 2pt 0; font-size: 8.5pt; line-height: 1.35; }
+.fp-pieces-note { font-size: 7.5pt; color: #555; margin-top: 4pt; }
 table.fp-echeancier { width: 100%; border-collapse: collapse; margin-bottom: 10pt; }
 table.fp-echeancier th, table.fp-echeancier td { border: 0.9pt solid #ccc; padding: 6pt 8pt; font-size: 8.5pt; }
 table.fp-echeancier th { background: #f0f0f0; text-align: left; }
@@ -86,42 +93,44 @@ table.fp-echeancier td.fp-montant { text-align: right; }
       <th>Référence</th>
       <th>Intitulé de la formation</th>
       <th>Année académique</th>
-      <th>Nb. stagiaire</th>
       <th>Montant</th>
     </tr>
+    <?php
+      // Le niveau est accolé à l'intitulé : deux années d'un même cycle peuvent
+      // avoir deux tarifs, et sans lui l'ANBG ne peut pas rapprocher le montant
+      // de l'année demandée.
+      $intitule = $filiereLibelle;
+      if ($niveauLibelle !== '') {
+          $intitule .= ' (' . $niveauLibelle . ')';
+      } elseif ($cycleLibelle !== '') {
+          $intitule .= ' (' . $cycleLibelle . ')';
+      }
+    ?>
     <?php if ($fraisInscription > 0): ?>
     <tr>
       <td>1 - Inscription</td>
-      <td><?= $h($filiereLibelle) ?></td>
+      <td><?= $h($intitule) ?></td>
       <td><?= $h($anneeUniv) ?></td>
-      <td>1</td>
       <td class="fp-montant"><?= $fmt($fraisInscription) ?></td>
     </tr>
     <?php endif; ?>
     <?php if ($fraisScolarite > 0): ?>
     <tr>
       <td>2 - Scolarité</td>
-      <td><?= $h($filiereLibelle) ?></td>
+      <td><?= $h($intitule) ?></td>
       <td>—</td>
-      <td>1</td>
       <td class="fp-montant"><?= $fmt($fraisScolarite) ?></td>
     </tr>
     <?php endif; ?>
-    <tr class="fp-total">
-      <td colspan="4">Net à payer HTVA</td>
-      <td class="fp-montant"><?= $fmt($total) ?></td>
-    </tr>
-    <tr>
-      <td colspan="4">TVA 18%</td>
-      <td class="fp-montant">—</td>
-    </tr>
+    <?php // Un seul total. La formation n'est pas assujettie à la TVA : « HTVA »,
+          // « TVA 18 % » et « Montant TTC » décrivaient une taxe qui ne
+          // s'applique pas, et deux lignes de total identiques faisaient douter
+          // du document. ?>
     <tr class="fp-ttc">
-      <td colspan="4">Montant TTC</td>
+      <td colspan="3">Net à payer</td>
       <td class="fp-montant"><?= $fmt($total) ?></td>
     </tr>
   </table>
-
-  <p class="fp-arrete">Arrêté la présente facture proforma à la somme de <b><?= $fmt($total) ?></b>, à titre indicatif — les modalités de règlement et l'échéancier définitif seront confirmés par le service comptabilité de l'établissement.</p>
 
   <table class="fp-echeancier">
     <tr><th>Échéance</th><th>Montant</th></tr>
@@ -129,6 +138,30 @@ table.fp-echeancier td.fp-montant { text-align: right; }
     <tr><td>1er versement scolarité</td><td class="fp-montant">—</td></tr>
     <tr><td>Solde scolarité (réparti selon accord avec l'établissement)</td><td class="fp-montant">—</td></tr>
   </table>
+
+  <?php
+    // Composition du dossier d'inscription, restreinte au cycle de ce candidat
+    // (voir Services\Orientation\CompositionDossier). Deux colonnes, remplies
+    // en colonne puis en ligne pour que la lecture reste verticale.
+    if (!empty($piecesDossier)):
+        $fpNb    = count($piecesDossier);
+        $fpMoit  = (int)ceil($fpNb / 2);
+        $fpGauche = array_slice($piecesDossier, 0, $fpMoit);
+        $fpDroite = array_slice($piecesDossier, $fpMoit);
+  ?>
+  <div class="fp-pieces">
+    <div class="fp-pieces-t">Composition du dossier d'inscription — cycle <?= $h($cycleDossierLibelle) ?></div>
+    <table class="fp-pieces-l">
+      <?php for ($i = 0; $i < $fpMoit; $i++): ?>
+      <tr>
+        <td>• <?= $h($fpGauche[$i]) ?></td>
+        <td><?= isset($fpDroite[$i]) ? '• ' . $h($fpDroite[$i]) : '' ?></td>
+      </tr>
+      <?php endfor; ?>
+    </table>
+    <div class="fp-pieces-note">Liste communiquée par l'établissement pour le cycle demandé ; des pièces complémentaires peuvent être réclamées à l'examen du dossier. Les pièces sont à déposer au service des admissions lors de l'inscription définitive.</div>
+  </div>
+  <?php endif; ?>
 
   <table class="fp-pied">
     <tr>

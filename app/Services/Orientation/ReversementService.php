@@ -81,7 +81,24 @@ class ReversementService
             return ['success' => false, 'message' => 'Compte mobile money non actif.'];
         }
 
-        $rev->incrementTentatives($reversementId);
+        // ── Réservation ATOMIQUE avant tout appel à l'API de paiement ────────
+        //
+        // Les contrôles ci-dessus lisent un état ; ils ne le retiennent pas. Un
+        // double-clic de l'agent lançait deux requêtes qui franchissaient
+        // toutes deux ces contrôles et appelaient toutes deux le payout :
+        // l'établissement était payé DEUX FOIS, et rien ne le signalait.
+        //
+        // Cette instruction lit et écrit d'un seul geste. Un seul appel
+        // concurrent peut la réussir ; les autres s'arrêtent ici, avant que le
+        // moindre franc ne parte. Elle remplace aussi `incrementTentatives()`,
+        // qui incrémentait après coup et ne gardait donc rien.
+        if (!$rev->reserverPourRejeu($reversementId, self::MAX_TENTATIVES)) {
+            return [
+                'success' => false,
+                'message' => 'Ce reversement est déjà en cours de traitement ou n’est plus rejouable. '
+                           . 'Rafraîchissez la réconciliation avant de réessayer.',
+            ];
+        }
 
         $ok = self::appelPayoutMF(
             $rev,

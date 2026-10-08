@@ -57,18 +57,36 @@ class Validator
         }
     }
 
+    /**
+     * Longueur minimale, en CARACTÈRES.
+     *
+     * `strlen` compte des octets. En UTF-8 un caractère accentué en pèse deux,
+     * un idéogramme trois : « éàüñ » faisait huit octets et satisfaisait donc
+     * `min:8`, alors que le mot de passe ne compte que quatre caractères. La
+     * longueur minimale des mots de passe était contournable — il suffisait
+     * d'accentuer. `mb_strlen` mesure ce que l'utilisateur a réellement tapé.
+     */
     private function ruleMin(string $field, mixed $value, array $params): void
     {
         $min = (int) ($params[0] ?? 0);
-        if ($value !== null && $value !== '' && strlen((string) $value) < $min) {
+        if ($value !== null && $value !== '' && mb_strlen((string) $value) < $min) {
             $this->addError($field, "Minimum {$min} caractères requis");
         }
     }
 
+    /**
+     * Longueur maximale, en CARACTÈRES — pour la raison symétrique.
+     *
+     * Compté en octets, `max:100` refusait un nom de soixante lettres dès
+     * qu'elles portaient des accents. Sur un public gabonais et francophone,
+     * cela bloquait des inscriptions parfaitement légitimes. C'est aussi
+     * l'unité de MySQL : une colonne utf8mb4 VARCHAR(100) accepte cent
+     * caractères, accentués ou non.
+     */
     private function ruleMax(string $field, mixed $value, array $params): void
     {
         $max = (int) ($params[0] ?? 255);
-        if ($value && strlen((string) $value) > $max) {
+        if ($value && mb_strlen((string) $value) > $max) {
             $this->addError($field, "Maximum {$max} caractères autorisés");
         }
     }

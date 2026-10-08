@@ -25,7 +25,16 @@ class CsrfMiddleware
                     'error'   => ['code' => 'CSRF_ERROR', 'message' => 'Token invalide. Rafraîchissez la page.'],
                 ], 403);
             }
-            Session::flash('errors', ['general' => 'Token de sécurité invalide. Rafraîchissez la page.']);
+            $message = 'Session expirée : votre action n’a pas été enregistrée. Rafraîchissez la page et réessayez.';
+
+            // Deux clés pour un seul message : les formulaires historiques
+            // relisent `errors` (tableau par champ), les écrans récents
+            // relisent `error` (chaîne). N'en poser qu'une renvoyait
+            // l'utilisateur sur une page inchangée, sans un mot d'explication —
+            // c'est exactement ce qui se passait au dépôt d'une pièce depuis
+            // l'espace candidat, où l'échec était totalement silencieux.
+            Session::flash('errors', ['general' => $message]);
+            Session::flash('error', $message);
             Response::redirect($_SERVER['HTTP_REFERER'] ?? '/');
         }
     }

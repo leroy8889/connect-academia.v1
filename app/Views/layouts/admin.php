@@ -85,6 +85,9 @@ function adminNavActive(string $path, string $current, string $base): string {
         $isSuperAdmin = ($adminRole === 'super_admin');
         // Accès au tableau de bord sécurité : super_admin + admin.
         $canSecurite  = in_array($adminRole, ['super_admin', 'admin'], true);
+        // Espace traçabilité (spec §11) : mêmes rôles que la sécurité — il
+        // expose les données personnelles de tous les candidats.
+        $canTracabilite = $canSecurite;
         // Compteur d'alertes de sécurité non lues (rôles autorisés uniquement).
         $secUnseen = $canSecurite ? \Core\SecurityMonitor::unseenCount() : 0;
     ?>
@@ -189,6 +192,15 @@ function adminNavActive(string $path, string $current, string $base): string {
           </svg>
           <span>Paiements</span>
         </a>
+        <?php if ($canTracabilite): ?>
+        <a href="<?= url('/admin/commissions') ?>" class="sidebar-link<?= str_contains($currentUri, '/admin/commissions') ? ' active' : '' ?>">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+          <span>Commissions</span>
+        </a>
+        <?php endif; ?>
       </div>
       <?php endif; ?>
 
@@ -218,6 +230,36 @@ function adminNavActive(string $path, string $current, string $base): string {
             <path d="M3 21v-5h5"/>
           </svg>
           <span>Réconciliation</span>
+        </a>
+      </div>
+      <?php endif; ?>
+
+      <?php if ($canTracabilite): ?>
+      <!-- TRAÇABILITÉ (spec §11) — super administrateur : suivi de bout en bout
+           de chaque préinscription et de chaque inscription. -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Traçabilité</div>
+        <a href="<?= url('/admin/dossiers') ?>" class="sidebar-link<?= str_contains($currentUri, '/admin/dossiers') ? ' active' : '' ?>">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <path d="M9 15l2 2 4-4"/>
+          </svg>
+          <span>Dossiers</span>
+        </a>
+        <a href="<?= url('/admin/tableaux-de-bord') ?>" class="sidebar-link<?= str_contains($currentUri, '/admin/tableaux-de-bord') ? ' active' : '' ?>">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M3 3v18h18"/>
+            <path d="M7 15l4-5 3 3 4-6"/>
+          </svg>
+          <span>Tableaux de bord</span>
+        </a>
+        <a href="<?= url('/admin/journal') ?>" class="sidebar-link<?= str_contains($currentUri, '/admin/journal') ? ' active' : '' ?>">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="9"/>
+            <polyline points="12 7 12 12 15 14"/>
+          </svg>
+          <span>Journal d&rsquo;activit&eacute;</span>
         </a>
       </div>
       <?php endif; ?>

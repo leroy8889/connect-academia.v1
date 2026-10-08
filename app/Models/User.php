@@ -63,12 +63,73 @@ class User extends BaseModel
             ]
         );
 
-        return $this->lastInsertId();
+        $id = $this->lastInsertId();
+
+        // Traçabilité §11.2 — point d'écriture UNIQUE de la création de compte :
+        // toutes les portes d'entrée passent par ici (inscription élève, compte
+        // visiteur créé pendant une candidature, création depuis la console).
+        // Journal::ecrire() n'échoue jamais : aucun risque pour l'inscription.
+        \Services\Orientation\Journal::ecrire(
+            \Services\Orientation\Journal::COMPTE_CREE,
+            [
+                'utilisateur_id' => $id,
+                'objet_type'     => 'user',
+                'objet_id'       => $id,
+                'donnees'        => [
+                    'role'  => $data['role'] ?? 'eleve',
+                    'email' => $data['email'] ?? null,
+                ],
+            ]
+        );
+
+        return $id;
     }
 
     public function verifyPassword(string $password, string $hash): bool
     {
         return password_verify($password, $hash);
+    }
+
+    /**
+     * Le compte appartient-il à un établissement (gestionnaire / agent) ?
+     *
+     * Les gestionnaires vivent dans la même table `users` que les élèves, mais
+     * leur porte d'entrée est /gestionnaire/login (2FA obligatoire). Sans ce
+     * garde-fou, un gestionnaire pouvait ouvrir une session « élève » depuis
+     * /auth/connexion et atterrir sur le hub. Source unique de vérité :
+     * users.role = 'gestionnaire' OU un lien dans etablissement_admins.
+     *
+     * Filet : si la table orientation n'existe pas (base restée au schéma
+     * d'origine), on retombe sur le rôle seul plutôt que de casser le login.
+     */
+    public function isEtablissementAccount(int $userId): bool
+    {
+        if ($userId <= 0) {
+            return false;
+        }
+
+        try {
+            $row = $this->query(
+                "SELECT 1
+                   FROM users u
+                   LEFT JOIN etablissement_admins ea ON ea.user_id = u.id
+                  WHERE u.id = ?
+                    AND (u.role = 'gestionnaire' OR ea.user_id IS NOT NULL)
+                  LIMIT 1",
+                [$userId]
+            )->fetchColumn();
+
+            return (bool) $row;
+        } catch (\Throwable $e) {
+            error_log('[User] isEtablissementAccount : ' . $e->getMessage());
+
+            $role = $this->query(
+                "SELECT role FROM users WHERE id = ? LIMIT 1",
+                [$userId]
+            )->fetchColumn();
+
+            return $role === 'gestionnaire';
+        }
     }
 
     public function updateLastLogin(int $id): void

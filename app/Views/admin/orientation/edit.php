@@ -49,6 +49,18 @@ $modesPrefill = isset($old['mode_paiement'])
     ? array_values(array_filter(array_map('trim', (array)$old['mode_paiement'])))
     : (json_decode($etab['infos_paiement'] ?? '[]', true) ?: []);
 
+// Composition du dossier d'inscription : trois listes (commun / licence /
+// master). `old` prioritaire pour qu'une re-soumission échouée ne fasse pas
+// perdre la saisie ; sinon le JSON de la fiche, relu par le service qui en est
+// la seule source de vérité.
+$compoPrefill = isset($old['composition_commun'])
+             || isset($old['composition_licence'])
+             || isset($old['composition_master'])
+    ? \Services\Orientation\CompositionDossier::decoder(
+          \Services\Orientation\CompositionDossier::encoder($old)
+      )
+    : \Services\Orientation\CompositionDossier::depuisEtab($etab);
+
 $statsPrefill = [];
 if (isset($old['stat_label'])) {
     foreach ((array)$old['stat_label'] as $i => $label) {
@@ -94,12 +106,22 @@ if (isset($old['formations'])) {
 $preinsChecked = isset($old['nom'])
     ? isset($old['preinscription_active'])
     : (bool)($etab['preinscription_active'] ?? 1);
+// Inscriptions en ligne : fermées par défaut (0), contrairement à la
+// préinscription — c'est le parcours qui engage l'établissement.
+$inscriptionChecked = isset($old['nom'])
+    ? isset($old['inscription_active'])
+    : (bool)($etab['inscription_active'] ?? 0);
 $recepChecked = isset($old['nom'])
     ? isset($old['genere_recepisse'])
     : (bool)($etab['genere_recepisse'] ?? 1);
 $attestChecked = isset($old['nom'])
     ? isset($old['genere_attestation'])
     : (bool)($etab['genere_attestation'] ?? 1);
+// Ouverture aux boursiers : colonne absente (migration non rejouée) → coché,
+// qui est le comportement de la plateforme avant ce réglage.
+$boursiersChecked = isset($old['nom'])
+    ? isset($old['accepte_boursiers'])
+    : (bool)($etab['accepte_boursiers'] ?? 1);
 
 $imagesActuelles = json_decode($etab['images_cles'] ?? '[]', true) ?: [];
 ?>
@@ -213,6 +235,47 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
 }
 .or-btn-remove:hover { background: var(--red); color: #fff; }
 
+/* ── Gestionnaires ────────────────────────────────────── */
+.or-gest-vide {
+    background: var(--ap-xl); border-radius: 10px; padding: 14px 16px;
+    font-size: 13px; color: var(--txt-m); margin-bottom: 14px;
+}
+.or-gest-liste { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.or-gest-existant {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    flex-wrap: wrap;
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px;
+}
+.or-gest-nom  { font-size: 13.5px; font-weight: 600; color: var(--txt); margin-right: 8px; }
+.or-gest-mail { font-size: 12.5px; color: var(--txt-l); }
+.or-gest-meta { display: flex; align-items: center; gap: 10px; }
+.or-gest-etat {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+    border-radius: 999px; padding: 3px 9px;
+}
+.or-gest-etat.ok { background: var(--ap-xl); color: var(--ap); }
+.or-gest-etat.ko { background: var(--red-bg); color: var(--red); }
+.or-gest-vu   { font-size: 11.5px; color: var(--txt-l); }
+.or-gest-note { font-size: 12px; color: var(--txt-l); margin: 0 0 14px; }
+.or-gest-note a { color: var(--ap); }
+
+.or-gest-block {
+    background: var(--ap-xl); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px 4px; margin-bottom: 12px;
+}
+.or-gest-head {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+}
+.or-gest-title {
+    font-size: 11px; font-weight: 700; color: var(--ap);
+    text-transform: uppercase; letter-spacing: 0.06em;
+}
+.or-gest-del {
+    background: var(--red-bg); color: var(--red); border: none; border-radius: 6px;
+    width: 26px; height: 26px; font-size: 16px; line-height: 1; cursor: pointer; font-weight: 700;
+}
+.or-gest-del:hover { background: var(--red); color: #fff; }
+
 .or-tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .or-tag {
     display: flex; align-items: center; gap: 6px;
@@ -247,10 +310,42 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
     font-size: 12px; color: var(--txt-m); margin-bottom: 10px;
 }
 
+/* Tient la colonne du sommaire pour les blocs qui n'en ont pas (grille des
+   tarifs), afin qu'ils s'alignent avec les sections du formulaire au lieu de
+   tomber DANS la colonne de 220 px. */
+.or-layout-spacer { min-height: 1px; }
+
+/* ── Grille tarifaire dans la console admin ─────────────────────────────
+   Le fragment `_grille-tarifs.php` est volontairement neutre en CSS (il sert
+   aussi au back-office gestionnaire). On l'habille ici sans le modifier :
+   une carte par formation, lisible d'un coup d'œil, qui ne déborde jamais. */
+.or-formation-tarif {
+    border: 1px solid var(--border); border-radius: 14px;
+    background: var(--ap-xl); padding: 16px 18px; margin-bottom: 14px;
+}
+.or-formation-tarif:last-child { margin-bottom: 0; }
+.or-formation-tarif-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap; margin-bottom: 4px;
+}
+.or-formation-tarif-nom {
+    font-size: 14.5px; font-weight: 700; color: var(--txt);
+    min-width: 0; overflow-wrap: anywhere;
+}
+.or-formation-tarif form { margin: 0; }
+.or-formation-add {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 18px;
+}
+.or-formation-add .form-input { flex: 1 1 240px; min-width: 0; }
+
 @media (max-width: 900px) {
     .or-form-layout { grid-template-columns: 1fr; }
     .or-nav { position: static; }
     .or-grid-2, .or-grid-3 { grid-template-columns: 1fr; }
+    /* La colonne du sommaire disparaît : l'espaceur ne doit pas laisser un
+       trou de 28px (le `gap` de la grille) au-dessus des tarifs. */
+    .or-layout-spacer { display: none; }
 }
 </style>
 
@@ -297,10 +392,12 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
                 'atouts'      => ['Atouts',       false],
                 'contact'     => ['Contact',      true],
                 'tarifs'      => ['Tarifs',       true],
+                'dossier'     => ['Dossier d\'inscription', false],
                 'formations'  => ['Formations',   true],
+                'gestionnaires' => ['Gestionnaires', false],
             ];
             foreach ($navItems as $id => [$label, $required]):
-                $hasError = array_filter(array_keys($errors), fn($k) => str_contains($k, $id) || ($id === 'identite' && in_array($k, ['nom','type','ville','couleur_principale'])) || ($id === 'medias' && in_array($k, ['logo','images_campus','video'])) || ($id === 'formations' && $k === 'formations') || ($id === 'contact' && in_array($k, ['email_contact','map_embed'])));
+                $hasError = array_filter(array_keys($errors), fn($k) => str_contains($k, $id) || ($id === 'identite' && in_array($k, ['nom','type','ville','couleur_principale'])) || ($id === 'medias' && in_array($k, ['logo','images_campus','video'])) || ($id === 'formations' && $k === 'formations') || ($id === 'gestionnaires' && str_starts_with($k, 'gestionnaire')) || ($id === 'contact' && in_array($k, ['email_contact','map_embed'])));
             ?>
             <a href="#sec-<?= $id ?>" class="<?= !empty($hasError) ? 'active' : '' ?>">
                 <?= $label ?>
@@ -380,6 +477,10 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
                             Préinscription activée
                         </label>
                         <label class="or-check-label">
+                            <input type="checkbox" name="inscription_active" value="1" <?= $inscriptionChecked ? 'checked' : '' ?>>
+                            Inscription en ligne activée
+                        </label>
+                        <label class="or-check-label">
                             <input type="checkbox" name="genere_recepisse" value="1" <?= $recepChecked ? 'checked' : '' ?>>
                             Génère un récépissé PDF
                         </label>
@@ -387,7 +488,23 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
                             <input type="checkbox" name="genere_attestation" value="1" <?= $attestChecked ? 'checked' : '' ?>>
                             Génère une attestation d'inscription
                         </label>
+                        <label class="or-check-label">
+                            <input type="checkbox" name="accepte_boursiers" value="1" <?= $boursiersChecked ? 'checked' : '' ?>>
+                            Accepte les candidatures de boursiers
+                        </label>
                     </div>
+                    <p style="font-size:12px;color:var(--txt-l);margin-top:8px;">
+                        <strong style="color:var(--txt)">Inscription en ligne</strong> : cochée, le bouton
+                        « S'inscrire » et le parcours en trois étapes s'ouvrent aux candidats. Le même
+                        réglage est accessible au gestionnaire depuis ses paramètres, et en un clic
+                        depuis la liste des établissements.
+                    </p>
+                    <p style="font-size:12px;color:var(--txt-l);margin-top:8px;">
+                        Décochée, la question de la bourse disparaît entièrement du front-office :
+                        bloc « situation de bourse » du formulaire d'inscription, colonne « Boursier »
+                        des grilles tarifaires et pièces ANBG. Les dossiers déjà déposés gardent leur
+                        situation, leur historique et leur commission.
+                    </p>
                 </div>
             </section>
 
@@ -732,12 +849,60 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
                         </div>
                     </div>
 
+                    <!-- Frais d'inscription par cycle × situation de bourse -->
+                    <div class="or-subhead" style="margin-top:22px;">Frais d'inscription par cycle</div>
+                    <div class="or-upload-hint" style="margin:-4px 0 12px;">
+                        Les frais d'inscription ne sont pas les mêmes pour tous : ils dépendent du
+                        <strong>cycle</strong> suivi et de la <strong>situation de bourse</strong> de l'étudiant.
+                        Ces quatre montants sont ceux qui seront appliqués à un dossier d'inscription.
+                        <br><strong>Laissez un champ à 0 pour ne rien changer</strong> : la plateforme retombe
+                        alors sur « Prix inscription + Frais de dossier » ci-dessus, exactement comme aujourd'hui.
+                        Un champ boursier laissé à 0 reprend le tarif non boursier du même cycle.
+                        <br><strong>Pour un étudiant déclaré boursier, la commission Connect'Academia porte sur
+                        CES frais d'inscription</strong> — jamais sur sa scolarité, prise en charge par l'ANBG.
+                    </div>
+                    <div class="or-grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="frais_inscription_licence">Licence — non boursier (FCFA)</label>
+                            <input type="number" id="frais_inscription_licence" name="frais_inscription_licence" class="form-input"
+                                   min="0" step="1000" value="<?= old('frais_inscription_licence', etabVal('frais_inscription_licence')) ?: '0' ?>" placeholder="150000">
+                            <div class="or-upload-hint">Frais d’inscription du cycle Licence, tarif plein. 0 = hérite du tarif public.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="frais_inscription_licence_boursier">Licence — boursier (FCFA)</label>
+                            <input type="number" id="frais_inscription_licence_boursier" name="frais_inscription_licence_boursier" class="form-input"
+                                   min="0" step="1000" value="<?= old('frais_inscription_licence_boursier', etabVal('frais_inscription_licence_boursier')) ?: '0' ?>" placeholder="100000">
+                            <div class="or-upload-hint">Base de la commission plateforme pour un boursier de Licence. 0 = hérite du tarif public.</div>
+                        </div>
+                    </div>
+                    <div class="or-grid-2" style="margin-top:16px;">
+                        <div class="form-group">
+                            <label class="form-label" for="frais_inscription_master">Master — non boursier (FCFA)</label>
+                            <input type="number" id="frais_inscription_master" name="frais_inscription_master" class="form-input"
+                                   min="0" step="1000" value="<?= old('frais_inscription_master', etabVal('frais_inscription_master')) ?: '0' ?>" placeholder="200000">
+                            <div class="or-upload-hint">Frais d’inscription du cycle Master, tarif plein. 0 = hérite du tarif public.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="frais_inscription_master_boursier">Master — boursier (FCFA)</label>
+                            <input type="number" id="frais_inscription_master_boursier" name="frais_inscription_master_boursier" class="form-input"
+                                   min="0" step="1000" value="<?= old('frais_inscription_master_boursier', etabVal('frais_inscription_master_boursier')) ?: '0' ?>" placeholder="150000">
+                            <div class="or-upload-hint">Base de la commission plateforme pour un boursier de Master. 0 = hérite du tarif public.</div>
+                        </div>
+                    </div>
+
                     <!-- Scolarité annuelle par cycle × statut boursier -->
                     <div class="or-subhead" style="margin-top:22px;">Frais de scolarité annuels</div>
                     <div class="or-upload-hint" style="margin:-4px 0 12px;">
                         Un seul tarif ? Renseignez uniquement la colonne « Non boursier » et laissez
-                        « Boursier » à 0 : la page publique n'affichera alors qu'un montant, comme aujourd'hui.
-                        La commission plateforme se calcule sur les tarifs non boursiers.
+                        « Boursier » à 0 : la page publique n'affichera qu'un montant, et les boursiers
+                        seront tarifés comme les autres.
+                        <br>Ces montants sont les <strong>tarifs par défaut de l'établissement</strong>. Ils
+                        s'appliquent à toute formation qui n'a pas sa propre grille — voir « Tarifs par
+                        formation » plus bas, qui permet de distinguer L1, L2, L3, M1 et M2.
+                        <br>Ils s'appliquent <strong>automatiquement</strong> quand l'établissement valide une
+                        inscription à 100 % : son guichet n'a rien à saisir ni à confirmer.
+                        <br><strong>Base de la commission :</strong> la scolarité pour un étudiant non
+                        boursier ; les <em>frais d'inscription</em> pour un boursier confirmé.
                     </div>
                     <div class="or-grid-2">
                         <div class="form-group">
@@ -784,8 +949,30 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
                                    min="0" max="100" step="0.01" value="<?= old('taux_commission', etabVal('taux_commission_scolarite') !== '' ? etabVal('taux_commission_scolarite') : '10') ?>" placeholder="10"
                                    data-taux-commission>
                             <?= err('taux_commission') ?>
-                            <div class="or-upload-hint">Pourcentage de la scolarité perçu par Connect'Academia pour chaque élève inscrit via la plateforme — appliqué aux nouvelles commissions (les commissions déjà créées gardent leur taux). 0 = aucune commission.</div>
+                            <div class="or-upload-hint">Pourcentage perçu par Connect'Academia pour chaque élève inscrit via la plateforme. <strong>La base dépend de la situation de bourse déclarée :</strong> la scolarité annuelle pour un non boursier ; pour un boursier confirmé, elle suit le réglage ci-contre. La commission est créée automatiquement à la validation à 100 %, avec ses <?= e(\Services\Orientation\CommissionDossier::libelleRepartition()) ?> encaissées ensuite une par une. Le taux est gelé à cet instant : les commissions déjà créées gardent le leur. 0 = aucune commission.</div>
                             <div class="or-commission-preview" id="commission-preview" hidden></div>
+                        </div>
+                        <?php // ── Assiette de la commission des BOURSIERS ──
+                              // Seul cas négociable de la règle : certains accords prévoient
+                              // que la commission d'un boursier porte sur sa scolarité, que
+                              // l'établissement perçoit alors de l'ANBG. Les non boursiers
+                              // restent sur la scolarité quoi qu'il arrive — ils ne sont pas
+                              // proposés ici, il n'y a rien à choisir.
+                              //
+                              // Repli sur 'frais_inscription' quand la colonne n'existe pas
+                              // encore en base : c'est exactement ce que le code applique
+                              // alors, l'écran ne doit pas annoncer autre chose.
+                              $baseBoursierActuelle = \Services\Orientation\TarifCycle::normaliserBaseBoursier(
+                                  etabVal('base_commission_boursier')
+                              );
+                              $baseBoursierChoisie = old('base_commission_boursier', $baseBoursierActuelle); ?>
+                        <div class="form-group">
+                            <label class="form-label" for="base_commission_boursier">Commission des boursiers — prélevée sur</label>
+                            <select id="base_commission_boursier" name="base_commission_boursier" class="form-select">
+                                <option value="frais_inscription" <?= $baseBoursierChoisie === 'frais_inscription' ? 'selected' : '' ?>>Les frais d'inscription (par défaut)</option>
+                                <option value="scolarite"         <?= $baseBoursierChoisie === 'scolarite' ? 'selected' : '' ?>>La scolarité annuelle (accord particulier)</option>
+                            </select>
+                            <div class="or-upload-hint"><strong>Ne concerne que les boursiers confirmés.</strong> Par défaut la commission porte sur leurs frais d'inscription, leur scolarité étant prise en charge par l'ANBG. Basculez sur la scolarité si l'accord signé avec cet établissement le prévoit. Les élèves non boursiers restent commissionnés sur la scolarité, quel que soit ce réglage. Comme le taux, l'assiette est gelée à la validation à 100 % : <strong>les commissions déjà créées ne sont pas recalculées</strong>.</div>
                         </div>
                     </div>
                     <div class="form-group">
@@ -809,7 +996,82 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
                 </div>
             </section>
 
-            <!-- §8 Formations -->
+            <!-- §8 Composition du dossier d'inscription -->
+            <section class="or-section" id="sec-dossier">
+                <div class="or-section-header">
+                    <div class="or-section-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 12h6M9 16h6M9 8h2"/>
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="or-section-title">Dossier d'inscription <span class="or-optional">optionnel</span></p>
+                        <p class="or-section-sub">Pièces à fournir — imprimées sur l'attestation, la proforma et la page publique</p>
+                    </div>
+                </div>
+                <div class="or-section-body">
+                    <div class="or-upload-hint" style="margin:-4px 0 16px;">
+                        Ce que le candidat devra <strong>apporter</strong> pour transformer sa
+                        préinscription en inscription. La liste est reprise telle quelle sur
+                        l'<strong>attestation de préinscription</strong>, sur la <strong>facture
+                        proforma</strong> et sur la <strong>page publique</strong> de l'établissement.
+                        <br>Les pièces <strong>communes</strong> valent pour tout le monde ; celles d'un
+                        cycle <strong>s'y ajoutent</strong>. Un candidat de licence ne voit jamais les
+                        pièces du master, et inversement — le cycle est déduit de son niveau d'entrée
+                        (L1 → L3 = Licence, M1 → M2 = Master).
+                        <br><strong>Tout laisser vide ne casse rien</strong> : les documents gardent alors
+                        leur formulation générique, comme aujourd'hui.
+                    </div>
+                    <?php
+                    // Libellés du FORMULAIRE (plus explicites que ceux imprimés sur les
+                    // documents, qui restent la propriété de CompositionDossier).
+                    $compoChamps = [
+                        'commun'  => [
+                            'Pièces communes à tous les candidats',
+                            'Ex : Acte de naissance légalisé',
+                            'Exigées de tout candidat, quel que soit le cycle visé.',
+                        ],
+                        'licence' => [
+                            'Cycle Licence — pièces supplémentaires',
+                            'Ex : Relevé de notes du baccalauréat',
+                            "S'ajoutent aux pièces communes pour un candidat de Licence 1 à 3.",
+                        ],
+                        'master'  => [
+                            'Cycle Master — pièces supplémentaires',
+                            'Ex : Diplôme de licence et relevés des trois années',
+                            "S'ajoutent aux pièces communes pour un candidat de Master 1 ou 2.",
+                        ],
+                    ];
+                    foreach ($compoChamps as $compoCle => [$compoLabel, $compoExemple, $compoAide]):
+                        $compoListId  = 'compo-' . $compoCle . '-list';
+                        $compoInputId = 'compo-' . $compoCle . '-input';
+                        $compoChamp   = 'composition_' . $compoCle . '[]';
+                    ?>
+                    <div class="form-group">
+                        <label class="form-label" for="<?= $compoInputId ?>"><?= e($compoLabel) ?></label>
+                        <div class="or-tag-list" id="<?= $compoListId ?>">
+                            <?php foreach (($compoPrefill[$compoCle] ?? []) as $compoPiece): ?>
+                            <div class="or-tag">
+                                <input type="hidden" name="<?= $compoChamp ?>" value="<?= e($compoPiece) ?>">
+                                <span><?= e($compoPiece) ?></span>
+                                <button type="button" class="or-tag-del" onclick="removeTag(this)">×</button>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="or-add-row">
+                            <input type="text" class="form-input or-add-input" id="<?= $compoInputId ?>"
+                                   placeholder="<?= e($compoExemple) ?>" maxlength="200"
+                                   onkeydown="if(event.key==='Enter'){event.preventDefault();addTag('<?= $compoInputId ?>','<?= $compoChamp ?>','<?= $compoListId ?>');}">
+                            <button type="button" class="btn-add-tag" onclick="addTag('<?= $compoInputId ?>','<?= $compoChamp ?>','<?= $compoListId ?>')">+</button>
+                        </div>
+                        <div class="or-upload-hint"><?= e($compoAide) ?></div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+
+            <!-- §9 Formations -->
             <section class="or-section" id="sec-formations">
                 <div class="or-section-header">
                     <div class="or-section-icon">
@@ -885,6 +1147,149 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
                 </div>
             </section>
 
+
+            <!-- §10 Gestionnaires -->
+            <?php
+            // Comptes déjà rattachés (affichés, non modifiables ici) et blocs
+            // de NOUVEAUX comptes. Après une soumission refusée, les blocs
+            // saisis sont ré-affichés tels quels — sans les mots de passe,
+            // retirés par oldSansMotDePasse().
+            $gestionnairesLies = $gestionnaires ?? [];
+            $gNouveaux = [];
+            foreach ((array)($GLOBALS['__or_old']['gestionnaires'] ?? []) as $gKey => $gVal) {
+                if (is_array($gVal)) {
+                    $gNouveaux[(int)$gKey] = $gVal;
+                }
+            }
+            $gNextIndex = $gNouveaux === [] ? 0 : max(array_keys($gNouveaux)) + 1;
+            ?>
+            <section class="or-section" id="sec-gestionnaires">
+                <div class="or-section-header">
+                    <div class="or-section-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="or-section-title">Gestionnaires</p>
+                        <p class="or-section-sub">Comptes rattachés à cet établissement — ajoute-en autant que nécessaire</p>
+                    </div>
+                </div>
+                <div class="or-section-body">
+
+                    <?php if (empty($gestionnairesLies)): ?>
+                    <div class="or-gest-vide">Aucun gestionnaire n'est rattaché à cet établissement.</div>
+                    <?php else: ?>
+                    <div class="or-gest-liste">
+                        <?php foreach ($gestionnairesLies as $g): ?>
+                        <div class="or-gest-existant">
+                            <div>
+                                <span class="or-gest-nom"><?= e(trim(($g['prenom'] ?? '') . ' ' . ($g['nom'] ?? ''))) ?></span>
+                                <span class="or-gest-mail"><?= e($g['email'] ?? '') ?></span>
+                            </div>
+                            <div class="or-gest-meta">
+                                <span class="or-gest-etat <?= (int)($g['is_active'] ?? 0) ? 'ok' : 'ko' ?>">
+                                    <?= (int)($g['is_active'] ?? 0) ? 'Actif' : 'Suspendu' ?>
+                                </span>
+                                <span class="or-gest-vu">
+                                    <?= !empty($g['last_login'])
+                                        ? 'Dernière connexion : ' . e(date('d/m/Y', strtotime((string)$g['last_login'])))
+                                        : 'Jamais connecté' ?>
+                                </span>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <p class="or-gest-note">
+                        Ces comptes ne se modifient pas ici : suspendre ou réactiver un accès se fait
+                        depuis <a href="<?= url('/admin/orientation') ?>#gestionnaires">la vue d'ensemble Orientation</a>.
+                        Enregistrer la fiche ne les touche pas.
+                    </p>
+                    <?php endif; ?>
+
+                    <div id="gestionnaires-list">
+                        <?php foreach ($gNouveaux as $gi => $gb): ?>
+                        <div class="or-gest-block" data-gest-block data-gest-index="<?= (int)$gi ?>">
+                            <div class="or-gest-head">
+                                <span class="or-gest-title">Nouveau gestionnaire <span data-gest-rang></span></span>
+                                <button type="button" class="or-gest-del" onclick="removeGestionnaire(this)" title="Retirer ce gestionnaire">×</button>
+                            </div>
+
+                            <div class="or-grid-2">
+                                <div class="form-group">
+                                    <label class="form-label" for="g-prenom-<?= (int)$gi ?>">Prénom <span style="color:var(--red)">*</span></label>
+                                    <input type="text" id="g-prenom-<?= (int)$gi ?>" name="gestionnaires[<?= (int)$gi ?>][prenom]"
+                                           class="form-input<?= hasErr('gestionnaire_prenom_' . (int)$gi) ?>"
+                                           value="<?= e((string)($gb['prenom'] ?? '')) ?>" required>
+                                    <?= err('gestionnaire_prenom_' . (int)$gi) ?>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="g-nom-<?= (int)$gi ?>">Nom <span style="color:var(--red)">*</span></label>
+                                    <input type="text" id="g-nom-<?= (int)$gi ?>" name="gestionnaires[<?= (int)$gi ?>][nom]"
+                                           class="form-input<?= hasErr('gestionnaire_nom_' . (int)$gi) ?>"
+                                           value="<?= e((string)($gb['nom'] ?? '')) ?>" required>
+                                    <?= err('gestionnaire_nom_' . (int)$gi) ?>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="g-email-<?= (int)$gi ?>">Email <span style="color:var(--red)">*</span></label>
+                                <input type="email" id="g-email-<?= (int)$gi ?>" name="gestionnaires[<?= (int)$gi ?>][email]"
+                                       class="form-input<?= hasErr('gestionnaire_email_' . (int)$gi) ?>"
+                                       value="<?= e((string)($gb['email'] ?? '')) ?>" required
+                                       placeholder="gestionnaire@ecole.ga">
+                                <?= err('gestionnaire_email_' . (int)$gi) ?>
+                            </div>
+
+                            <div class="or-grid-2">
+                                <div class="form-group">
+                                    <label class="form-label" for="g-mdp-<?= (int)$gi ?>">Mot de passe <span class="or-optional">optionnel</span></label>
+                                    <div style="position:relative;">
+                                        <input type="password" id="g-mdp-<?= (int)$gi ?>" name="gestionnaires[<?= (int)$gi ?>][password]"
+                                               class="form-input<?= hasErr('gestionnaire_password_' . (int)$gi) ?>"
+                                               data-gest-mdp minlength="8" autocomplete="new-password"
+                                               placeholder="8 caractères minimum" style="padding-right:44px;">
+                                        <button type="button" onclick="toggleMdp(this)" title="Afficher / masquer"
+                                                style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--txt-l);padding:6px;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <?= err('gestionnaire_password_' . (int)$gi) ?>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="g-mdp-c-<?= (int)$gi ?>">Confirmation</label>
+                                    <input type="password" id="g-mdp-c-<?= (int)$gi ?>" name="gestionnaires[<?= (int)$gi ?>][password_confirm]"
+                                           class="form-input<?= hasErr('gestionnaire_password_confirm_' . (int)$gi) ?>"
+                                           data-gest-mdp-confirm minlength="8" autocomplete="new-password"
+                                           placeholder="Retape le mot de passe">
+                                    <?= err('gestionnaire_password_confirm_' . (int)$gi) ?>
+                                </div>
+                            </div>
+
+                            <div style="margin:-6px 0 2px;">
+                                <button type="button" class="btn-outline btn-sm" onclick="genererMdp(this)">Générer un mot de passe fort</button>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <button type="button" class="btn-outline" style="width:100%;margin-top:4px" onclick="addGestionnaire()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px;vertical-align:-1px">
+                            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Ajouter un gestionnaire
+                    </button>
+
+                    <div style="background:var(--ap-xl);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--txt-m);margin-top:14px;">
+                        ℹ️ Les comptes ajoutés ici sont créés à l'enregistrement de la fiche. Mot de passe laissé vide = mot de passe temporaire généré ; dans tous les cas chaque gestionnaire reçoit ses identifiants par email.
+                    </div>
+                </div>
+            </section>
+
         </div><!-- /.or-form-content -->
     </div><!-- /.or-form-layout -->
 
@@ -900,6 +1305,110 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
         </button>
     </div>
 </form>
+
+<?php
+// ══ Tarifs par formation ═══════════════════════════════════════════════════
+//
+// HORS du formulaire principal, et ce n'est pas un détail de mise en page :
+// chaque grille est un formulaire indépendant, et HTML interdit d'imbriquer un
+// <form> dans un autre. Les imbriquer aurait produit un enregistrement muet —
+// le navigateur ignore silencieusement le formulaire interne.
+//
+// Enregistrer une grille est donc une action ATOMIQUE, distincte de
+// l'enregistrement de la fiche : le super administrateur n'a pas à re-soumettre
+// tout l'établissement (logo, vidéo, photos comprises) pour corriger un prix.
+$gtEtabId = (int)$etab['id'];
+$gtCsrfTok = \Core\Session::getCsrfToken();
+$gtFilieres = $filieres ?? [];
+$gtGrilles  = $grilles ?? [];
+
+// Tarifs de la fiche établissement, montrés en indication dans chaque grille :
+// c'est ce qui s'applique tant qu'une case reste vide.
+$gtHeritageEtab = [
+    \Services\Orientation\TarifCycle::LICENCE => [
+        'non_boursier' => (int)($etab['frais_scolarite'] ?? 0),
+        'boursier'     => (int)($etab['frais_scolarite_boursier'] ?? 0),
+    ],
+    \Services\Orientation\TarifCycle::MASTER => [
+        'non_boursier' => (int)($etab['frais_scolarite_master'] ?? 0),
+        'boursier'     => (int)($etab['frais_scolarite_master_boursier'] ?? 0),
+    ],
+];
+?>
+<?php /* ══ Mise en page ══
+         Ce bloc réutilise la grille `or-form-layout` (220px de sommaire + le
+         contenu). Il n'avait qu'UN enfant : le contenu tombait donc dans la
+         colonne de 220 px du sommaire — d'où une carte « Tarifs par formation »
+         comprimée sur un cinquième de l'écran, chaque mot sur sa ligne, et
+         toute la moitié droite vide. La colonne du sommaire est ici tenue par
+         un espaceur : le contenu retrouve la largeur des sections du dessus et
+         reste aligné avec elles. */ ?>
+<div class="or-form-layout" id="sec-tarifs-formation" style="margin-top:26px;">
+  <div class="or-layout-spacer" aria-hidden="true"></div>
+  <div class="or-form-content">
+    <section class="or-section">
+      <div class="or-section-header">
+        <div class="or-section-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <div>
+          <p class="or-section-title">Tarifs par formation</p>
+          <p class="or-section-sub">Scolarité annuelle par niveau et selon la situation de bourse — c'est cette grille qui est appliquée aux dossiers d'inscription</p>
+        </div>
+      </div>
+      <div class="or-section-body">
+        <div class="or-upload-hint" style="margin-bottom:14px;">
+          Quand un candidat choisit sa formation et son niveau, <strong>c'est le prix de cette grille
+          qui est enregistré sur son dossier</strong> et qui sert de base à la commission.
+          Une formation sans grille reprend les « Frais de scolarité annuels » de la fiche ci-dessus :
+          rien n'est cassé tant que rien n'est saisi.
+          <br>La <strong>facture proforma de préinscription</strong> affiche, elle, la colonne
+          « Boursier » — c'est le document que le candidat dépose à l'ANBG.
+        </div>
+
+        <form action="<?= url('/admin/orientation/' . $gtEtabId . '/formations') ?>" method="post"
+              class="or-formation-add">
+          <input type="hidden" name="_csrf_token" value="<?= e($gtCsrfTok) ?>">
+          <input type="text" name="nom" class="form-input"
+                 placeholder="Nom d'une nouvelle formation (ex : Droit des affaires)" required>
+          <button type="submit" class="btn-outline">Ajouter la formation</button>
+        </form>
+
+        <?php if (empty($gtFilieres)): ?>
+          <p style="font-size:13px;opacity:.7;">
+            Aucune formation enregistrée. Ajoutez-en une ci-dessus pour lui donner ses tarifs —
+            les candidats la verront alors dans le menu déroulant « Filière » des formulaires.
+          </p>
+        <?php else: ?>
+          <?php foreach ($gtFilieres as $gtF): ?>
+            <div class="or-formation-tarif">
+              <div class="or-formation-tarif-head">
+                <span class="or-formation-tarif-nom"><?= e($gtF['nom']) ?></span>
+                <form action="<?= url('/admin/orientation/' . $gtEtabId . '/formations/' . (int)$gtF['id'] . '/delete') ?>"
+                      method="post"
+                      onsubmit="return confirm('Supprimer la formation « <?= e(addslashes($gtF['nom'])) ?> », ses spécialités et ses tarifs ?\n\nLes dossiers déjà déposés sont conservés.')">
+                  <input type="hidden" name="_csrf_token" value="<?= e($gtCsrfTok) ?>">
+                  <button type="submit" class="btn-outline" style="padding:5px 12px;font-size:12px;">Supprimer</button>
+                </form>
+              </div>
+              <?php
+                $gtFiliere  = $gtF;
+                $gtGrille   = $gtGrilles[(int)$gtF['id']] ?? [];
+                $gtAction   = url('/admin/orientation/' . $gtEtabId . '/formations/' . (int)$gtF['id'] . '/tarifs');
+                $gtCsrf     = $gtCsrfTok;
+                $gtChamp    = '_csrf_token';
+                $gtHeritage = $gtHeritageEtab;
+                include BASE_PATH . '/app/Views/partials/_grille-tarifs.php';
+              ?>
+            </div>
+          <?php endforeach; ?>
+        <?php endif; ?>
+      </div>
+    </section>
+  </div>
+</div>
 
 <script>
 // ── Compteur formations (démarre après les lignes existantes) ─────────
@@ -1006,6 +1515,97 @@ function addStatRow() {
     document.getElementById('stats-rows').appendChild(row);
 }
 
+// ── Gestionnaires : blocs répétables (comptes AJOUTÉS) ─────────────────
+// Les comptes déjà rattachés sont affichés au-dessus et ne sont pas des
+// champs : enregistrer la fiche ne les touche pas. Ici on ne saisit que des
+// NOUVEAUX comptes, et n'en saisir aucun est le cas normal — d'où l'absence de
+// bloc au chargement et la suppression toujours permise.
+var gestionnaireIndex = <?= (int)($gNextIndex ?? 0) ?>;
+
+function addGestionnaire() {
+    var i    = gestionnaireIndex++;
+    var wrap = document.createElement('div');
+    wrap.className = 'or-gest-block';
+    wrap.setAttribute('data-gest-block', '');
+    wrap.setAttribute('data-gest-index', i);
+    wrap.innerHTML =
+        '<div class="or-gest-head">' +
+          '<span class="or-gest-title">Nouveau gestionnaire <span data-gest-rang></span></span>' +
+          '<button type="button" class="or-gest-del" onclick="removeGestionnaire(this)" title="Retirer ce gestionnaire">×</button>' +
+        '</div>' +
+        '<div class="or-grid-2">' +
+          '<div class="form-group">' +
+            '<label class="form-label" for="g-prenom-' + i + '">Prénom <span style="color:var(--red)">*</span></label>' +
+            '<input type="text" id="g-prenom-' + i + '" name="gestionnaires[' + i + '][prenom]" class="form-input" required>' +
+          '</div>' +
+          '<div class="form-group">' +
+            '<label class="form-label" for="g-nom-' + i + '">Nom <span style="color:var(--red)">*</span></label>' +
+            '<input type="text" id="g-nom-' + i + '" name="gestionnaires[' + i + '][nom]" class="form-input" required>' +
+          '</div>' +
+        '</div>' +
+        '<div class="form-group">' +
+          '<label class="form-label" for="g-email-' + i + '">Email <span style="color:var(--red)">*</span></label>' +
+          '<input type="email" id="g-email-' + i + '" name="gestionnaires[' + i + '][email]" class="form-input" required placeholder="gestionnaire@ecole.ga">' +
+        '</div>' +
+        '<div class="or-grid-2">' +
+          '<div class="form-group">' +
+            '<label class="form-label" for="g-mdp-' + i + '">Mot de passe <span class="or-optional">optionnel</span></label>' +
+            '<div style="position:relative;">' +
+              '<input type="password" id="g-mdp-' + i + '" name="gestionnaires[' + i + '][password]" class="form-input" data-gest-mdp minlength="8" autocomplete="new-password" placeholder="8 caractères minimum" style="padding-right:44px;">' +
+              '<button type="button" onclick="toggleMdp(this)" title="Afficher / masquer" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--txt-l);padding:6px;">' +
+                '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="form-group">' +
+            '<label class="form-label" for="g-mdp-c-' + i + '">Confirmation</label>' +
+            '<input type="password" id="g-mdp-c-' + i + '" name="gestionnaires[' + i + '][password_confirm]" class="form-input" data-gest-mdp-confirm minlength="8" autocomplete="new-password" placeholder="Retape le mot de passe">' +
+          '</div>' +
+        '</div>' +
+        '<div style="margin:-6px 0 2px;">' +
+          '<button type="button" class="btn-outline btn-sm" onclick="genererMdp(this)">Générer un mot de passe fort</button>' +
+        '</div>';
+
+    document.getElementById('gestionnaires-list').appendChild(wrap);
+    renumeroterGestionnaires();
+    var premier = wrap.querySelector('input');
+    if (premier) premier.focus();
+}
+
+function removeGestionnaire(btn) {
+    btn.closest('[data-gest-block]').remove();
+    renumeroterGestionnaires();
+}
+
+function renumeroterGestionnaires() {
+    document.querySelectorAll('[data-gest-block]').forEach(function (bloc, n) {
+        var rang = bloc.querySelector('[data-gest-rang]');
+        if (rang) rang.textContent = (n + 1);
+    });
+}
+
+// ── Mot de passe d'UN gestionnaire (bloc courant) ─────────────────────
+function toggleMdp(btn) {
+    var bloc = btn.closest('[data-gest-block]');
+    var inp  = bloc.querySelector('[data-gest-mdp]');
+    var cnf  = bloc.querySelector('[data-gest-mdp-confirm]');
+    var t = inp.type === 'password' ? 'text' : 'password';
+    inp.type = t; cnf.type = t;
+}
+
+function genererMdp(btn) {
+    var chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%';
+    var arr = new Uint32Array(14);
+    crypto.getRandomValues(arr);
+    var mdp = '';
+    for (var i = 0; i < arr.length; i++) mdp += chars[arr[i] % chars.length];
+    var bloc = btn.closest('[data-gest-block]');
+    var inp  = bloc.querySelector('[data-gest-mdp]');
+    var cnf  = bloc.querySelector('[data-gest-mdp-confirm]');
+    inp.value = mdp; cnf.value = mdp;
+    inp.type = 'text'; cnf.type = 'text'; // visible pour que l'admin puisse le noter
+}
+
 // ── Preview image ──────────────────────────────────────────────────────
 function previewImg(input, previewId) {
     var prev = document.getElementById(previewId);
@@ -1103,6 +1703,9 @@ document.getElementById('color-picker').addEventListener('input', function() {
     tx.addEventListener('input', render);
     render();
 })();
+
+// ── Init : numérote les blocs gestionnaires ré-affichés après une erreur ─
+renumeroterGestionnaires();
 
 // ── Soumission + upload direct des médias : géré par le module partagé
 //    assets/js/orientation-media-upload.js (inclus plus bas).

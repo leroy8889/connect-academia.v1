@@ -13,7 +13,7 @@ use PDO;
  * Le super admin crée une commission sur un dossier « inscrit » en saisissant
  * la scolarité ; le taux configuré sur l'établissement s'applique
  * automatiquement (10 % par défaut). Il coche ensuite chaque tranche
- * (40/30/30) encaissée en présentiel.
+ * (CommissionDossier::REPARTITION_TRANCHES) encaissée en présentiel.
  */
 class CommissionsController
 {
@@ -85,7 +85,8 @@ class CommissionsController
         Response::json([
             'success' => true,
             'id'      => $id,
-            'message' => "Commission de {$tauxApplique} % créée — 3 tranches (40 % / 30 % / 30 %) à encaisser.",
+            'message' => "Commission de {$tauxApplique} % créée — "
+                       . \Services\Orientation\CommissionDossier::libelleRepartition() . ' à encaisser.',
         ]);
     }
 

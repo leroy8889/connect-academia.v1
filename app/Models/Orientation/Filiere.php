@@ -57,8 +57,13 @@ class Filiere
     }
 
     /**
-     * Filières actives + spécialités actives, pour les formulaires publics.
-     * Retourne [['nom' => 'Droit', 'specialites' => ['Conseil juridique', …]], …]
+     * Filières actives + spécialités actives, pour les écrans publics.
+     * Retourne [['id' => 4, 'nom' => 'Droit', 'specialites' => ['Conseil juridique', …]], …]
+     *
+     * L'identifiant est conservé dans la sortie : sans lui, la page publique
+     * n'avait aucun moyen de retrouver la grille tarifaire de la formation
+     * (`tarifs_formation.filiere_id`) — les prix configurés par l'établissement
+     * ne s'affichaient donc nulle part.
      */
     public function findActiveByEtab(int $etabId): array
     {
@@ -91,6 +96,7 @@ class Filiere
         $out = [];
         foreach ($filieres as $f) {
             $out[] = [
+                'id'          => (int)$f['id'],
                 'nom'         => $f['nom'],
                 'specialites' => $specByFiliere[(int)$f['id']] ?? [],
             ];

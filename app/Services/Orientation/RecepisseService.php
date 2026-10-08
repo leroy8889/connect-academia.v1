@@ -148,6 +148,13 @@ class RecepisseService
         $dateEmissionStr = $date->format('d/m/Y');
         $qrDataUri       = QrCodeVerification::dataUri($tokenVerification);
 
+        // La composition du dossier d'inscription n'est PAS imprimée ici : elle
+        // appartient à la facture proforma (page 2), seul document que le
+        // candidat présente au service des admissions et à l'ANBG. L'attestation
+        // garde son texte d'origine — le document tient ainsi en DEUX pages,
+        // une par pièce officielle, sans paragraphe de renvoi qui coûterait des
+        // lignes sur les deux.
+
         ob_start();
         include BASE_PATH . ($pourPdf
             ? '/app/Views/orientation/_recepisse-pdf.php'

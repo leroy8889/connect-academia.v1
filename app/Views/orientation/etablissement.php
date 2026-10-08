@@ -107,8 +107,23 @@ $scolariteLicence           = (int)($etab['frais_scolarite'] ?? 0);
 $scolariteLicenceBoursier   = (int)($etab['frais_scolarite_boursier'] ?? 0);
 $scolariteMaster            = (int)($etab['frais_scolarite_master'] ?? 0);
 $scolariteMasterBoursier    = (int)($etab['frais_scolarite_master_boursier'] ?? 0);
+// Établissement fermé aux boursiers : les montants boursiers sont ramenés à 0,
+// c'est-à-dire « non renseigné ». La carte de cycle retombe alors sur son
+// affichage à montant unique, sans mention de statut — aucun visiteur ne se
+// voit proposer un tarif auquel il ne peut pas candidater. Les valeurs restent
+// en base : le réglage est réversible.
+if (!\Services\Orientation\PolitiqueBoursiers::accepte($etab)) {
+    $scolariteLicenceBoursier = 0;
+    $scolariteMasterBoursier  = 0;
+}
 $fraisUniforme              = (int)($etab['frais_uniforme'] ?? 0);
 $aScolarite                 = ($scolariteLicence > 0 || $scolariteMaster > 0);
+
+// Composition du dossier d'inscription, par groupe (commun / licence / master).
+// Le visiteur n'a pas encore de dossier : on lui montre les deux cycles, à lui
+// de lire celui qui le concerne. Tableau vide = l'établissement n'a rien saisi,
+// la section n'est alors pas rendue du tout.
+$compositionGroupes = \Services\Orientation\CompositionDossier::groupesRenseignes($etab);
 ?>
 <!doctype html>
 <html lang="fr" data-theme="light">
@@ -121,6 +136,16 @@ $aScolarite                 = ($scolariteLicence > 0 || $scolariteMaster > 0);
 <style>
   :root { --brand: <?= e($couleur) ?>; }
 </style>
+<noscript>
+  <style>
+    /* Sans JavaScript, rien ne peut être déplié : les panneaux fermés par le
+       serveur sont donc rendus ouverts. La page reste complète — pour le
+       visiteur comme pour l'indexation. */
+    .cyc-panel[hidden], .fil-panel[hidden] { display: block !important; height: auto !important; overflow: visible; }
+    .cyc-chevron, .fil-chevron { display: none; }
+    .cyc-trigger, .fil-trigger { cursor: default; }
+  </style>
+</noscript>
 </head>
 <body>
 
@@ -144,6 +169,7 @@ $aScolarite                 = ($scolariteLicence > 0 || $scolariteMaster > 0);
     <div class="nav-menu">
       <?php if (!empty($formations) || !empty($filieres)): ?><a href="#filieres">Formations</a><?php endif; ?>
       <a href="#tarifs">Admission</a>
+      <?php if ($compositionGroupes !== []): ?><a href="#dossier">Dossier</a><?php endif; ?>
       <?php if (!empty($actualites)): ?><a href="#blog">Actualités</a><?php endif; ?>
       <a href="#avis">Avis</a>
       <a href="#contact">Contact</a>
@@ -247,9 +273,25 @@ $aScolarite                 = ($scolariteLicence > 0 || $scolariteMaster > 0);
       <?php endif; ?>
     </div>
 
-    <?php if (!empty($formations)): ?>
-    <div class="filiere-grid">
-    <?php foreach ($formations as $f): ?>
+    <?php
+      // ── Formations rangées par cycle ────────────────────────────────────
+      // Une école peut publier vingt formations : les déverser d'un seul bloc
+      // rendait la section illisible et noyait le cycle qui intéresse le
+      // visiteur. Elles sont donc rangées par cycle (Licence, Master,
+      // Doctorat, Autres) dans des groupes qu'on ouvre et ferme, et chaque
+      // groupe n'affiche d'abord que ses six premières cartes.
+      //
+      // Une petite école — un seul cycle, six formations au plus — garde
+      // l'affichage direct d'origine : le repli n'y ajouterait qu'un clic.
+      $groupesFormations  = \Services\Orientation\CycleFormation::grouper($formations);
+      $cartesParPaquet    = 6;
+      $formationsRepliees = count($formations) > $cartesParPaquet || count($groupesFormations) > 1;
+    ?>
+    <?php
+      // Le rendu d'une carte est écrit UNE fois et appelé par les deux
+      // dispositions : elles ne peuvent pas diverger au fil des retouches.
+      $carteFormation = function (array $f) use ($statutFormation, $etab, $preinsActive, $preinscriptionUrl): void {
+    ?>
       <?php
         $sf    = $statutFormation[$f['statut']] ?? ['label' => $f['statut'], 'class' => ''];
         $isOpen = $f['statut'] === 'ouverte';
@@ -263,34 +305,25 @@ $aScolarite                 = ($scolariteLicence > 0 || $scolariteMaster > 0);
             <span class="dot"></span><?= $sf['label'] ?>
           </span>
         </div>
-        <div class="filiere-ic">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 10 12 5 2 10l10 5 10-5z"/>
-            <path d="M6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5M22 10v6"/>
-          </svg>
-        </div>
         <?php $fDetailUrl = url('orientation/' . rawurlencode($etab['slug']) . '/formations/' . (int)$f['id']); ?>
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
-          <h3><a href="<?= e($fDetailUrl) ?>" style="color:inherit;text-decoration:none;"><?= e($f['intitule']) ?></a></h3>
-          <a href="<?= e($fDetailUrl) ?>" title="Voir le détail de cette formation" aria-label="Voir le détail de cette formation"
-             style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;background:var(--brand-tint);color:var(--brand);border:1px solid var(--brand-line);flex:none;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <div class="filiere-head">
+          <h3><a href="<?= e($fDetailUrl) ?>"><?= e($f['intitule']) ?></a></h3>
+          <a class="filiere-eye" href="<?= e($fDetailUrl) ?>"
+             title="Voir le détail de cette formation" aria-label="Voir le détail de cette formation">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </a>
         </div>
-        <div class="filiere-meta">
-          <?php if (!empty($f['duree_texte'])): ?>
-          <div class="row">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            <?= e($f['duree_texte']) ?>
-          </div>
-          <?php endif; ?>
-          <?php if (!empty($f['places_texte'])): ?>
-          <div class="row">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
-            <?= e($f['places_texte']) ?>
-          </div>
-          <?php endif; ?>
-        </div>
+        <?php
+          // Durée et places sur une seule ligne : deux pictogrammes répétés à
+          // l'identique sur chaque carte décoraient sans informer.
+          $metaFormation = array_values(array_filter([
+            trim((string)($f['duree_texte']  ?? '')),
+            trim((string)($f['places_texte'] ?? '')),
+          ], static fn (string $v): bool => $v !== ''));
+        ?>
+        <?php if ($metaFormation !== []): ?>
+        <div class="filiere-meta"><?= e(implode(' · ', $metaFormation)) ?></div>
+        <?php endif; ?>
         <div class="filiere-foot">
           <?php if ((int)$f['prix'] > 0): ?>
           <div class="filiere-price">
@@ -301,16 +334,95 @@ $aScolarite                 = ($scolariteLicence > 0 || $scolariteMaster > 0);
           <div></div>
           <?php endif; ?>
           <?php if ($isOpen): ?>
-          <a class="btn btn-primary btn-sm" href="<?= $preinsActive ? e($preinscriptionUrl) : '#tarifs' ?>">
-            Préinscription
-            <svg class="filiere-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </a>
+          <a class="btn btn-primary btn-sm" href="<?= $preinsActive ? e($preinscriptionUrl) : '#tarifs' ?>">Préinscription</a>
           <?php else: ?>
           <a class="btn btn-ghost btn-sm" href="#contact">M'avertir</a>
           <?php endif; ?>
         </div>
       </article>
-    <?php endforeach; ?>
+    <?php
+      };
+    ?>
+
+    <?php if (!empty($formations) && !$formationsRepliees): ?>
+    <div class="filiere-grid">
+      <?php foreach ($formations as $f) { $carteFormation($f); } ?>
+    </div>
+    <?php elseif (!empty($formations)): ?>
+    <div class="cyc-acc">
+      <?php foreach ($groupesFormations as $gi => $groupe): ?>
+        <?php
+          $gFormations = $groupe['formations'];
+          $gNb         = count($gFormations);
+          $gExtra      = max(0, $gNb - $cartesParPaquet);
+          $gOuvert     = $gi === 0;   // Le premier cycle est déplié : la section n'est jamais vide à l'arrivée.
+          $gPanelId    = 'cyc-panel-' . $gi;
+
+          // Repère de prix du groupe : le plus bas des formations qui ont un
+          // prix. Un groupe sans prix saisi n'affiche rien plutôt que « 0 ».
+          $gMin = 0;
+          foreach ($gFormations as $gf) {
+            $gPrix = (int)($gf['prix'] ?? 0);
+            if ($gPrix > 0 && ($gMin === 0 || $gPrix < $gMin)) {
+              $gMin = $gPrix;
+            }
+          }
+
+          // Nombre de formations ouvertes à la candidature dans ce cycle.
+          $gOuvertes = 0;
+          foreach ($gFormations as $gf) {
+            if (($gf['statut'] ?? '') === 'ouverte') {
+              $gOuvertes++;
+            }
+          }
+        ?>
+        <section class="cyc-item<?= $gOuvert ? ' is-open' : '' ?>">
+          <button type="button" class="cyc-trigger" aria-expanded="<?= $gOuvert ? 'true' : 'false' ?>" aria-controls="<?= $gPanelId ?>">
+            <span class="cyc-txt">
+              <span class="cyc-name"><?= e($groupe['libelle']) ?></span>
+              <span class="cyc-sub">
+                <?= $gNb ?> formation<?= $gNb > 1 ? 's' : '' ?>
+                <?php // « 13 formations · 13 ouvertes » ne dit rien de plus : le compte
+                      // n'apparaît que s'il distingue une partie du groupe. ?>
+                <?php if ($gOuvertes > 0 && $gOuvertes < $gNb): ?>
+                  · <?= $gOuvertes ?> ouverte<?= $gOuvertes > 1 ? 's' : '' ?> à la candidature
+                <?php elseif ($gOuvertes === 0): ?>
+                  · candidatures fermées
+                <?php endif; ?>
+                <?php if ($gMin > 0): ?>
+                  · dès <?= number_format($gMin, 0, ',', ' ') ?> FCFA
+                <?php endif; ?>
+              </span>
+            </span>
+            <span class="cyc-aside">
+              <span class="cyc-count"><?= $gNb ?></span>
+              <svg class="cyc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </span>
+          </button>
+          <div class="cyc-panel<?= $gOuvert ? ' is-full' : '' ?>" id="<?= $gPanelId ?>"<?= $gOuvert ? ' style="height:auto"' : ' hidden' ?>>
+            <div class="cyc-panel-in">
+              <div class="filiere-grid cyc-grid" data-visible="<?= $cartesParPaquet ?>">
+                <?php foreach ($gFormations as $f) { $carteFormation($f); } ?>
+              </div>
+              <?php if ($gExtra > 0): ?>
+              <div class="cyc-more">
+                <?php // Bouton révélé par le script : sans JavaScript, toutes les cartes sont déjà là. ?>
+                <button type="button" class="cyc-more-btn" data-restant="<?= $gExtra ?>" hidden>
+                  <span class="cyc-more-txt">Voir les <?= $gExtra ?> autres formations</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M6 9l6 6 6-6"/>
+                  </svg>
+                </button>
+              </div>
+              <?php endif; ?>
+            </div>
+          </div>
+        </section>
+      <?php endforeach; ?>
     </div>
     <?php endif; ?>
 
@@ -318,48 +430,205 @@ $aScolarite                 = ($scolariteLicence > 0 || $scolariteMaster > 0);
     <div class="fil-spec"<?= !empty($formations) ? ' data-has-formations="1"' : '' ?>>
       <div class="fil-spec-head">
         <h3>Filières &amp; spécialités</h3>
-        <p>Clique sur une filière pour dérouler ses spécialités.</p>
+        <p>Cliquez sur une filière pour dérouler ses spécialités et ses frais de scolarité par niveau.</p>
       </div>
-      <div class="fil-acc">
+
+      <?php
+        // ── Filtres de l'accordéon ──────────────────────────────────────────
+        // Un catalogue de vingt filières ne se lit pas au défilement. La barre
+        // n'apparaît qu'au-delà du seuil : sur cinq filières, chercher coûte
+        // plus cher que lire.
+        $filPlafond  = 8;   // filières visibles avant « Afficher les restantes »
+        $filSeuilBar = 6;   // en-deçà, aucune barre d'outils
+        $filBarre    = count($filieres) >= $filSeuilBar;
+
+        // Puces de cycle : uniquement les cycles RÉELLEMENT présents dans les
+        // grilles tarifaires, dans l'ordre du cursus. Deux cycles minimum,
+        // sinon la puce ne trierait rien.
+        $filCyclesPresents = [];
+        foreach ($filieres as $filX) {
+          $tarifX = $tarifsFilieres[(int)($filX['id'] ?? 0)] ?? null;
+          foreach (($tarifX['cycles'] ?? []) as $cycleX) {
+            $filCyclesPresents[(string)$cycleX['libelle']] = true;
+          }
+        }
+        $filCyclesOrdonnes = [];
+        foreach ([\Services\Orientation\TarifCycle::LICENCE, \Services\Orientation\TarifCycle::MASTER] as $cleCycle) {
+          $libCycle = \Services\Orientation\TarifCycle::libelle($cleCycle);
+          if (isset($filCyclesPresents[$libCycle])) {
+            $filCyclesOrdonnes[] = $libCycle;
+          }
+        }
+        $filPuces = $filBarre && count($filCyclesOrdonnes) > 1;
+      ?>
+
+      <?php if ($filBarre): ?>
+      <?php // La barre est révélée par le script : sans JavaScript, filtrer serait un champ mort. ?>
+      <div class="fil-tools" hidden>
+        <div class="fil-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+          </svg>
+          <input type="search" class="fil-search-input" id="filSearch" autocomplete="off"
+                 placeholder="Rechercher une filière ou une spécialité…"
+                 aria-label="Rechercher une filière ou une spécialité">
+          <button type="button" class="fil-search-clear" aria-label="Effacer la recherche" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 6 6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <?php if ($filPuces): ?>
+        <div class="fil-chips" role="group" aria-label="Filtrer par cycle">
+          <button type="button" class="fil-chip is-on" data-cycle="" aria-pressed="true">Tous les cycles</button>
+          <?php foreach ($filCyclesOrdonnes as $libCycle): ?>
+          <button type="button" class="fil-chip" data-cycle="<?= e($libCycle) ?>" aria-pressed="false"><?= e($libCycle) ?></button>
+          <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+      </div>
+      <?php endif; ?>
+
+      <div class="fil-acc" data-plafond="<?= $filPlafond ?>">
         <?php foreach ($filieres as $fi => $fil): ?>
           <?php
             $specs   = $fil['specialites'] ?? [];
             $hasSpec = !empty($specs);
             $nbSpec  = count($specs);
             $panelId = 'fil-panel-' . $fi;
+
+            // Grille tarifaire de CETTE formation, résolue par le contrôleur
+            // (TarifCycle) : c'est le prix que le guichet appliquera, pas une
+            // seconde lecture approximative de la table.
+            $tarif   = $tarifsFilieres[(int)($fil['id'] ?? 0)] ?? null;
+            $hasTarif = $tarif !== null && !empty($tarif['cycles']);
+
+            // Le panneau s'ouvre dès qu'il a quelque chose à montrer :
+            // spécialités, tarifs, ou les deux.
+            $ouvrable = $hasSpec || $hasTarif;
+
+            // Clés de filtrage, calculées côté serveur pour que le script n'ait
+            // qu'à comparer des chaînes déjà normalisées (minuscules, sans
+            // accents) — « génie » trouve « Genie » et réciproquement.
+            $filCyclesItem = [];
+            foreach (($tarif['cycles'] ?? []) as $cycleItem) {
+              $filCyclesItem[] = (string)$cycleItem['libelle'];
+            }
+            $filRecherche = mb_strtolower(
+              \Core\Texte::sansAccents(trim((string)$fil['nom'] . ' ' . implode(' ', $specs))),
+              'UTF-8'
+            );
           ?>
-          <div class="fil-item<?= $hasSpec ? '' : ' is-solo' ?>">
+          <div class="fil-item<?= $ouvrable ? '' : ' is-solo' ?>"
+               data-cycles="<?= e(implode('|', $filCyclesItem)) ?>"
+               data-recherche="<?= e($filRecherche) ?>">
             <button type="button" class="fil-trigger" aria-expanded="false"
-                    <?= $hasSpec ? 'aria-controls="' . $panelId . '"' : 'disabled' ?>>
+                    <?= $ouvrable ? 'aria-controls="' . $panelId . '"' : 'disabled' ?>>
               <span class="fil-name"><?= e($fil['nom']) ?></span>
               <span class="fil-aside">
+                <?php if ($hasTarif): ?>
+                  <span class="fil-prix">
+                    <small>à partir de</small>
+                    <b><?= number_format((int)$tarif['min'], 0, ',', ' ') ?><span> FCFA/an</span></b>
+                  </span>
+                <?php endif; ?>
                 <?php if ($hasSpec): ?>
                   <span class="fil-count"><?= $nbSpec ?> spécialité<?= $nbSpec > 1 ? 's' : '' ?></span>
+                <?php elseif (!$hasTarif): ?>
+                  <span class="fil-count fil-count-solo">Sans spécialité</span>
+                <?php endif; ?>
+                <?php if ($ouvrable): ?>
                   <svg class="fil-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M6 9l6 6 6-6"/>
                   </svg>
-                <?php else: ?>
-                  <span class="fil-count fil-count-solo">Sans spécialité</span>
                 <?php endif; ?>
               </span>
             </button>
-            <?php if ($hasSpec): ?>
+            <?php if ($ouvrable): ?>
             <div class="fil-panel" id="<?= $panelId ?>" hidden>
-              <ul class="fil-list">
-                <?php foreach ($specs as $spec): ?>
-                <li>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
-                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-                  <span><?= e($spec) ?></span>
-                </li>
-                <?php endforeach; ?>
-              </ul>
+              <div class="fil-panel-in">
+                <?php if ($hasSpec): ?>
+                <ul class="fil-list">
+                  <?php foreach ($specs as $spec): ?>
+                  <?php // Pas de puce ni de flèche : la même icône répétée sur chaque
+                        // ligne décore sans rien ajouter, le filet suffit à séparer. ?>
+                  <li><span><?= e($spec) ?></span></li>
+                  <?php endforeach; ?>
+                </ul>
+                <?php endif; ?>
+
+                <?php if ($hasTarif): ?>
+                <div class="fil-tarifs">
+                  <div class="fil-tarifs-t">Frais de scolarité annuels</div>
+                  <?php foreach ($tarif['cycles'] as $cycleTarif): ?>
+                  <?php
+                    // La colonne « Boursier » n'apparaît que si l'établissement
+                    // distingue réellement les deux tarifs sur ce cycle : une
+                    // colonne entière de « idem » n'apprend rien au candidat.
+                    $colBoursier = array_filter(array_column($cycleTarif['lignes'], 'boursier')) !== [];
+                  ?>
+                  <?php // `data-cycle` : la puce de cycle filtre aussi le DÉTAIL du panneau,
+                        // pour ne pas rouvrir une filière sur la grille de l'autre cycle. ?>
+                  <div class="fil-tarifs-cycle" data-cycle="<?= e($cycleTarif['libelle']) ?>">
+                    <div class="fil-tarifs-cycle-t">Cycle <?= e($cycleTarif['libelle']) ?></div>
+                    <div class="fil-tarifs-scroll">
+                      <table class="fil-tarifs-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Niveau</th>
+                            <th scope="col">Scolarité</th>
+                            <?php if ($colBoursier): ?>
+                            <th scope="col">Boursier</th>
+                            <?php endif; ?>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <?php foreach ($cycleTarif['lignes'] as $ligne): ?>
+                          <tr>
+                            <th scope="row"><?= e($ligne['niveau']) ?></th>
+                            <td><?= number_format((int)$ligne['non_boursier'], 0, ',', ' ') ?> <span>FCFA</span></td>
+                            <?php if ($colBoursier): ?>
+                            <td><?= (int)$ligne['boursier'] > 0
+                                  ? number_format((int)$ligne['boursier'], 0, ',', ' ') . ' <span>FCFA</span>'
+                                  : '<span class="fil-tarifs-idem">idem</span>' ?></td>
+                            <?php endif; ?>
+                          </tr>
+                          <?php endforeach; ?>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <?php endforeach; ?>
+                  <p class="fil-tarifs-note">
+                    Montants annuels indicatifs, hors frais d'inscription. Le montant exact est
+                    confirmé par l'établissement lors de la validation du dossier.
+                  </p>
+                </div>
+                <?php endif; ?>
+              </div>
             </div>
             <?php endif; ?>
           </div>
         <?php endforeach; ?>
       </div>
+
+      <p class="fil-vide" hidden>Aucune filière ne correspond à cette recherche.</p>
+
+      <?php if (count($filieres) > $filPlafond): ?>
+      <div class="fil-more">
+        <?php // Révélé par le script : sans JavaScript, toutes les filières sont déjà listées. ?>
+        <button type="button" class="fil-more-btn" data-restant="<?= count($filieres) - $filPlafond ?>" hidden>
+          <span class="fil-more-txt">Afficher les <?= count($filieres) - $filPlafond ?> filières restantes</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+      </div>
+      <?php endif; ?>
     </div>
     <?php endif; ?>
   </div>
@@ -992,6 +1261,43 @@ body.av-modal-open { overflow: hidden; }
   </div>
 </section>
 
+<!-- ════════════════ DOSSIER D'INSCRIPTION ════════════════ -->
+<?php if ($compositionGroupes !== []): ?>
+<section class="section dossier-sec" id="dossier">
+  <div class="wrap">
+    <div class="section-head center">
+      <span class="section-tag">Après la préinscription</span>
+      <h2 class="display">Le dossier d'inscription, <span class="hl">pièce par pièce</span>.</h2>
+      <p>Réunissez ces documents avant de vous présenter au service des admissions. Les pièces communes valent pour tous&nbsp;; celles d'un cycle s'y ajoutent.</p>
+    </div>
+
+    <div class="dossier-grid">
+      <?php foreach ($compositionGroupes as $groupe): ?>
+      <article class="dossier-card dossier-card--<?= e($groupe['cle']) ?>">
+        <div class="dossier-card-head">
+          <span class="dossier-dot"></span>
+          <h3><?= e($groupe['libelle']) ?></h3>
+          <span class="dossier-count"><?= count($groupe['pieces']) ?></span>
+        </div>
+        <ul class="dossier-list">
+          <?php foreach ($groupe['pieces'] as $piece): ?>
+          <li>
+            <span class="dossier-ck">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            </span>
+            <?= e($piece) ?>
+          </li>
+          <?php endforeach; ?>
+        </ul>
+      </article>
+      <?php endforeach; ?>
+    </div>
+
+    <p class="dossier-note">Liste communiquée par <?= e($nom) ?>. Elle ne se substitue pas aux pièces complémentaires qui pourraient être demandées à l'examen du dossier.</p>
+  </div>
+</section>
+<?php endif; ?>
+
 <!-- ════════════════ LOCALISATION / CONTACT ════════════════ -->
 <section class="contact" id="contact">
   <div class="contact-grid">
@@ -1104,6 +1410,7 @@ body.av-modal-open { overflow: hidden; }
         <a href="<?= e($inscriptionUrl) ?>">Inscription en ligne</a>
         <?php endif; ?>
         <a href="#tarifs">Frais de scolarité</a>
+        <?php if ($compositionGroupes !== []): ?><a href="#dossier">Dossier d'inscription</a><?php endif; ?>
         <a href="#contact">Nous contacter</a>
       </div>
     </div>
@@ -1119,64 +1426,257 @@ body.av-modal-open { overflow: hidden; }
 
 <script src="<?= asset('orientation/site.js') ?>"></script>
 <script>
-/* ── Accordéon Filières → Spécialités ──────────────────────────────── */
+/* ── Sections dépliables : cycles de formations & filières ──────────────
+   Deux accordéons, un seul mécanisme. Le panneau s'anime en hauteur puis
+   repasse en `height:auto` : une carte survolée peut alors déborder de son
+   panneau (ombre, léger soulèvement) sans être rognée. */
 (function () {
-  var acc = document.querySelector('.fil-acc');
-  if (!acc) return;
-
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  function close(item) {
-    var btn   = item.querySelector('.fil-trigger');
-    var panel = item.querySelector('.fil-panel');
-    if (!btn || !panel) return;
-    btn.setAttribute('aria-expanded', 'false');
-    if (reduce) {
-      panel.hidden = true;
-      panel.style.height = '';
-    } else {
+  /**
+   * Câble un accordéon.
+   * @param {Element} racine
+   * @param {{item:string, trigger:string, panel:string, unique:boolean}} sel
+   */
+  function accordeon(racine, sel) {
+    if (!racine) return null;
+
+    function panneau(item) { return item.querySelector(sel.panel); }
+    function bouton(item)  { return item.querySelector(sel.trigger); }
+
+    function fermer(item) {
+      var btn = bouton(item), panel = panneau(item);
+      if (!btn || !panel) return;
+      btn.setAttribute('aria-expanded', 'false');
+      item.classList.remove('is-open');
+      panel.classList.remove('is-full');
+      if (reduce) {
+        panel.hidden = true;
+        panel.style.height = '';
+        return;
+      }
       panel.style.height = panel.scrollHeight + 'px';
       requestAnimationFrame(function () { panel.style.height = '0px'; });
       panel.addEventListener('transitionend', function te(e) {
-        if (e.propertyName !== 'height') return;
+        if (e.propertyName !== 'height' || e.target !== panel) return;
         panel.hidden = true;
         panel.style.height = '';
         panel.removeEventListener('transitionend', te);
       });
     }
-    item.classList.remove('is-open');
+
+    function ouvrir(item) {
+      var btn = bouton(item), panel = panneau(item);
+      if (!btn || !panel) return;
+      btn.setAttribute('aria-expanded', 'true');
+      item.classList.add('is-open');
+      panel.hidden = false;
+      if (reduce) {
+        panel.style.height = 'auto';
+        panel.classList.add('is-full');
+        return;
+      }
+      panel.style.height = '0px';
+      requestAnimationFrame(function () { panel.style.height = panel.scrollHeight + 'px'; });
+      panel.addEventListener('transitionend', function te(e) {
+        if (e.propertyName !== 'height' || e.target !== panel) return;
+        panel.style.height = 'auto';
+        panel.classList.add('is-full');
+        panel.removeEventListener('transitionend', te);
+      });
+    }
+
+    racine.addEventListener('click', function (e) {
+      var btn = e.target.closest(sel.trigger);
+      if (!btn || btn.disabled || !racine.contains(btn)) return;
+      var item = btn.closest(sel.item);
+      if (!item) return;
+      if (item.classList.contains('is-open')) {
+        fermer(item);
+      } else {
+        if (sel.unique) {
+          racine.querySelectorAll(sel.item + '.is-open').forEach(fermer);
+        }
+        ouvrir(item);
+      }
+    });
+
+    return { ouvrir: ouvrir, fermer: fermer };
   }
 
-  function open(item) {
-    var btn   = item.querySelector('.fil-trigger');
-    var panel = item.querySelector('.fil-panel');
-    if (!btn || !panel) return;
-    btn.setAttribute('aria-expanded', 'true');
-    item.classList.add('is-open');
-    panel.hidden = false;
-    if (reduce) { panel.style.height = 'auto'; return; }
-    panel.style.height = '0px';
-    requestAnimationFrame(function () { panel.style.height = panel.scrollHeight + 'px'; });
-    panel.addEventListener('transitionend', function te(e) {
-      if (e.propertyName !== 'height') return;
-      panel.style.height = 'auto';
-      panel.removeEventListener('transitionend', te);
+  /* ── 1. Groupes de formations par cycle ──────────────────────────────
+     Plusieurs cycles peuvent rester ouverts en même temps : un candidat
+     hésitant entre Licence et Master compare sans refermer l'un pour voir
+     l'autre. */
+  accordeon(document.querySelector('.cyc-acc'), {
+    item: '.cyc-item', trigger: '.cyc-trigger', panel: '.cyc-panel', unique: false
+  });
+
+  /* ── 2. Plafond de cartes dans chaque cycle ──────────────────────────
+     Le serveur rend TOUTES les cartes : sans JavaScript, la page reste
+     complète. C'est le script qui replie le surplus et révèle le bouton. */
+  document.querySelectorAll('.cyc-grid[data-visible]').forEach(function (grille) {
+    var max    = parseInt(grille.getAttribute('data-visible'), 10) || 6;
+    var cartes = Array.prototype.slice.call(grille.children);
+    var extra  = cartes.slice(max);
+    if (!extra.length) return;
+
+    var bloc = grille.parentNode.querySelector('.cyc-more');
+    var btn  = bloc && bloc.querySelector('.cyc-more-btn');
+    if (!btn) return;
+
+    var txt     = btn.querySelector('.cyc-more-txt');
+    var restant = extra.length;
+    var libelle = 'Voir les ' + restant + ' autre' + (restant > 1 ? 's' : '') +
+                  ' formation' + (restant > 1 ? 's' : '');
+
+    function replier(oui) {
+      extra.forEach(function (c) {
+        c.hidden = oui;
+        // Cartes demandées explicitement : elles apparaissent tout de suite,
+        // sans attendre que l'observateur de défilement les rattrape.
+        if (!oui) c.classList.add('in');
+      });
+      btn.setAttribute('aria-expanded', oui ? 'false' : 'true');
+      btn.classList.toggle('is-open', !oui);
+      if (txt) txt.textContent = oui ? libelle : 'Réduire';
+    }
+
+    replier(true);
+    btn.hidden = false;
+    btn.addEventListener('click', function () {
+      replier(!extra[0].hidden);
+    });
+  });
+
+  /* ── 3. Filières : plafond + recherche + puces de cycle ──────────────── */
+  var acc = document.querySelector('.fil-acc');
+  if (!acc) return;
+
+  var api = accordeon(acc, {
+    item: '.fil-item', trigger: '.fil-trigger', panel: '.fil-panel', unique: true
+  });
+
+  var items    = Array.prototype.slice.call(acc.querySelectorAll('.fil-item'));
+  var plafond  = parseInt(acc.getAttribute('data-plafond'), 10) || 0;
+  var spec     = acc.closest('.fil-spec');
+  var tools    = spec && spec.querySelector('.fil-tools');
+  var champ    = spec && spec.querySelector('.fil-search-input');
+  var effacer  = spec && spec.querySelector('.fil-search-clear');
+  var puces    = spec ? Array.prototype.slice.call(spec.querySelectorAll('.fil-chip')) : [];
+  var vide     = spec && spec.querySelector('.fil-vide');
+  var moreBloc = spec && spec.querySelector('.fil-more');
+  var moreBtn  = moreBloc && moreBloc.querySelector('.fil-more-btn');
+  var moreTxt  = moreBtn && moreBtn.querySelector('.fil-more-txt');
+
+  var deplie = false;      // « Afficher les restantes » actionné
+  var cycle  = '';         // puce active ('' = tous)
+
+  function normaliser(v) {
+    v = (v || '').toLowerCase();
+    return v.normalize ? v.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : v;
+  }
+
+  function appliquer() {
+    var q       = normaliser(champ ? champ.value.trim() : '');
+    var filtre  = q !== '' || cycle !== '';
+    var visible = 0;
+    var derniere = null;
+
+    items.forEach(function (item) {
+      var okTexte = q === '' || (item.getAttribute('data-recherche') || '').indexOf(q) !== -1;
+      var okCycle = cycle === '' ||
+        ((item.getAttribute('data-cycles') || '').split('|').indexOf(cycle) !== -1);
+      var garde = okTexte && okCycle;
+
+      // Hors filtre, le plafond reprend la main : les filières au-delà du
+      // rang autorisé restent repliées tant qu'on n'a pas tout affiché.
+      if (garde && !filtre && plafond > 0 && !deplie && visible >= plafond) {
+        garde = false;
+      }
+      if (garde) { visible++; derniere = item; }
+
+      if (!garde && item.classList.contains('is-open')) {
+        api.fermer(item);   // une filière masquée ne peut pas rester dépliée
+      }
+      item.hidden = !garde;
+
+      // Le filtre de cycle vaut aussi DANS le panneau : une filière ouverte
+      // sous « Master » ne montre pas la grille tarifaire de la licence.
+      item.querySelectorAll('.fil-tarifs-cycle').forEach(function (bloc) {
+        bloc.hidden = cycle !== '' && bloc.getAttribute('data-cycle') !== cycle;
+      });
+    });
+
+    // Le filet du bas appartient à la dernière ligne visible, pas à la
+    // dernière ligne du DOM : sinon il doublait la bordure du cadre.
+    items.forEach(function (item) { item.classList.toggle('is-derniere', item === derniere); });
+    acc.hidden = visible === 0;   // un cadre vide vaut moins que pas de cadre
+    if (vide) vide.hidden = visible !== 0;
+
+    if (moreBtn) {
+      var cache = items.length - (plafond > 0 ? plafond : items.length);
+      // Le bouton n'a de sens que hors filtre : une recherche montre déjà
+      // tout ce qui correspond.
+      moreBtn.hidden = filtre || cache <= 0;
+      moreBtn.setAttribute('aria-expanded', deplie ? 'true' : 'false');
+      moreBtn.classList.toggle('is-open', deplie);
+      if (moreTxt) {
+        moreTxt.textContent = deplie
+          ? 'Réduire la liste'
+          : 'Afficher les ' + cache + ' filière' + (cache > 1 ? 's' : '') + ' restante' + (cache > 1 ? 's' : '');
+      }
+    }
+
+    if (effacer) effacer.hidden = !(champ && champ.value !== '');
+  }
+
+  if (tools) tools.hidden = false;
+
+  if (champ) {
+    champ.addEventListener('input', appliquer);
+    champ.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && champ.value !== '') {
+        e.stopPropagation();
+        champ.value = '';
+        appliquer();
+      }
     });
   }
 
-  acc.addEventListener('click', function (e) {
-    var btn = e.target.closest('.fil-trigger');
-    if (!btn || btn.disabled || !acc.contains(btn)) return;
-    var item = btn.closest('.fil-item');
-    if (!item) return;
-    if (item.classList.contains('is-open')) {
-      close(item);
-    } else {
-      // Un seul panneau ouvert à la fois
-      acc.querySelectorAll('.fil-item.is-open').forEach(close);
-      open(item);
-    }
+  if (effacer) {
+    effacer.addEventListener('click', function () {
+      if (champ) { champ.value = ''; champ.focus(); }
+      appliquer();
+    });
+  }
+
+  puces.forEach(function (p) {
+    p.addEventListener('click', function () {
+      cycle = p.getAttribute('data-cycle') || '';
+      puces.forEach(function (x) {
+        var on = x === p;
+        x.classList.toggle('is-on', on);
+        x.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      appliquer();
+    });
   });
+
+  if (moreBtn) {
+    moreBtn.addEventListener('click', function () {
+      deplie = !deplie;
+      appliquer();
+      if (!deplie) {
+        // Repli : on remonte sur la liste, sinon le clic laisse le lecteur
+        // dans le vide laissé par les filières qui viennent de disparaître.
+        var haut = acc.getBoundingClientRect().top + window.pageYOffset - 90;
+        window.scrollTo({ top: haut, behavior: reduce ? 'auto' : 'smooth' });
+      }
+    });
+  }
+
+  appliquer();
 })();
 </script>
 <script>

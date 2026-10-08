@@ -11,8 +11,121 @@ use PHPMailer\PHPMailer\Exception;
 
 class AuthController
 {
+    /**
+     * Tentatives de connexion autorisées avant blocage temporaire.
+     *
+     * Dix : assez pour un utilisateur qui hésite entre deux mots de passe et
+     * se trompe de casse, très loin du compte pour une attaque par
+     * dictionnaire. Au-delà, l'adresse IP et l'adresse e-mail visée sont mises
+     * au repos pour self::FENETRE_CONNEXION secondes.
+     */
+    private const MAX_TENTATIVES_CONNEXION = 10;
+
+    /** Durée du blocage, et durée de la fenêtre de comptage : 15 minutes. */
+    private const FENETRE_CONNEXION = 900;
+
+    /**
+     * Les deux compteurs qui encadrent une tentative de connexion.
+     *
+     * DEUX, parce qu'un seul se contourne :
+     *
+     *  - par IP seule : un attaquant qui dispose d'un réseau d'adresses (botnet,
+     *    proxys résidentiels, simple partage de connexion mobile) recommence à
+     *    zéro à chaque changement d'adresse et attaque un compte sans limite ;
+     *  - par e-mail seul : un attaquant essaie dix mots de passe sur dix mille
+     *    comptes différents depuis la même machine — c'est le « password
+     *    spraying », et aucun compteur par compte ne le voit passer.
+     *
+     * Les deux ensemble ferment les deux chemins. Le compteur d'e-mail
+     * s'incrémente que l'adresse existe ou non : il ne renseigne donc jamais
+     * sur l'existence d'un compte.
+     *
+     * @return array{0:string,1:string} [clé IP, clé e-mail]
+     */
+    private static function clesTentatives(string $email): array
+    {
+        return [
+            RateLimiter::ipKey('user_login'),
+            RateLimiter::emailKey('user_login', $email),
+        ];
+    }
+
+    /**
+     * Enregistre un échec sur les deux compteurs.
+     *
+     * Appelée sur TOUS les chemins d'échec — mot de passe faux, e-mail inconnu,
+     * compte d'établissement refusé ici. Un chemin oublié devient le chemin que
+     * l'attaquant emprunte, puisqu'il ne coûte rien.
+     */
+    private static function compterEchecConnexion(string $email): void
+    {
+        foreach (self::clesTentatives($email) as $cle) {
+            RateLimiter::hit($cle, self::FENETRE_CONNEXION);
+        }
+    }
+
+    /**
+     * Sortie UNIQUE de tous les échecs d'identification.
+     *
+     * Le message, le compteur, la page de retour et les champs repeuplés sont
+     * rigoureusement les mêmes que l'adresse existe, que le mot de passe soit
+     * faux, ou que le compte appartienne à un établissement. C'est la garantie
+     * anti-énumération : elle ne tient que si UN SEUL code produit la réponse.
+     * Trois blocs copiés finissaient toujours par se désynchroniser — un mot
+     * changé, un compteur oublié, et la différence trahit l'existence du compte.
+     *
+     * Cette méthode ne rend jamais la main (Response::redirect termine).
+     */
+    private function echecIdentifiants(string $email, string $redirectAfter): void
+    {
+        self::compterEchecConnexion($email);
+
+        $message = 'Email ou mot de passe incorrect.';
+
+        // Décompte annoncé seulement quand il devient utile : prévenir dès la
+        // première erreur inquiète pour rien, et prévenir un attaquant du seuil
+        // exact ne lui apprend rien qu'il ne mesure déjà en comptant ses essais.
+        $restantes = self::tentativesRestantes($email);
+        if ($restantes > 0 && $restantes <= 5) {
+            $message .= sprintf(
+                ' Il vous reste %d tentative%s avant blocage temporaire.',
+                $restantes,
+                $restantes > 1 ? 's' : ''
+            );
+        }
+
+        Session::flash('errors', ['general' => $message]);
+        Session::flash('old', ['email' => $email]);
+        Response::redirect('/auth/connexion' . ($redirectAfter ? '?redirect=' . urlencode($redirectAfter) : ''));
+    }
+
+    /**
+     * Tentatives encore permises : la plus contraignante des deux limites.
+     *
+     * Retourne le maximum si Redis est indisponible — le limiteur est alors
+     * hors service (fail-open assumé, cf. Core\RateLimiter) et annoncer un
+     * décompte faux serait pire que de n'en annoncer aucun.
+     */
+    private static function tentativesRestantes(string $email): int
+    {
+        $restantes = self::MAX_TENTATIVES_CONNEXION;
+        foreach (self::clesTentatives($email) as $cle) {
+            $restantes = min($restantes, RateLimiter::retriesLeft($cle, self::MAX_TENTATIVES_CONNEXION));
+        }
+
+        return $restantes;
+    }
+
     public function showConnexion(): void
     {
+        // Cloison des espaces : une session gestionnaire ouverte en parallèle
+        // n'a AUCUN effet ici. On ne la redirige surtout pas vers /gestionnaire
+        // — ce raccourci ouvrait le tableau de bord établissement depuis un
+        // point d'entrée public (poste partagé au guichet), en contournant la
+        // porte /gestionnaire/login et son 2FA, et révélait à la fois
+        // l'existence et l'adresse du portail. Le formulaire élève s'affiche
+        // normalement ; c'est connexion() qui refuse les comptes
+        // d'établissement, sans rien divulguer.
         if (Session::isLoggedIn()) {
             Response::redirect('/hub');
         }
@@ -40,11 +153,25 @@ class AuthController
             Response::redirect('/auth/connexion' . ($redirectAfter ? '?redirect=' . urlencode($redirectAfter) : ''));
         }
 
-        $rlKey = RateLimiter::ipKey('user_login');
-        if (RateLimiter::tooManyAttempts($rlKey, 10)) {
-            $waitMin = max(1, (int) ceil(RateLimiter::availableIn($rlKey) / 60));
-            Session::flash('errors', ['general' => "Trop de tentatives. Réessayez dans {$waitMin} minute(s)."]);
-            Response::redirect('/auth/connexion');
+        // ── Limitation des tentatives : 10 par fenêtre de 15 minutes ────────
+        // Le blocage est vérifié AVANT toute lecture en base : une tentative
+        // refusée ne doit coûter ni requête SQL ni vérification de hash, sinon
+        // le limiteur devient lui-même le levier du déni de service.
+        [$rlIp, $rlEmail] = self::clesTentatives($email);
+
+        foreach ([$rlIp, $rlEmail] as $cle) {
+            if (!RateLimiter::tooManyAttempts($cle, self::MAX_TENTATIVES_CONNEXION)) {
+                continue;
+            }
+
+            $attente = max(1, (int) ceil(RateLimiter::availableIn($cle) / 60));
+            Session::flash('errors', ['general' =>
+                'Trop de tentatives de connexion ('
+                . self::MAX_TENTATIVES_CONNEXION . ' maximum). '
+                . "Réessayez dans {$attente} minute(s).",
+            ]);
+            Session::flash('old', ['email' => $email]);
+            Response::redirect('/auth/connexion' . ($redirectAfter ? '?redirect=' . urlencode($redirectAfter) : ''));
         }
 
         $userModel = new User();
@@ -55,17 +182,26 @@ class AuthController
         // de réponse soit identique à celle d'un email existant.
         if (!$user) {
             $userModel->verifyPassword($password, '$2y$12$tax65kQnF8SZ0g1rGGuP2eo5P.g4uc2QDRQ74VlrP9Fz/KzVok7ym');
-            RateLimiter::hit($rlKey, 900);
-            Session::flash('errors', ['general' => 'Email ou mot de passe incorrect.']);
-            Session::flash('old', ['email' => $email]);
-            Response::redirect('/auth/connexion' . ($redirectAfter ? '?redirect=' . urlencode($redirectAfter) : ''));
+            $this->echecIdentifiants($email, $redirectAfter);
         }
 
         if (!$userModel->verifyPassword($password, $user['password_hash'])) {
-            RateLimiter::hit($rlKey, 900);
-            Session::flash('errors', ['general' => 'Email ou mot de passe incorrect.']);
-            Session::flash('old', ['email' => $email]);
-            Response::redirect('/auth/connexion' . ($redirectAfter ? '?redirect=' . urlencode($redirectAfter) : ''));
+            $this->echecIdentifiants($email, $redirectAfter);
+        }
+
+        // ── Cloison des espaces ───────────────────────────────────────────
+        // Un compte d'établissement (gestionnaire) partage la table `users`
+        // avec les élèves : ses identifiants sont donc valides ici. Interdit —
+        // sa porte d'entrée est son espace dédié, avec 2FA obligatoire.
+        // Sans ce contrôle, il ouvrait une session « élève » et arrivait au hub.
+        //
+        // Réponse VOLONTAIREMENT identique à celle d'un mot de passe faux :
+        // même message, même compteur de tentatives, même page. Ni le type de
+        // compte ni l'existence d'un autre espace ne doivent fuiter — sinon un
+        // e-mail de gestionnaire obtenu par ailleurs suffirait à découvrir la
+        // porte à attaquer. Aucune redirection vers cette porte ici.
+        if ($userModel->isEtablissementAccount((int) $user['id'])) {
+            $this->echecIdentifiants($email, $redirectAfter);
         }
 
         if (!$user['is_active'] || $user['is_deleted']) {
@@ -73,10 +209,28 @@ class AuthController
             Response::redirect('/auth/connexion');
         }
 
-        RateLimiter::clear($rlKey);
+        // Connexion réussie : les deux compteurs sont remis à zéro, sinon les
+        // essais ratés d'avant la réussite continueraient de peser sur les
+        // prochaines connexions légitimes du même utilisateur.
+        RateLimiter::clear($rlIp);
+        RateLimiter::clear($rlEmail);
+
         Session::regenerate();
         $this->setUserSession($user);
         $userModel->updateLastLogin((int) $user['id']);
+
+        // Traçabilité §11.2 — la frise de la fiche super admin doit pouvoir
+        // situer chaque action entre deux connexions.
+        \Services\Orientation\Journal::ecrire(
+            \Services\Orientation\Journal::CONNEXION,
+            [
+                'utilisateur_id' => (int) $user['id'],
+                'acteur_id'      => (int) $user['id'],
+                'acteur_role'    => (string) ($user['role'] ?? 'eleve'),
+                'objet_type'     => 'user',
+                'objet_id'       => (int) $user['id'],
+            ]
+        );
 
         // Rattache les dossiers orientation déposés avec cet email avant le compte
         try {

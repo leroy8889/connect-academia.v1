@@ -276,15 +276,31 @@ a.acct-stat:hover{border-color:rgba(26,26,25,.16)}
 .acct-field-err{font-size:11.5px;color:var(--err-fg);font-weight:600}
 .acct-field-hint{font-size:11.5px;color:var(--ink-faint);line-height:1.5}
 
-/* lignes pièces / documents */
-.acct-doc-row{display:flex;align-items:center;gap:14px;padding:13px 4px;border-bottom:1px solid var(--glass-line-soft)}
+/* lignes pièces / documents
+   ── Anti-débordement ──
+   Un élément flex a `min-width:auto` par défaut : il refuse de descendre sous
+   la largeur minimale de son contenu. Un libellé de pièce un peu long
+   (« 1 Copie des bulletins de la Terminale + collante du bac ») imposait donc
+   sa largeur à la ligne, et la carte débordait au lieu de replier le texte.
+   `min-width:0` sur la ligne ET ses enfants rend le repli possible ;
+   `overflow-wrap:anywhere` traite le cas d'un mot unique plus large que la
+   carte (une référence, un nom de fichier). */
+.acct-doc-row{display:flex;align-items:center;gap:14px;padding:13px 4px;border-bottom:1px solid var(--glass-line-soft);min-width:0}
 .acct-doc-row:last-child{border-bottom:none}
+.acct-doc-row > *{min-width:0}
 .acct-doc-ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex-shrink:0}
 .acct-doc-ic.ok{background:rgba(107,155,120,.14);color:#8FCB9F}
 .acct-doc-ic.miss{background:rgba(26,26,25,.04);color:var(--ink-faint);border:1px dashed var(--glass-line)}
-.acct-doc-name{font-family:'Montserrat',sans-serif;font-weight:700;font-size:13.5px;color:var(--ink)}
-.acct-doc-sub{font-size:11.5px;color:var(--ink-dim);margin-top:2px}
-.acct-doc-actions{margin-left:auto;display:flex;gap:8px;flex-shrink:0}
+.acct-doc-name{font-family:'Montserrat',sans-serif;font-weight:700;font-size:13.5px;color:var(--ink);overflow-wrap:anywhere}
+.acct-doc-sub{font-size:11.5px;color:var(--ink-dim);margin-top:2px;overflow-wrap:anywhere}
+/* Les boutons ne s'écrasent pas sous leur texte, mais la rangée se replie :
+   « Télécharger » + un badge ne tiennent pas à côté d'un libellé long. */
+.acct-doc-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:100%}
+.acct-doc-actions > *{flex-shrink:0}
+
+/* Même traitement pour l'aperçu compact du tableau de bord. */
+.acct-mini-doc{min-width:0;flex-wrap:wrap}
+.acct-mini-doc-t{overflow-wrap:anywhere}
 
 /* état vide */
 .acct-empty{padding:40px 26px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:13px}
@@ -323,12 +339,33 @@ a.acct-stat:hover{border-color:rgba(26,26,25,.16)}
   .acct-kv-row{grid-template-columns:repeat(2,1fr)}
 }
 @media (max-width:980px){
+  /* Le tiroir est HORS ÉCRAN au repos (translateX(-100%)), mais son ombre
+     portée, elle, ne l'est pas : `24px 0 60px` la projette vers la DROITE,
+     donc à l'intérieur du viewport. D'où la bande sombre permanente sur le
+     bord gauche du dashboard en mobile. `.acct` a bien `overflow:hidden`,
+     mais un enfant `position:fixed` n'est pas découpé par un ancêtre qui ne
+     porte ni transform ni filter — le débord passait donc au travers.
+
+     L'ombre n'est portée que quand le tiroir est OUVERT, c'est-à-dire quand
+     elle a quelque chose à décoller du fond. Elle est animée en même temps
+     que la translation pour que la fermeture reste continue. */
   .acct-side{
     position:fixed;left:0;top:0;bottom:0;height:100%;
-    transform:translateX(-100%);transition:transform .22s ease;
-    background:#F2F0EA;box-shadow:24px 0 60px rgba(0,0,0,.5);
+    transform:translateX(-100%);
+    /* `visibility` fait partie de la transition : sans elle, la fermeture
+       masquerait le tiroir INSTANTANÉMENT et on ne verrait jamais le
+       glissement. Transitionnée, elle ne bascule qu'en fin d'animation. */
+    transition:transform .22s ease, box-shadow .22s ease, visibility .22s ease;
+    background:#F2F0EA;box-shadow:none;
+    /* Filet de ceinture : rien du tiroir fermé ne peut peindre à l'écran,
+       même si une ombre ou un pseudo-élément est réintroduit plus tard. */
+    visibility:hidden;
   }
-  .acct.side-open .acct-side{transform:translateX(0)}
+  .acct.side-open .acct-side{
+    transform:translateX(0);
+    box-shadow:24px 0 60px rgba(0,0,0,.5);
+    visibility:visible;
+  }
   .acct-side-overlay{
     display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:30;
   }
@@ -347,8 +384,36 @@ a.acct-stat:hover{border-color:rgba(26,26,25,.16)}
   .acct-pay-head{display:none}
   .acct-profile-grid,.acct-form-row{grid-template-columns:1fr}
   .acct-doc-row{flex-wrap:wrap}
-  .acct-doc-actions{margin-left:52px}
+  /* Le retrait aligne les actions sous le libellé ; sans la largeur maximale
+     correspondante, `100% + 52px` sortait de la carte sur les petits écrans. */
+  .acct-doc-actions{margin-left:52px;max-width:calc(100% - 52px);justify-content:flex-start}
   .acct-dossier-ref{margin-left:0;text-align:left;width:100%}
+
+  /* Un bouton ne peut pas être plus large que la carte qui le contient.
+     `.abtn` porte `white-space:nowrap` — parfait pour « Voir » ou « Valider »,
+     ruineux pour les boutons qui affichent un numéro de document complet
+     (« Récépissé de dépôt de dossier · CA-2026-AFR-000001 »). Mesuré sur un
+     écran de 390 px : 416 px de bouton dans un conteneur de 382, soit 75 px de
+     débordement. Le conteneur `.acct-content` étant défilable horizontalement,
+     toute la page devenait décalable latéralement au doigt — et un balayage
+     involontaire pendant qu'on vise un bouton emmenait l'utilisateur sur une
+     bande vide.
+
+     On laisse donc le libellé revenir à la ligne, en gardant la hauteur d'un
+     bouton normal tant qu'il tient sur une ligne (`min-height`, pas `height`). */
+  .abtn{
+    max-width:100%;
+    white-space:normal;
+    height:auto;
+    min-height:38px;
+    padding-top:8px;
+    padding-bottom:8px;
+    text-align:left;
+    line-height:1.35;
+  }
+  .abtn.sm{min-height:32px;padding-top:6px;padding-bottom:6px}
+  /* L'icône ne se comprime jamais : c'est le texte qui plie. */
+  .abtn > svg{flex:0 0 auto}
 }
 
 /* ============ Icônes monochromes — sans couleur (langage Claude) ============
@@ -363,3 +428,10 @@ a.acct-stat:hover{border-color:rgba(26,26,25,.16)}
   color:var(--ink-dim);
 }
 .acct-doc-ic.miss{background:rgba(26,26,25,.03);color:var(--ink-faint);border:1px dashed var(--glass-line)}
+/* Pièce REFUSÉE — état à part entière, ni « déposée » ni « manquante ».
+   Ces deux règles vivaient uniquement dans `orientation/espace-suivi.css`,
+   feuille que seule la fiche d'un dossier charge : le tableau de bord et
+   l'onglet Documents affichaient donc une pièce refusée en gris neutre,
+   impossible à distinguer d'une pièce simplement absente. */
+.acct-doc-ic.err{background:rgba(255,82,82,.13);color:#A32626;border:1px solid rgba(255,82,82,.22)}
+.acct-doc-row-err .acct-doc-name{color:#A32626}

@@ -23,6 +23,7 @@ final class PdfStream
     public static function emettre(?string $pdf, callable $htmlFallback, string $nomFichier): void
     {
         // Un PDF ne tolère aucun octet parasite : on vide les tampons ouverts.
+        // Le repli HTML plus bas a besoin d'un tampon vide lui aussi.
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
@@ -43,12 +44,12 @@ final class PdfStream
             // front-controller n'ont pas de sens sur un flux binaire : `object-src
             // 'none'` empêche certains navigateurs d'afficher la visionneuse PDF,
             // et la page reste blanche alors que le document est correct.
-            if (function_exists('apache_setenv')) {
-                @apache_setenv('no-gzip', '1');
-            }
-            @ini_set('zlib.output_compression', '0');
-            header_remove('Content-Security-Policy');
-            header_remove('X-Frame-Options');
+            //
+            // Cette règle est désormais portée par Core\FichierBinaire, qui la
+            // partage avec les pièces justificatives déposées par le candidat :
+            // elles souffraient exactement du même défaut sans jamais avoir reçu
+            // le correctif, faute de passer par ici.
+            \Core\FichierBinaire::preparerReponse();
 
             header('Content-Type: application/pdf');
             header('Content-Disposition: attachment; filename="' . $nom . '.pdf"');

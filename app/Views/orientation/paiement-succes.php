@@ -19,7 +19,7 @@ $estPaye        = in_array($dossier['statut'] ?? '', ['paye', 'accepte'], true) 
 $titre          = $estPaye ? 'Inscription confirmée !' : 'Dossier d\'inscription envoyé !';
 ?>
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">

@@ -191,6 +191,27 @@
   line-height: 1.25; /* respire : laisse la place au verre du mot accentué */
 }
 
+/* Mobile : respiration entre la barre de navigation et le titre du hero.
+   Le bandeau est en `position:absolute; top:20px` et mesure ~60 px : son bord
+   bas tombe donc vers 80 px. Le hero n'ouvrait que 60 px de padding (le
+   raccourci `padding` de style.css écrase le `padding-block-start` déclaré
+   juste au-dessus de lui) et le titre commençait à 100 px — vingt pixels sous
+   le verre du bandeau, qui semblait le toucher.
+   On ouvre l'espace sur le HERO, pas sur le titre : le cadre violet arrondi
+   garde ainsi ses proportions, et le décalage profite aussi au contenu qui
+   suit. Borne à 767 px : au-delà, c'est le palier `min-width: 768px` de
+   style.css qui reprend la main sur le padding — le desktop reste intact. */
+@media (max-width: 767px) {
+  .hero { padding-top: 108px; }
+  .hero-content h1 { margin-top: 24px; }
+}
+
+/* Très petits écrans : le bandeau passe souvent sur deux lignes de hauteur
+   utile (logo + bouton menu), il faut un cran de plus. */
+@media (max-width: 420px) {
+  .hero { padding-top: 118px; }
+}
+
 /* Le mot accentué du H1 hero : VERRE LIQUIDE VIOLET dominant.
    Le verre translucide teinté violet prime, le texte passe en blanc. */
 .hero-content h1 .span {

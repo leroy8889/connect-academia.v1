@@ -37,13 +37,22 @@ $groupes = $groupes ?? [];
         <?= $nbOk ?> pièce<?= $nbOk > 1 ? 's' : '' ?> déposée<?= $nbOk > 1 ? 's' : '' ?><?= $nbMiss > 0 ? ' · ' . $nbMiss . ' manquante' . ($nbMiss > 1 ? 's' : '') : '' ?>
       </div>
       <?php foreach ($pieces as $p): ?>
-        <?php $doc = $p['doc'] ?? null; ?>
-        <div class="acct-doc-row">
-          <div class="acct-doc-ic <?= $p['ok'] ? 'ok' : 'miss' ?>"><?= acct_icon($p['ok'] ? 'idcard' : 'upload', 17) ?></div>
-          <div>
+        <?php
+          $doc = $p['doc'] ?? null;
+          // Une pièce refusée était rangée avec les manquantes : le candidat
+          // lisait « Manquante » sur un document qu'il avait bel et bien
+          // envoyé, sans le motif du refus ni le moindre bouton pour agir.
+          $refusee = ($p['etat'] ?? null) === 'refuse';
+          $motif   = trim((string)($p['motif_refus'] ?? ''));
+        ?>
+        <div class="acct-doc-row<?= $refusee ? ' acct-doc-row-err' : '' ?>">
+          <div class="acct-doc-ic <?= $refusee ? 'err' : ($p['ok'] ? 'ok' : 'miss') ?>"><?= acct_icon($refusee ? 'alert' : ($p['ok'] ? 'idcard' : 'upload'), 17) ?></div>
+          <div style="min-width:0">
             <div class="acct-doc-name"><?= e($p['libelle']) ?></div>
             <div class="acct-doc-sub">
-              <?php if ($p['ok'] && $doc): ?>
+              <?php if ($refusee): ?>
+                Refusée par l'établissement<?= $motif !== '' ? ' — ' . e($motif) : '' ?>
+              <?php elseif ($p['ok'] && $doc): ?>
                 Déposée le <?= acct_date($doc['date_depot'] ?? null) ?><?= !empty($doc['taille_octets']) ? ' · ' . acct_taille((int)$doc['taille_octets']) : '' ?>
               <?php elseif ($p['obligatoire']): ?>
                 Manquante — requise pour finaliser l'inscription
@@ -55,10 +64,18 @@ $groupes = $groupes ?? [];
           <div class="acct-doc-actions">
             <?php if ($p['ok'] && !empty($doc['url_doc'])): ?>
               <a href="<?= e($doc['url_doc']) ?>" target="_blank" rel="noopener" class="abtn ghost sm"><?= acct_icon('download', 13) ?> Télécharger</a>
-            <?php elseif (!$p['ok'] && ($d['statut'] ?? '') === 'brouillon' && !empty($d['etab_slug'])): ?>
+            <?php endif; ?>
+            <?php /* Le dépôt vit dans la fiche du dossier : c'est le seul écran
+                     qui porte un formulaire par pièce. On y renvoie plutôt que
+                     de laisser un état sans issue. */ ?>
+            <?php if (!$p['ok'] && ($d['statut'] ?? '') === 'brouillon' && !empty($d['etab_slug'])): ?>
               <a href="<?= url('/orientation/' . e($d['etab_slug']) . '/inscription') ?>" class="abtn glass sm"><?= acct_icon('upload', 13) ?> Déposer</a>
+            <?php elseif (!$p['ok'] && !empty($p['deposable'])): ?>
+              <a href="<?= url('/eleve/orientation/dossier/' . hid((int)$d['id'])) ?>#pieces" class="abtn glass sm">
+                <?= acct_icon('upload', 13) ?> <?= $refusee ? 'Remplacer' : 'Déposer' ?>
+              </a>
             <?php elseif (!$p['ok']): ?>
-              <span class="badge2 <?= $p['obligatoire'] ? 'warn' : 'draft' ?>"><?= $p['obligatoire'] ? 'À déposer' : 'Optionnelle' ?></span>
+              <span class="badge2 <?= $refusee ? 'err' : ($p['obligatoire'] ? 'warn' : 'draft') ?>"><?= $refusee ? 'Refusée' : ($p['obligatoire'] ? 'À déposer' : 'Optionnelle') ?></span>
             <?php endif; ?>
           </div>
         </div>

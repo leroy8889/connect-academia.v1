@@ -37,15 +37,27 @@ EXCLUDES=(
   # Outils et documents de travail : n'ont rien à faire sur un serveur public.
   --exclude=ui-ux-pro-max-skill/
   --exclude=.vscode/
+  --exclude=.agents/              # configuration d'agents locaux
   --exclude=.gitleaks.toml
+  --exclude=.gitignore            # sans objet hors dépôt
   --exclude=docs/
   --exclude=deploy/
+  --exclude=Database/             # migrations ET dumps : jouées à la main, jamais servies
   --exclude=*.md
   --exclude=*.sql
+  --exclude=tests/                 # suites de test : écrivent en base, jamais en prod
   --exclude=psalm.xml
+  --exclude=psalm-taint.json      # sortie d'analyse statique
   --exclude=skills-lock.json
   --exclude=package-lock.json
   --exclude=nginx.conf            # référence locale ; la vraie conf vit dans /etc/nginx
+  --exclude=fatal.html            # gabarit mort : index.php génère sa page fatale en ligne
+
+  # Filets génériques : rien de ces formes ne doit partir, quel que soit le dossier.
+  --exclude=.env.*
+  --exclude=*.bak
+  --exclude=*.old
+  --exclude=*.log
 )
 
 # Contrôle avant transfert : une image dont la casse ne correspond pas au fichier

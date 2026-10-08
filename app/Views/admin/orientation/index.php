@@ -559,10 +559,23 @@ $gestSuspendus = array_values(array_filter($gestionnaires, static fn(array $g): 
                         <a href="<?= url('/admin/orientation/' . $e['id'] . '/paiement') ?>" class="kb-act" title="Configurer paiement">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
                         </a>
-                        <form method="POST" action="<?= url('/admin/orientation/' . $e['id'] . '/activer-inscription') ?>" style="display:inline">
-                            <input type="hidden" name="csrf_token" value="<?= e($_SESSION['csrf_token'] ?? '') ?>">
-                            <button type="submit" class="kb-act" title="<?= $inscrit ? 'Désactiver inscriptions' : 'Activer inscriptions' ?>">
-                                <?= $inscrit ? '⏸' : '▶' ?>
+                        <?php /* Ouverture / fermeture des inscriptions en un clic.
+                                 Le bouton portait deux glyphes (⏸ ▶) dans un jeu
+                                 d'icônes entièrement vectoriel, et son action —
+                                 ouvrir un formulaire au public — n'était confirmée
+                                 nulle part. */ ?>
+                        <form method="POST" action="<?= url('/admin/orientation/' . $e['id'] . '/activer-inscription') ?>" style="display:inline"
+                              onsubmit="return confirm(<?= e(json_encode(($inscrit ? 'Fermer' : 'Ouvrir') . ' les inscriptions en ligne de « ' . $e['nom'] . ' » ?', JSON_UNESCAPED_UNICODE)) ?>);">
+                            <input type="hidden" name="_csrf_token" value="<?= e(\Core\Session::getCsrfToken()) ?>">
+                            <button type="submit" class="kb-act"
+                                    style="background:none;border:none;padding:0;cursor:pointer;font:inherit;<?= $inscrit ? 'color:var(--green,#1f9d55);' : '' ?>"
+                                    title="<?= $inscrit ? 'Fermer les inscriptions en ligne' : 'Ouvrir les inscriptions en ligne' ?>"
+                                    aria-label="<?= $inscrit ? 'Fermer les inscriptions en ligne' : 'Ouvrir les inscriptions en ligne' ?>">
+                                <?php if ($inscrit): ?>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                <?php else: ?>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+                                <?php endif; ?>
                             </button>
                         </form>
                     </div>

@@ -29,7 +29,7 @@ $piecesManquantes = count(array_filter($pieces, fn($p) => $p['obligatoire'] && !
 
 <?php if ($actif): ?>
   <?php
-    $estInscription = !empty($actif['inscription_id']) || ($actif['statut'] ?? '') === 'brouillon';
+    $estInscription = \Models\Orientation\Dossier::estInscription($actif);
     $statut = $actif['statut'] ?? 'brouillon';
     $estValide = in_array($statut, ['inscrit','accepte'], true); // inscription validée
     $refDossier = $actif['numero_attestation'] ?? $actif['numero_recepisse'] ?? ('DOS-' . str_pad((string)(int)$actif['id'], 6, '0', STR_PAD_LEFT));
@@ -159,15 +159,37 @@ $piecesManquantes = count(array_filter($pieces, fn($p) => $p['obligatoire'] && !
         <?= $actif ? 'Aucune pièce requise pour ce dossier.' : 'Les pièces de votre dossier d\'inscription apparaîtront ici.' ?>
       </div>
     <?php else: ?>
+      <?php /* Une pièce REFUSÉE n'est pas une pièce « manquante » : le candidat
+               l'a déposée, l'établissement l'a écartée, et il doit en déposer
+               une autre. Les confondre affichait « Manquante » sur un document
+               déjà envoyé — le candidat cherchait un dépôt qu'il avait fait. */ ?>
       <?php foreach (array_slice($pieces, 0, 6) as $p): ?>
+        <?php $refusee = ($p['etat'] ?? null) === 'refuse'; ?>
         <div class="acct-mini-doc">
           <div class="acct-mini-doc-ic <?= $p['ok'] ? 'ok' : '' ?>"><?= acct_icon($p['ok'] ? 'check' : 'alert', 14) ?></div>
           <div class="acct-mini-doc-t"><?= e($p['libelle']) ?></div>
-          <span class="badge2 <?= $p['ok'] ? 'ok' : ($p['obligatoire'] ? 'warn' : 'draft') ?>">
-            <?= $p['ok'] ? 'Déposée' : ($p['obligatoire'] ? 'Manquante' : 'Optionnelle') ?>
+          <span class="badge2 <?= $p['ok'] ? 'ok' : ($refusee || $p['obligatoire'] ? 'err' : 'draft') ?>">
+            <?= $p['ok'] ? 'Déposée' : ($refusee ? 'Refusée' : ($p['obligatoire'] ? 'Manquante' : 'Optionnelle')) ?>
           </span>
         </div>
       <?php endforeach; ?>
+
+      <?php /* Le tableau de bord ne porte pas le formulaire de dépôt (il vit
+               dans la fiche du dossier, au niveau de la ligne de chaque pièce).
+               Sans ce lien, l'écran signale un problème sans dire où le régler. */ ?>
+      <?php
+        $aCorriger = array_filter(
+            $pieces,
+            static fn(array $p): bool => ($p['etat'] ?? null) === 'refuse'
+                                      || (!$p['ok'] && !empty($p['obligatoire']))
+        );
+      ?>
+      <?php if ($aCorriger !== [] && $actif): ?>
+        <a href="<?= url('/eleve/orientation/dossier/' . hid((int)$actif['id'])) ?>#pieces"
+           class="abtn glass sm" style="margin-top:12px;">
+          <?= acct_icon('upload', 13) ?> Déposer ou remplacer une pièce
+        </a>
+      <?php endif; ?>
     <?php endif; ?>
   </div>
 </div>

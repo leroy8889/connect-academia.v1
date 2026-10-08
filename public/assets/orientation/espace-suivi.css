@@ -1,0 +1,250 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Espace étudiant — suivi de dossier et situation de bourse (spec §9)
+   Complète les styles `acct-*` existants ; ne redéfinit rien de l'existant.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Message de suivi en langage clair (spec §9.2) ───────────────────────── */
+.acct-suivi {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    font-size: 13.5px;
+    line-height: 1.55;
+}
+.acct-suivi p { margin: 0; }
+.acct-suivi-sub { margin-top: 6px !important; font-size: 12.5px; opacity: .85; }
+
+.acct-suivi-succes  { background: rgba(0, 200, 83, .12);  color: #14663A; }
+.acct-suivi-info    { background: rgba(139, 82, 250, .11); color: #5B34A8; }
+.acct-suivi-attente { background: rgba(255, 171, 0, .15);  color: #7A5200; }
+.acct-suivi-danger  { background: rgba(255, 82, 82, .12);  color: #A32626; }
+.acct-suivi-neutre  { background: rgba(26, 26, 26, .05);   color: #4A4A4A; }
+
+/* ── Bloc situation de bourse ────────────────────────────────────────────── */
+.acct-bourse-note {
+    margin: 8px 0 16px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--text-secondary, #4A4A4A);
+    max-width: 62ch;
+}
+
+.acct-bourse-options { display: grid; gap: 10px; margin-bottom: 14px; }
+
+.acct-bourse-opt { display: block; cursor: pointer; }
+.acct-bourse-opt input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.acct-bourse-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 13px 15px;
+    border: 1.5px solid rgba(26, 26, 26, .10);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .6);
+    transition: border-color .18s, background .18s;
+}
+.acct-bourse-opt:hover .acct-bourse-body { border-color: rgba(139, 82, 250, .40); }
+
+.acct-bourse-opt input:checked + .acct-bourse-body {
+    border-color: #8B52FA;
+    background: rgba(139, 82, 250, .06);
+}
+.acct-bourse-opt input:focus-visible + .acct-bourse-body {
+    outline: 2px solid #8B52FA;
+    outline-offset: 2px;
+}
+
+.acct-bourse-radio {
+    flex: 0 0 auto;
+    width: 19px;
+    height: 19px;
+    margin-top: 2px;
+    border: 2px solid #9E9E9E;
+    border-radius: 999px;
+    position: relative;
+}
+.acct-bourse-opt input:checked + .acct-bourse-body .acct-bourse-radio { border-color: #8B52FA; }
+.acct-bourse-opt input:checked + .acct-bourse-body .acct-bourse-radio::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 999px;
+    background: #8B52FA;
+}
+
+.acct-bourse-body strong { display: block; font-size: 14px; font-weight: 600; line-height: 1.35; }
+.acct-bourse-body em {
+    display: block;
+    margin-top: 2px;
+    font-size: 12.5px;
+    font-style: normal;
+    color: var(--text-secondary, #4A4A4A);
+}
+
+/* Champs conditionnels — masqués par défaut, révélés par le JS */
+.acct-bourse-cond {
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    background: rgba(26, 26, 26, .035);
+    border-radius: 12px;
+}
+.acct-bourse-cond[hidden] { display: none; }
+.acct-bourse-cond label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+.acct-bourse-cond label + label { margin-top: 12px; }
+.acct-bourse-cond .opt { font-weight: 400; color: #9E9E9E; }
+.acct-bourse-cond input[type="text"],
+.acct-bourse-cond input[type="date"],
+.acct-bourse-cond input[type="file"] {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1.5px solid rgba(26, 26, 26, .10);
+    border-radius: 12px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 13.5px;
+    color: inherit;
+}
+.acct-bourse-cond input:focus { outline: none; border-color: #8B52FA; }
+
+.acct-bourse-aide {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #9E9E9E;
+}
+
+/* ── Historique des déclarations ─────────────────────────────────────────── */
+.acct-bourse-histo {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(26, 26, 26, .08);
+}
+.acct-bourse-histo-t {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #9E9E9E;
+    margin-bottom: 8px;
+}
+.acct-bourse-histo ul { list-style: none; margin: 0; padding: 0; }
+.acct-bourse-histo li {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--text-secondary, #4A4A4A);
+    padding: 3px 0;
+}
+.acct-bourse-histo li strong { color: var(--text-primary, #1A1A1A); }
+.acct-bourse-histo li span { color: #9E9E9E; }
+
+/* ── Dépôt / remplacement d'une pièce (spec §9.3) ────────────────────────────
+   Le formulaire occupe une deuxième ligne DANS la ligne de la pièce : la
+   grille `acct-doc-row` est un flex, on force donc un retour à la ligne pleine
+   largeur plutôt que d'ajouter une colonne qui écraserait le libellé.
+
+   Les garde-fous d'anti-débordement des lignes de pièces vivent dans
+   `css/espace-compte.css` : ces lignes existent aussi sur le tableau de bord et
+   l'onglet Documents, qui ne chargent pas cette feuille-ci. */
+.acct-doc-row { flex-wrap: wrap; }
+
+.acct-doc-ic.err {
+    background: rgba(255, 82, 82, .13);
+    color: #A32626;
+    border: 1px solid rgba(255, 82, 82, .22);
+}
+.acct-doc-row-err .acct-doc-name { color: #A32626; }
+
+/* Retrait de 52 px pour s'aligner sous le libellé de la pièce (largeur de la
+   puce d'icône + son gouttière).
+   La base était `flex: 1 0 100%` AVEC cette marge : 100 % de la largeur PLUS
+   52 px, soit un dépassement garanti de 52 px sur toute la plage desktop —
+   seule la règle mobile (≤ 640 px) remettait la marge à zéro. La base retire
+   donc désormais la marge qu'elle s'applique. */
+.acct-piece-form {
+    flex: 0 0 calc(100% - 52px);
+    max-width: calc(100% - 52px);
+    box-sizing: border-box;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 10px 0 2px 52px;
+    padding: 11px 13px;
+    border: 1px dashed rgba(139, 82, 250, .32);
+    border-radius: 14px;
+    background: rgba(139, 82, 250, .045);
+}
+
+/* Le champ natif est masqué SANS `display:none` : il doit rester focalisable au
+   clavier et déclencher la validation `required` du navigateur. */
+.acct-piece-file {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+}
+.acct-piece-file:focus-visible + .acct-piece-pick {
+    outline: 2px solid #8B52FA;
+    outline-offset: 2px;
+}
+
+.acct-piece-pick { cursor: pointer; }
+
+.acct-piece-nom {
+    font-size: 12.5px;
+    color: #4A4A4A;
+    max-width: 22ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* La mention de format part sur sa propre ligne : intercalée entre le bouton
+   d'envoi et le bord, elle poussait la rangée hors du cadre. */
+.acct-piece-aide {
+    flex: 1 1 100%;
+    min-width: 0;
+    font-size: 11.5px;
+    color: #6B6B6B;
+    line-height: 1.45;
+}
+
+/* Le bouton « Choisir un fichier » ne se laisse pas comprimer sous son texte,
+   mais il peut passer à la ligne. */
+.acct-piece-pick,
+.acct-piece-envoi { flex: 0 1 auto; max-width: 100%; }
+
+@media (max-width: 640px) {
+    .acct-piece-form {
+        flex-basis: 100%;
+        max-width: 100%;
+        margin-left: 0;
+    }
+    .acct-piece-nom  { max-width: 100%; }
+    /* Les actions repassent à gauche : le retrait de 52 px hérité du bureau
+       les collait au bord droit sur un téléphone. */
+    .acct-doc-actions { justify-content: flex-start; }
+}
+
+/* Lien d'action dans le bandeau de suivi : hérite la couleur du bandeau pour
+   ne pas introduire un troisième ton dans un bloc déjà coloré. */
+.acct-suivi-lien {
+    color: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}

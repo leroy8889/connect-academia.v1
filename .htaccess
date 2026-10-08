@@ -41,8 +41,17 @@ Options -MultiViews
     # Fichiers projet à la racine
     RewriteRule ^(composer\.(json|lock)|package(-lock)?\.json|\.user\.ini|README|LICENSE)$ - [F,L]
 
+    # Outils et documentation interne : psalm.xml décrit l'arborescence,
+    # les .md portent les spécifications et les règles métier.
+    RewriteRule ^(psalm\.xml|skills-lock\.json)$ - [F,L,NC]
+    RewriteRule ^[^/]+\.md$ - [F,L,NC]
+
     # ── Bloquer l'accès direct aux répertoires internes ─────────────────────
-    RewriteRule ^(app|config|storage|database|docs|vendor|node_modules|bin)(/|$) - [F,L]
+    # `tests` bloqué comme les autres : ces fichiers écrivent en base, envoient
+    # des e-mails et téléversent des PDF. `[NC]` parce que le dossier s'appelle
+    # « Database » avec une majuscule : sur Linux, la casse compte, et la règle
+    # en minuscules ne l'aurait jamais attrapé en production.
+    RewriteRule ^(app|config|storage|database|docs|vendor|node_modules|bin|tests)(/|$) - [F,L,NC]
 
     # Ceinture + bretelles : blocage authz si le module est présent (Apache 2.4)
     <FilesMatch "(^\.|\.(env|log|sql|sqlite|lock|ini|bak|old|dist|example|sh|conf)$)">

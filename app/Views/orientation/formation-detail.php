@@ -342,13 +342,7 @@ $description   = trim((string)($formation['description'] ?? ''));
             <div class="filiere-top">
               <?php if (!empty($f['niveau'])): ?><span class="filiere-niveau"><?= e($f['niveau']) ?></span><?php endif; ?>
             </div>
-            <div class="filiere-ic">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 10 12 5 2 10l10 5 10-5z"/>
-                <path d="M6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5M22 10v6"/>
-              </svg>
-            </div>
-            <h3><?= e($f['intitule']) ?></h3>
+            <div class="filiere-head"><h3><?= e($f['intitule']) ?></h3></div>
             <div class="filiere-foot">
               <?php if ((int)$f['prix'] > 0): ?>
               <div class="filiere-price">

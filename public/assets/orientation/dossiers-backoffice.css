@@ -1,0 +1,511 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Back-office établissement — liste et fiche dossier (spec §8)
+   S'appuie sur les tokens du layout gestionnaire (--ap, --ink, --paper…),
+   déjà au langage Claude : canvas crème, aplats, filets fins, radii 12-16-24.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Onglets de nature (préinscriptions / inscriptions) ───────────────────
+   Au-dessus des compteurs d'état, et visuellement plus fort qu'eux : c'est le
+   premier tri à faire dans la tête de l'agent. Deux parcours, deux listes. */
+.d-onglets {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    padding: 4px;
+    border-radius: var(--r-lg, 16px);
+    background: var(--card, rgba(255,255,255,.58));
+    border: 1px solid var(--border, rgba(31,30,29,.08));
+}
+
+.d-onglet {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    border-radius: var(--r-md, 12px);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-2, #5C5A54);
+    text-decoration: none;
+    transition: background .16s, color .16s;
+}
+.d-onglet:hover { background: rgba(31,30,29,.04); color: var(--ink, #1F1E1D); }
+
+.d-onglet-actif,
+.d-onglet-actif:hover {
+    background: var(--ap, #8B52FA);
+    color: #fff;
+}
+
+.d-onglet-n {
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: rgba(31,30,29,.06);
+    color: var(--ink-2, #5C5A54);
+}
+.d-onglet-actif .d-onglet-n { background: rgba(255,255,255,.24); color: #fff; }
+
+/* Nature d'une ligne, dans la liste « Tous » uniquement : ailleurs l'onglet le
+   dit déjà, et le répéter à chaque ligne n'apprend rien. */
+.d-nature {
+    margin-top: 3px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+.d-nature-pre  { color: var(--ink-3, #8D8A83); }
+.d-nature-insc { color: var(--ap-deep, #6D33D6); }
+
+/* ── Compteurs cliquables ────────────────────────────────────────────────── */
+.d-compteurs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.d-compteur {
+    flex: 1 1 118px;
+    min-width: 0;
+    padding: 12px 14px;
+    border-radius: var(--r-lg, 16px);
+    background: var(--card, rgba(255,255,255,.58));
+    border: 1px solid var(--border, rgba(31,30,29,.08));
+    text-decoration: none;
+    transition: transform .16s, border-color .16s, box-shadow .16s;
+}
+.d-compteur:hover { transform: translateY(-2px); border-color: var(--bdr-s, rgba(31,30,29,.16)); }
+
+.d-compteur-n {
+    display: block;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--ink, #1F1E1D);
+}
+.d-compteur-l {
+    display: block;
+    margin-top: 3px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ink-3, #8D8A83);
+}
+
+/* Le compteur actif est un filtre en cours : il doit se lire comme tel. */
+.d-compteur.d-actif {
+    background: var(--ap-tint, rgba(139,82,250,.10));
+    border-color: rgba(139, 82, 250, .32);
+}
+.d-compteur.d-actif .d-compteur-l { color: var(--ap-deep, #7440D9); }
+
+/* Pastille de tonalité : une barre de couleur en tête, jamais un fond plein —
+   six aplats vifs côte à côte rendraient la page illisible. */
+.d-compteur.d-ton-succes  { border-top: 3px solid #22C55E; }
+.d-compteur.d-ton-attente { border-top: 3px solid #F59E0B; }
+.d-compteur.d-ton-danger  { border-top: 3px solid #EF4444; }
+.d-compteur.d-ton-info    { border-top: 3px solid var(--ap, #8B52FA); }
+.d-compteur.d-ton-neutre  { border-top: 3px solid var(--bdr-s, rgba(31,30,29,.16)); }
+
+/* ── Filtres ─────────────────────────────────────────────────────────────── */
+.d-filtres { padding: 14px 18px; margin-bottom: 20px; }
+.d-filtres form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.d-champ {
+    padding: 8px 12px;
+    border: 1.5px solid var(--border, rgba(31,30,29,.08));
+    border-radius: var(--r-md, 12px);
+    background: rgba(255, 255, 255, .7);
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--ink, #1F1E1D);
+    min-width: 0;
+}
+.d-champ:focus { outline: none; border-color: var(--ap, #8B52FA); }
+.d-champ-large { flex: 1 1 220px; }
+
+.d-periode {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--ink-3, #8D8A83);
+}
+.d-periode .d-champ { width: 140px; }
+
+/* ── Tableau ─────────────────────────────────────────────────────────────── */
+.d-table { min-width: 900px; }
+
+.d-ref {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--ap-deep, #7440D9);
+    white-space: nowrap;
+}
+.d-ref-vide { color: var(--ink-3, #8D8A83); font-weight: 400; }
+
+.d-nom  { font-weight: 600; font-size: 13px; color: var(--ink, #1F1E1D); }
+.d-mail { font-size: 11px; color: var(--ink-3, #8D8A83); }
+
+.d-cell-sec  { font-size: 12px; color: var(--ink-2, #52504B); }
+.d-cell-date { font-size: 11.5px; color: var(--ink-3, #8D8A83); white-space: nowrap; }
+
+.d-bourse {
+    display: inline-block;
+    padding: 2.5px 9px;
+    border-radius: var(--r-pill, 999px);
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(31, 30, 29, .05);
+    color: var(--ink-2, #52504B);
+}
+.d-bourse-boursier         { background: rgba(139, 82, 250, .12); color: var(--ap-deep, #7440D9); }
+
+/* Situation retirée du parcours (« dossier ANBG en cours »). La règle survit
+   pour les dossiers hérités d'un environnement où la migration n'a pas encore
+   été rejouée : sans elle, le badge tomberait sur le gris neutre et se
+   confondrait avec « non renseignée ». */
+.d-bourse-dossier_en_cours { background: rgba(217, 119, 87, .13); color: #B45309; }
+
+/* Badges de statut alignés sur les tonalités de DossierStatut */
+.d-badge-succes  { background: rgba(34,197,94,.12);  color: #15803d; border-color: rgba(34,197,94,.22); }
+.d-badge-attente { background: rgba(245,158,11,.14); color: #B45309; border-color: rgba(245,158,11,.26); }
+.d-badge-danger  { background: rgba(239,68,68,.10);  color: #b91c1c; border-color: rgba(239,68,68,.20); }
+.d-badge-info    { background: rgba(139,82,250,.13); color: var(--ap-deep, #7440D9); border-color: rgba(139,82,250,.26); }
+.d-badge-neutre  { background: rgba(31,30,29,.06);   color: var(--ink-2, #52504B); border-color: rgba(31,30,29,.10); }
+
+/* Dossier qui dort : signalé par un liseré, pas par un fond rouge — la ligne
+   doit rester lisible, c'est un rappel, pas une erreur. */
+.d-retard td:first-child { box-shadow: inset 3px 0 0 #EF4444; }
+
+.d-alerte {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 700;
+    color: #b91c1c;
+}
+
+/* ── Pagination ──────────────────────────────────────────────────────────── */
+.d-pagination {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 14px 18px;
+    border-top: 1px solid var(--border, rgba(31,30,29,.08));
+}
+.d-pagination a {
+    min-width: 32px;
+    padding: 6px 10px;
+    border-radius: var(--r-md, 12px);
+    text-align: center;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-2, #52504B);
+    text-decoration: none;
+}
+.d-pagination a:hover { background: rgba(255, 255, 255, .7); }
+.d-pagination a.d-page-actif { background: var(--ap, #8B52FA); color: #fff; }
+
+/* ══ Fiche dossier ═══════════════════════════════════════════════════════ */
+
+.f-grille {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+}
+@media (max-width: 980px) { .f-grille { grid-template-columns: minmax(0, 1fr); } }
+
+.f-bloc { padding: 20px; margin-bottom: 18px; }
+.f-bloc h3 {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink-3, #8D8A83);
+    margin-bottom: 14px;
+}
+
+/* En-tête : référence, nom, progression */
+.f-entete { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.f-entete-txt { flex: 1 1 240px; min-width: 0; }
+.f-ref {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ap-deep, #7440D9);
+}
+.f-nom { font-size: 22px; font-weight: 700; line-height: 1.2; margin-top: 2px; color: var(--ink, #1F1E1D); }
+.f-sous { font-size: 13px; color: var(--ink-2, #52504B); margin-top: 3px; }
+
+.f-paliers { display: flex; gap: 5px; margin: 16px 0 6px; }
+.f-paliers span {
+    flex: 1;
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(31, 30, 29, .10);
+}
+.f-paliers span.f-atteint { background: var(--ap, #8B52FA); }
+.f-paliers-noms { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-3, #8D8A83); }
+.f-paliers-noms b { color: var(--ink, #1F1E1D); font-weight: 600; }
+
+/* Faits */
+.f-faits { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+.f-faits dt {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--ink-3, #8D8A83);
+}
+.f-faits dd { font-size: 13.5px; font-weight: 600; color: var(--ink, #1F1E1D); margin-top: 2px; overflow-wrap: anywhere; }
+
+/* Pièces */
+.f-piece {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border, rgba(31,30,29,.08));
+    flex-wrap: wrap;
+}
+.f-piece:last-child { border-bottom: none; }
+.f-piece-txt { flex: 1 1 180px; min-width: 0; }
+.f-piece-nom { font-size: 13.5px; font-weight: 600; color: var(--ink, #1F1E1D); overflow-wrap: anywhere; }
+.f-piece-meta { font-size: 11px; color: var(--ink-3, #8D8A83); margin-top: 1px; }
+.f-piece-motif { font-size: 11.5px; color: #b91c1c; margin-top: 3px; }
+.f-piece-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.f-etat { font-size: 11px; font-weight: 700; padding: 2.5px 9px; border-radius: 999px; }
+.f-etat-en_attente { background: rgba(31,30,29,.06);   color: var(--ink-2, #52504B); }
+.f-etat-accepte    { background: rgba(34,197,94,.13);  color: #15803d; }
+.f-etat-refuse     { background: rgba(239,68,68,.11);  color: #b91c1c; }
+
+/* Zone décision */
+.f-decision { position: sticky; top: 18px; }
+.f-action { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border, rgba(31,30,29,.08)); }
+.f-action:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.f-action > label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-2, #52504B);
+    margin-bottom: 6px;
+}
+.f-action textarea,
+.f-action input[type="text"],
+.f-action input[type="date"],
+.f-action input[type="number"],
+.f-action select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border, rgba(31,30,29,.08));
+    border-radius: var(--r-md, 12px);
+    background: rgba(255, 255, 255, .75);
+    font-family: inherit;
+    font-size: 13.5px;
+    color: var(--ink, #1F1E1D);
+    margin-bottom: 8px;
+}
+.f-action textarea { min-height: 72px; resize: vertical; }
+.f-action select:focus,
+.f-action input:focus,
+.f-action textarea:focus { outline: none; border-color: var(--ap, #8B52FA); }
+.f-action .g-btn { width: 100%; justify-content: center; }
+
+.f-champ-erreur { border-color: #EF4444 !important; }
+.f-erreur { font-size: 11.5px; color: #b91c1c; margin: -4px 0 8px; }
+
+.f-duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+
+.f-aide { font-size: 11.5px; color: var(--ink-3, #8D8A83); line-height: 1.45; margin-top: 6px; }
+
+/* Le bouton 100 % reste inerte tant que les champs obligatoires sont vides :
+   c'est la condition qui garantit que la commission pourra être calculée. */
+.f-action .g-btn:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+
+.f-danger summary { color: #b91c1c; }
+.f-repli { margin-top: 4px; }
+.f-repli summary {
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-2, #52504B);
+    padding: 8px 0;
+    list-style: none;
+}
+.f-repli summary::-webkit-details-marker { display: none; }
+.f-repli summary::before { content: '▸ '; color: var(--ink-3, #8D8A83); }
+.f-repli[open] summary::before { content: '▾ '; }
+
+/* Historique */
+.f-histo { list-style: none; }
+.f-histo li {
+    position: relative;
+    padding: 0 0 14px 18px;
+    border-left: 2px solid var(--border, rgba(31,30,29,.08));
+}
+.f-histo li:last-child { border-left-color: transparent; padding-bottom: 0; }
+.f-histo li::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: 4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--ap, #8B52FA);
+}
+.f-histo-titre { font-size: 12.5px; font-weight: 600; color: var(--ink, #1F1E1D); }
+.f-histo-meta  { font-size: 11px; color: var(--ink-3, #8D8A83); margin-top: 1px; }
+.f-histo-note  { font-size: 11.5px; color: var(--ink-2, #52504B); margin-top: 3px; overflow-wrap: anywhere; }
+
+/* Commission */
+.f-commission { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.f-commission > div { text-align: center; }
+.f-commission dt {
+    font-size: 10.5px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--ink-3, #8D8A83);
+}
+.f-commission dd { font-size: 15px; font-weight: 700; margin-top: 2px; color: var(--ink, #1F1E1D); }
+
+@media (max-width: 560px) {
+    .d-compteur { flex: 1 1 calc(50% - 5px); }
+    .f-duo, .f-commission { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── Retour arrière sur la dernière décision ─────────────────────────────────
+   Séparé visuellement des décisions : un liseré ambre, ni rouge (ce n'est pas
+   un rejet) ni violet (ce n'est pas l'action attendue). L'agent le trouve
+   quand il le cherche, sans que l'écran l'y invite. */
+.f-retour {
+    border-top: 1px solid var(--border, rgba(31,30,29,.08));
+    margin-top: 4px;
+    padding-top: 12px;
+}
+.f-retour .f-repli summary { color: #92400E; }
+.f-retour .f-repli summary::before,
+.f-retour .f-repli[open] summary::before { content: '\21A9  '; color: #B45309; }
+
+/* ── Tarifs appliqués à la validation à 100 % (spec §8.4 révisée) ────────────
+   Les montants ne se saisissent plus au guichet : ils viennent de la fiche de
+   l'établissement. Ce bloc les CONSTATE — d'où l'absence de champ, de bordure
+   d'input et de tout ce qui suggérerait qu'on peut les changer ici. */
+.f-tarif {
+    margin: 0 0 14px;
+    padding: 13px 15px;
+    border-radius: 12px;
+    background: rgba(139, 82, 250, .06);
+    border: 1px solid rgba(139, 82, 250, .18);
+}
+
+.f-tarif-t {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--ap-deep, #5B34A8);
+    margin-bottom: 9px;
+}
+
+/* Le bloc vit dans la colonne étroite des actions : rien ne doit pouvoir en
+   sortir. `min-width: 0` casse la largeur minimale automatique des éléments
+   flex (sinon un contenu insécable élargit la carte au lieu de se replier), et
+   `flex-wrap` laisse le montant passer à la ligne quand le libellé est long —
+   c'est ce qui faisait déborder « Base de la commission — Frais d'inscription
+   — 150 000 XAF » hors de la carte. */
+.f-tarif { min-width: 0; }
+.f-tarif-l { margin: 0; display: grid; gap: 7px; min-width: 0; }
+.f-tarif-l > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 12px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+.f-tarif-l dt {
+    font-size: 12.5px;
+    color: var(--ink-2, #4A453C);
+    margin: 0;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow-wrap: anywhere;
+}
+.f-tarif-l dd {
+    margin: 0;
+    margin-left: auto;
+    font-size: 13.5px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    min-width: 0;
+    /* Seuls les NOMBRES sont insécables (.f-tarif-n) : un libellé porté par un
+       <dd> doit pouvoir se replier comme n'importe quel texte. */
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: right;
+}
+.f-tarif-n { white-space: nowrap; }
+.f-tarif-txt {
+    font-weight: 600;
+    color: var(--ink-2, #4A453C);
+    overflow-wrap: anywhere;
+}
+/* La commission est la dernière ligne : elle se détache, c'est le chiffre que
+   l'établissement vérifiera. */
+.f-tarif-l > div:last-child {
+    padding-top: 7px;
+    border-top: 1px solid rgba(139, 82, 250, .18);
+}
+.f-tarif-l > div:last-child dd { color: var(--ap-deep, #5B34A8); }
+
+/* ── Échéancier de commission sur la fiche dossier (spec §10.4) ─────────────
+   Lecture seule : aucun bouton, aucune bordure d'input. L'établissement
+   constate son recouvrement, il ne le modifie pas. */
+.f-tranches { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
+
+.f-tranche {
+    display: grid;
+    grid-template-columns: 66px 1fr;
+    align-items: baseline;
+    gap: 4px 10px;
+    padding: 7px 10px;
+    border-radius: 9px;
+    background: rgba(31, 30, 29, .035);
+}
+.f-tranche-n {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--ink-3, #8D8A83);
+}
+.f-tranche-m {
+    font-size: 12.5px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+.f-tranche-e { grid-column: 1 / -1; font-size: 11px; color: var(--ink-3, #8D8A83); }
+
+.f-tranche-payee { background: rgba(34, 197, 94, .10); }
+.f-tranche-payee .f-tranche-n,
+.f-tranche-payee .f-tranche-e { color: #15803d; }
+
+.f-tranche-close .f-tranche-m { text-decoration: line-through; }
+.f-tranche-close .f-tranche-n,
+.f-tranche-close .f-tranche-m,
+.f-tranche-close .f-tranche-e { color: #A8A29E; }
+
+.f-tranche-due .f-tranche-n { color: #B45309; }

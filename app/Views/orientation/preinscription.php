@@ -5,45 +5,51 @@ $etabSlug = e($etab['slug']);
 $o = $old ?? [];
 $err = $errors ?? [];
 
+// Adresse du compte connecté. Non nulle, le champ e-mail est verrouillé :
+// c'est elle qui rattache le dossier à l'espace candidat, et le serveur
+// refuse toute autre valeur (CandidatureController::erreurEmailCompte).
+$emailVerrouille = $emailVerrouille ?? null;
+
 function oldVal(string $key, array $old, string $default = ''): string {
     return isset($old[$key]) ? e($old[$key]) : $default;
 }
 ?>
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Préinscription — <?= $etabNom ?></title>
+  <title>Préinscription - <?= $etabNom ?></title>
   <link rel="stylesheet" href="<?= asset('orientation/candidature.css') ?>">
   <style>:root{--brand:<?= $couleur ?>}</style>
 </head>
 <body>
 
-<!-- Top bar -->
 <header class="cand-topbar">
   <a href="<?= url('orientation/' . $etabSlug) ?>" class="cand-back">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
     Retour à la page école
   </a>
-  <span class="cand-badge">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-    Préinscription gratuite
-  </span>
+  <?php /* La coche du badge illustrait le mot « gratuite » écrit à côté. */ ?>
+  <span class="cand-badge">Préinscription gratuite</span>
 </header>
 
 <main class="cand-page">
 
-  <!-- Hero -->
-  <div class="cand-hero">
-    <h1>Préinscription <span class="accent">en ligne</span></h1>
-    <p>La préinscription est <strong>gratuite et instantanée</strong>. Remplissez le formulaire, téléchargez votre attestation de préinscription officielle, puis finalisez votre inscription quand vous le souhaitez.</p>
+  <?php /* Le titre était centré, en deux teintes, au-dessus d'un paragraphe
+           de quarante mots lui aussi centré : la seule page du parcours à
+           être composée ainsi. Elle adopte le chapeau des trois étapes. */ ?>
+  <div class="cand-lede">
+    <span class="kicker">Préinscription <?= $etabNom ?></span>
+    <h1>Votre préinscription</h1>
+    <p>Elle est gratuite, immédiate, et ne vous engage à rien. À la validation,
+    votre attestation de préinscription est générée et téléchargeable aussitôt.</p>
   </div>
 
   <!-- Error général -->
   <?php if (!empty($err['general'])): ?>
   <div class="alert alert-error" style="margin-bottom:20px">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
     <?= e($err['general']) ?>
   </div>
   <?php endif; ?>
@@ -51,11 +57,18 @@ function oldVal(string $key, array $old, string $default = ''): string {
   <form method="POST" action="<?= url("orientation/{$etabSlug}/preinscription") ?>" novalidate>
     <input type="hidden" name="_csrf_token" value="<?= e($csrf) ?>">
 
+    <?php /* Le formulaire tenait dans une seule carte de dix-huit champs,
+             découpée par trois intertitres. Il passe à trois cartes, comme
+             l'étape 1 de l'inscription : état civil, coordonnées, parcours.
+             Un formulaire interrompu se reprend plus facilement, et les deux
+             écrans se ressemblent enfin. */ ?>
     <div class="cand-card">
+      <div class="cand-card-head">
+        <h2>Identité</h2>
+        <p>Telle qu'elle figure sur votre pièce d'identité ou votre acte de naissance.</p>
+      </div>
 
-      <!-- Section Identité -->
       <div class="form-section">
-        <div class="section-label">Identité</div>
 
         <div class="form-row full">
           <div class="form-group">
@@ -73,7 +86,7 @@ function oldVal(string $key, array $old, string $default = ''): string {
           <div class="form-group">
             <label for="genre">Genre <span class="req">*</span></label>
             <select id="genre" name="genre" class="<?= isset($err['genre']) ? 'is-error' : '' ?>" required>
-              <option value="">— Choisir —</option>
+              <option value="">Choisir</option>
               <option value="homme" <?= oldVal('genre', $o) === 'homme' ? 'selected' : '' ?>>Homme</option>
               <option value="femme" <?= oldVal('genre', $o) === 'femme' ? 'selected' : '' ?>>Femme</option>
             </select>
@@ -81,7 +94,7 @@ function oldVal(string $key, array $old, string $default = ''): string {
           </div>
           <div class="form-group">
             <label for="date_naissance">Date de naissance <span class="req">*</span></label>
-            <input type="date" id="date_naissance" name="date_naissance"
+            <input type="date" id="date_naissance" name="date_naissance" autocomplete="bday"
                    value="<?= oldVal('date_naissance', $o) ?>"
                    min="1950-01-01" max="<?= date('Y-m-d') ?>"
                    class="<?= isset($err['date_naissance']) ? 'is-error' : '' ?>" required>
@@ -92,7 +105,7 @@ function oldVal(string $key, array $old, string $default = ''): string {
         <div class="form-row">
           <div class="form-group">
             <label for="lieu_naissance">Lieu de naissance <span class="req">*</span></label>
-            <input type="text" id="lieu_naissance" name="lieu_naissance"
+            <input type="text" id="lieu_naissance" name="lieu_naissance" autocomplete="off"
                    value="<?= oldVal('lieu_naissance', $o) ?>"
                    placeholder="Ex. Libreville"
                    class="<?= isset($err['lieu_naissance']) ? 'is-error' : '' ?>" required>
@@ -100,26 +113,42 @@ function oldVal(string $key, array $old, string $default = ''): string {
           </div>
           <div class="form-group">
             <label for="nationalite">Nationalité <span class="req">*</span></label>
-            <input type="text" id="nationalite" name="nationalite"
+            <input type="text" id="nationalite" name="nationalite" autocomplete="off"
                    value="<?= oldVal('nationalite', $o) ?: 'Gabonaise' ?>"
                    class="<?= isset($err['nationalite']) ? 'is-error' : '' ?>" required>
             <?php if (isset($err['nationalite'])): ?><span class="field-error"><?= e($err['nationalite']) ?></span><?php endif; ?>
           </div>
         </div>
-      </div><!-- /Identité -->
+      </div>
+    </div><!-- /cand-card Identité -->
 
-      <!-- Section Contact -->
+    <div class="cand-card">
+      <div class="cand-card-head">
+        <h2>Coordonnées</h2>
+        <p>C'est par là que l'établissement vous joindra pour la suite de votre dossier.</p>
+      </div>
+
       <div class="form-section">
-        <div class="section-label">Contact</div>
 
         <div class="form-row">
           <div class="form-group">
             <label for="email">E-mail <span class="req">*</span></label>
-            <input type="email" id="email" name="email"
-                   value="<?= oldVal('email', $o) ?>"
-                   placeholder="prenom@exemple.com"
-                   class="<?= isset($err['email']) ? 'is-error' : '' ?>"
-                   required autocomplete="email">
+            <?php if ($emailVerrouille !== null): ?>
+              <div class="field-lock">
+                <input type="email" id="email" name="email"
+                       value="<?= e($emailVerrouille) ?>"
+                       readonly aria-readonly="true" autocomplete="email" required
+                       class="is-locked <?= isset($err['email']) ? 'is-error' : '' ?>">
+                <svg class="field-lock-ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+              </div>
+              <span class="field-note">Adresse de votre compte. C'est elle qui rattache ce dossier à votre espace.</span>
+            <?php else: ?>
+              <input type="email" id="email" name="email"
+                     value="<?= oldVal('email', $o) ?>"
+                     placeholder="prenom@exemple.com"
+                     class="<?= isset($err['email']) ? 'is-error' : '' ?>"
+                     required autocomplete="email">
+            <?php endif; ?>
             <?php if (isset($err['email'])): ?><span class="field-error"><?= e($err['email']) ?></span><?php endif; ?>
           </div>
           <div class="form-group">
@@ -130,7 +159,7 @@ function oldVal(string $key, array $old, string $default = ''): string {
                 <option value="<?= e($code) ?>" <?= oldVal('indicatif_tel', $o, '+241') === $code ? 'selected' : '' ?>><?= e($label) ?></option>
                 <?php endforeach; ?>
               </select>
-              <input type="tel" id="telephone" name="telephone"
+              <input type="tel" id="telephone" name="telephone" autocomplete="tel-national"
                      value="<?= oldVal('telephone', $o) ?>"
                      placeholder="07 XX XX XX"
                      class="tel-num <?= isset($err['telephone']) ? 'is-error' : '' ?>" required>
@@ -142,14 +171,14 @@ function oldVal(string $key, array $old, string $default = ''): string {
         <div class="form-row">
           <div class="form-group">
             <label for="pays_provenance">Pays de provenance <span class="req">*</span></label>
-            <input type="text" id="pays_provenance" name="pays_provenance"
+            <input type="text" id="pays_provenance" name="pays_provenance" autocomplete="country-name"
                    value="<?= oldVal('pays_provenance', $o) ?: 'Gabon' ?>"
                    class="<?= isset($err['pays_provenance']) ? 'is-error' : '' ?>" required>
             <?php if (isset($err['pays_provenance'])): ?><span class="field-error"><?= e($err['pays_provenance']) ?></span><?php endif; ?>
           </div>
           <div class="form-group">
             <label for="ville">Ville <span class="req">*</span></label>
-            <input type="text" id="ville" name="ville"
+            <input type="text" id="ville" name="ville" autocomplete="address-level2"
                    value="<?= oldVal('ville', $o) ?>"
                    placeholder="Ex. Libreville"
                    class="<?= isset($err['ville']) ? 'is-error' : '' ?>" required>
@@ -160,49 +189,77 @@ function oldVal(string $key, array $old, string $default = ''): string {
         <div class="form-row full">
           <div class="form-group">
             <label for="adresse">Adresse <span class="req">*</span></label>
-            <input type="text" id="adresse" name="adresse"
+            <input type="text" id="adresse" name="adresse" autocomplete="street-address"
                    value="<?= oldVal('adresse', $o) ?>"
                    placeholder="Quartier, rue…"
                    class="<?= isset($err['adresse']) ? 'is-error' : '' ?>" required>
             <?php if (isset($err['adresse'])): ?><span class="field-error"><?= e($err['adresse']) ?></span><?php endif; ?>
           </div>
         </div>
-      </div><!-- /Contact -->
+      </div>
+    </div><!-- /cand-card Coordonnées -->
 
-      <!-- Section Formation souhaitée -->
+    <div class="cand-card">
+      <div class="cand-card-head">
+        <h2>Formation souhaitée</h2>
+        <p>Ces informations orientent l'étude de votre dossier par l'établissement.</p>
+      </div>
+
       <div class="form-section">
-        <div class="section-label">Formation souhaitée</div>
 
         <div class="form-row">
           <div class="form-group">
             <label for="filiere_visee">Filière <span class="req">*</span></label>
             <select id="filiere_visee" name="filiere_visee"
                     class="<?= isset($err['filiere_visee']) ? 'is-error' : '' ?>" required>
-              <option value="">— Choisir —</option>
+              <option value="">Choisir</option>
               <?php foreach ($filieres as $val => $lbl): ?>
               <option value="<?= e($val) ?>" <?= oldVal('filiere_visee', $o) === $val ? 'selected' : '' ?>><?= e($lbl) ?></option>
               <?php endforeach; ?>
             </select>
             <?php if (isset($err['filiere_visee'])): ?><span class="field-error"><?= e($err['filiere_visee']) ?></span><?php endif; ?>
           </div>
-          <div class="form-group" id="specialite-group" style="display:none">
-            <label for="specialite_visee">Spécialité <span class="req">*</span></label>
-            <select id="specialite_visee" name="specialite_visee"
-                    class="<?= isset($err['specialite_visee']) ? 'is-error' : '' ?>">
-              <option value="">— Choisir —</option>
+          <div class="form-group">
+            <label for="niveau_entree">Niveau d'entrée <span class="req">*</span></label>
+<?php
+            // Liste FERMÉE : le niveau détermine désormais un PRIX (la grille
+            // tarifaire de la formation peut distinguer L1, L2 et L3). Un champ
+            // libre laissait passer « licence deux », qui ne correspond à aucune
+            // ligne de grille — le guichet se retrouvait alors sans tarif.
+            //
+            // On stocke le LIBELLÉ (« Licence 2 »), pas le code : une dizaine
+            // d'écrans, de PDF et d'e-mails affichent `niveau_entree` tel quel.
+            // Niveau::code() refait le chemin inverse pour retrouver la valeur
+            // d'un dossier ancien, saisi en texte libre.
+            $niveauCourant = \Services\Orientation\Niveau::code((string)($o['niveau_entree'] ?? ''));
+            ?>
+            <select id="niveau_entree" name="niveau_entree"
+                    class="<?= isset($err['niveau_entree']) ? 'is-error' : '' ?>" required>
+              <option value="">Choisir</option>
+              <?php foreach (\Services\Orientation\Niveau::optionsParCycle() as $cycleLbl => $niveaux): ?>
+                <optgroup label="<?= e($cycleLbl) ?>">
+                  <?php foreach ($niveaux as $code => $libelle): ?>
+                    <option value="<?= e($code) ?>" <?= $niveauCourant === $code ? 'selected' : '' ?>><?= e($libelle) ?></option>
+                  <?php endforeach; ?>
+                </optgroup>
+              <?php endforeach; ?>
             </select>
-            <?php if (isset($err['specialite_visee'])): ?><span class="field-error"><?= e($err['specialite_visee']) ?></span><?php endif; ?>
+            <?php if (isset($err['niveau_entree'])): ?><span class="field-error"><?= e($err['niveau_entree']) ?></span><?php endif; ?>
           </div>
         </div>
 
-        <div class="form-row">
+        <?php /* Rangée révélée par le script quand la filière choisie propose
+                 des spécialités. L'identifiant est porté par la RANGÉE : le
+                 script ne manipule que `style.display`, et `display:''` rend
+                 alors la grille de `.form-row.full`. */ ?>
+        <div class="form-row full" id="specialite-group" style="display:none">
           <div class="form-group">
-            <label for="niveau_entree">Niveau d'entrée <span class="req">*</span></label>
-            <input type="text" id="niveau_entree" name="niveau_entree"
-                   value="<?= oldVal('niveau_entree', $o) ?>"
-                   placeholder="Ex. Licence 3"
-                   class="<?= isset($err['niveau_entree']) ? 'is-error' : '' ?>" required>
-            <?php if (isset($err['niveau_entree'])): ?><span class="field-error"><?= e($err['niveau_entree']) ?></span><?php endif; ?>
+            <label for="specialite_visee">Spécialité <span class="req">*</span></label>
+            <select id="specialite_visee" name="specialite_visee"
+                    class="<?= isset($err['specialite_visee']) ? 'is-error' : '' ?>">
+              <option value="">Choisir</option>
+            </select>
+            <?php if (isset($err['specialite_visee'])): ?><span class="field-error"><?= e($err['specialite_visee']) ?></span><?php endif; ?>
           </div>
         </div>
 
@@ -236,28 +293,26 @@ function oldVal(string $key, array $old, string $default = ''): string {
             <?php if (isset($err['annee_bac'])): ?><span class="field-error"><?= e($err['annee_bac']) ?></span><?php endif; ?>
           </div>
         </div>
-      </div><!-- /Formation -->
-
-      <!-- Info banner -->
-      <div class="info-banner">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;margin-top:1px"><polyline points="20 6 9 17 4 12"/></svg>
-        <span><strong>Préinscription 100 % gratuite</strong> — Aucun paiement n'est requis à cette étape. L'attestation de préinscription sera générée et téléchargeable dès la validation.</span>
       </div>
+    </div><!-- /cand-card Formation souhaitée -->
 
-    </div><!-- /cand-card -->
+    <?php /* Le bandeau vert de bas de carte répétait mot pour mot le chapeau
+             de la page (« gratuite », « attestation téléchargeable »), à la
+             même distance de l'œil. La réassurance descend là où la question
+             se pose vraiment : juste au-dessus du bouton d'envoi. */ ?>
+    <p class="cand-footer-note">Aucun paiement n'est demandé à cette étape.</p>
 
-    <!-- Footer -->
     <div class="cand-footer">
       <?php if ((bool)($etab['inscription_active'] ?? false)): ?>
+      <?php /* La flèche était un caractère collé au libellé, et « payante »
+               opposait deux parcours qui ne s'excluent pas : on préinscrit
+               d'abord, on s'inscrit ensuite. */ ?>
       <a href="<?= url("orientation/{$etabSlug}/inscription") ?>" class="btn-link">
-        Passer à l'inscription payante →
+        Aller directement à l'inscription
       </a>
-      <?php else: ?>
-      <span></span>
       <?php endif; ?>
       <button type="submit" class="btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Valider &amp; générer l'attestation
+        Valider et générer l'attestation
       </button>
     </div>
 
@@ -277,7 +332,7 @@ function oldVal(string $key, array $old, string $default = ''): string {
 
   function refreshSpecialites(keepOld) {
     var specs = specMap[filiereSel.value] || [];
-    specSel.innerHTML = '<option value="">— Choisir —</option>';
+    specSel.innerHTML = '<option value="">Choisir</option>';
 
     if (!specs.length) {
       specGroup.style.display = 'none';

@@ -8,6 +8,14 @@ $errors = $errors ?? [];
 $GLOBALS['__or_old']    = $old;
 $GLOBALS['__or_errors'] = $errors;
 
+// Composition du dossier d'inscription : rien en base (l'établissement n'existe
+// pas encore), seulement ce qui a pu être saisi avant une erreur de validation.
+// On repasse par le service plutôt que de relire $old brut : la vue affiche
+// alors exactement ce qui SERAIT enregistré — nettoyé, dédoublonné, borné.
+$compoPrefill = \Services\Orientation\CompositionDossier::decoder(
+    \Services\Orientation\CompositionDossier::encoder($old)
+);
+
 if (!function_exists('old')) {
     function old(string $key, string $default = ''): string {
         $old = $GLOBALS['__or_old'] ?? [];
@@ -228,6 +236,36 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
 }
 .or-btn-remove:hover { background: var(--red); color: #fff; }
 
+/* ── Blocs gestionnaires (répétables) ─────────────────── */
+.or-gest-block {
+    background: var(--ap-xl);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px 4px;
+    margin-bottom: 12px;
+}
+.or-gest-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+.or-gest-title {
+    font-size: 11px; font-weight: 700; color: var(--ap);
+    text-transform: uppercase; letter-spacing: 0.06em;
+}
+.or-gest-del {
+    background: var(--red-bg);
+    color: var(--red);
+    border: none;
+    border-radius: 6px;
+    width: 26px; height: 26px;
+    font-size: 16px; line-height: 1;
+    cursor: pointer;
+    font-weight: 700;
+}
+.or-gest-del:hover { background: var(--red); color: #fff; }
+
 /* ── Listes dynamiques ────────────────────────────────── */
 .or-tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .or-tag {
@@ -336,9 +374,10 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
                 'atouts'      => ['Atouts',       'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 0 0 1.946-.806 3.42 3.42 0 0 1 4.438 0 3.42 3.42 0 0 0 1.946.806 3.42 3.42 0 0 1 3.138 3.138', false],
                 'contact'     => ['Contact',      'M17.657 16.657 13.414 20.9a1.998 1.998 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z', true],
                 'tarifs'      => ['Tarifs',       'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z', true],
+                'dossier'     => ["Dossier d'inscription", 'M9 12h6M9 16h6M9 8h2M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z', false],
                 'encaissement'=> ['Encaissement', 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 0 0 3-3V8a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3z', false],
                 'formations'  => ['Formations',   'M12 14l9-5-9-5-9 5 9 5zm0 0 6.16-3.422a12.083 12.083 0 0 1 .665 6.479A11.952 11.952 0 0 0 12 20.055', true],
-                'gestionnaire'=> ['Gestionnaire', 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z', true],
+                'gestionnaire'=> ['Gestionnaires', 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z', true],
             ];
             foreach ($navItems as $id => [$label, $icon, $required]):
                 $hasError = array_filter(array_keys($errors), fn($k) => str_contains($k, $id) || ($id === 'identite' && in_array($k, ['nom','type','ville','couleur_principale'])) || ($id === 'gestionnaire' && str_starts_with($k, 'gestionnaire')) || ($id === 'medias' && in_array($k, ['logo','images_campus','video'])) || ($id === 'formations' && $k === 'formations') || ($id === 'contact' && in_array($k, ['email_contact','map_embed'])));
@@ -422,6 +461,10 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
                             Préinscription activée
                         </label>
                         <label class="or-check-label">
+                            <input type="checkbox" name="inscription_active" value="1" <?= (old('inscription_active','0')==='1')?'checked':'' ?>>
+                            Inscription en ligne activée
+                        </label>
+                        <label class="or-check-label">
                             <input type="checkbox" name="genere_recepisse" value="1" <?= (old('genere_recepisse','1')==='1')?'checked':'' ?>>
                             Génère une attestation de préinscription (PDF)
                         </label>
@@ -429,7 +472,23 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
                             <input type="checkbox" name="genere_attestation" value="1" <?= (old('genere_attestation','1')==='1')?'checked':'' ?>>
                             Génère une attestation d'inscription
                         </label>
+                        <label class="or-check-label">
+                            <input type="checkbox" name="accepte_boursiers" value="1" <?= (old('accepte_boursiers','1')==='1')?'checked':'' ?>>
+                            Accepte les candidatures de boursiers
+                        </label>
                     </div>
+                    <p style="font-size:12px;color:var(--txt-l);margin-top:8px;">
+                        <strong style="color:var(--txt)">Inscription en ligne</strong> : cochée, le bouton
+                        « S'inscrire » et le parcours en trois étapes s'ouvrent aux candidats. À laisser
+                        décochée tant que les formations et les pièces requises ne sont pas saisies —
+                        un formulaire sans référentiel de pièces produit des dossiers vides.
+                    </p>
+                    <p style="font-size:12px;color:var(--txt-l);margin-top:8px;">
+                        Décochée, la question de la bourse disparaît entièrement du front-office :
+                        bloc « situation de bourse » du formulaire d'inscription, colonne « Boursier »
+                        des grilles tarifaires et pièces ANBG. Les dossiers déjà déposés ne sont pas
+                        modifiés.
+                    </p>
                 </div>
             </section>
 
@@ -730,12 +789,60 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
                         </div>
                     </div>
 
+                    <!-- Frais d'inscription par cycle × situation de bourse -->
+                    <div class="or-subhead" style="margin-top:22px;">Frais d'inscription par cycle</div>
+                    <div class="or-upload-hint" style="margin:-4px 0 12px;">
+                        Les frais d'inscription ne sont pas les mêmes pour tous : ils dépendent du
+                        <strong>cycle</strong> suivi et de la <strong>situation de bourse</strong> de l'étudiant.
+                        Ces quatre montants sont ceux qui seront appliqués à un dossier d'inscription.
+                        <br><strong>Laissez un champ à 0 pour ne rien changer</strong> : la plateforme retombe
+                        alors sur « Prix inscription + Frais de dossier » ci-dessus, exactement comme aujourd'hui.
+                        Un champ boursier laissé à 0 reprend le tarif non boursier du même cycle.
+                        <br><strong>Pour un étudiant déclaré boursier, la commission Connect'Academia porte sur
+                        CES frais d'inscription</strong> — jamais sur sa scolarité, prise en charge par l'ANBG.
+                    </div>
+                    <div class="or-grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="frais_inscription_licence">Licence — non boursier (FCFA)</label>
+                            <input type="number" id="frais_inscription_licence" name="frais_inscription_licence" class="form-input"
+                                   min="0" step="1000" value="<?= old('frais_inscription_licence','0') ?>" placeholder="150000">
+                            <div class="or-upload-hint">Frais d’inscription du cycle Licence, tarif plein. 0 = hérite du tarif public.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="frais_inscription_licence_boursier">Licence — boursier (FCFA)</label>
+                            <input type="number" id="frais_inscription_licence_boursier" name="frais_inscription_licence_boursier" class="form-input"
+                                   min="0" step="1000" value="<?= old('frais_inscription_licence_boursier','0') ?>" placeholder="100000">
+                            <div class="or-upload-hint">Base de la commission plateforme pour un boursier de Licence. 0 = hérite du tarif public.</div>
+                        </div>
+                    </div>
+                    <div class="or-grid-2" style="margin-top:16px;">
+                        <div class="form-group">
+                            <label class="form-label" for="frais_inscription_master">Master — non boursier (FCFA)</label>
+                            <input type="number" id="frais_inscription_master" name="frais_inscription_master" class="form-input"
+                                   min="0" step="1000" value="<?= old('frais_inscription_master','0') ?>" placeholder="200000">
+                            <div class="or-upload-hint">Frais d’inscription du cycle Master, tarif plein. 0 = hérite du tarif public.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="frais_inscription_master_boursier">Master — boursier (FCFA)</label>
+                            <input type="number" id="frais_inscription_master_boursier" name="frais_inscription_master_boursier" class="form-input"
+                                   min="0" step="1000" value="<?= old('frais_inscription_master_boursier','0') ?>" placeholder="150000">
+                            <div class="or-upload-hint">Base de la commission plateforme pour un boursier de Master. 0 = hérite du tarif public.</div>
+                        </div>
+                    </div>
+
                     <!-- Scolarité annuelle par cycle × statut boursier -->
                     <div class="or-subhead" style="margin-top:22px;">Frais de scolarité annuels</div>
                     <div class="or-upload-hint" style="margin:-4px 0 12px;">
                         Un seul tarif ? Renseignez uniquement la colonne « Non boursier » et laissez
-                        « Boursier » à 0 : la page publique n'affichera alors qu'un montant, comme aujourd'hui.
-                        La commission plateforme se calcule sur les tarifs non boursiers.
+                        « Boursier » à 0 : la page publique n'affichera qu'un montant, et les boursiers
+                        seront tarifés comme les autres.
+                        <br>Ces montants sont les <strong>tarifs par défaut de l'établissement</strong>. Ils
+                        s'appliquent à toute formation qui n'a pas sa propre grille — voir « Tarifs par
+                        formation » plus bas, qui permet de distinguer L1, L2, L3, M1 et M2.
+                        <br>Ils s'appliquent <strong>automatiquement</strong> quand l'établissement valide une
+                        inscription à 100 % : son guichet n'a rien à saisir ni à confirmer.
+                        <br><strong>Base de la commission :</strong> la scolarité pour un étudiant non
+                        boursier ; les <em>frais d'inscription</em> pour un boursier confirmé.
                     </div>
                     <div class="or-grid-2">
                         <div class="form-group">
@@ -782,8 +889,22 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
                                    min="0" max="100" step="0.01" value="<?= old('taux_commission','10') ?>" placeholder="10"
                                    data-taux-commission>
                             <?= err('taux_commission') ?>
-                            <div class="or-upload-hint">Pourcentage de la scolarité perçu par Connect'Academia pour chaque élève inscrit via la plateforme — appliqué automatiquement aux commissions (3 tranches 40/30/30). 0 = aucune commission.</div>
+                            <div class="or-upload-hint">Pourcentage perçu par Connect'Academia pour chaque élève inscrit via la plateforme. <strong>La base dépend de la situation de bourse déclarée :</strong> la scolarité annuelle pour un non boursier ; pour un boursier confirmé, elle suit le réglage ci-contre. La commission est créée automatiquement à la validation à 100 %, avec ses <?= e(\Services\Orientation\CommissionDossier::libelleRepartition()) ?> que Connect'Academia encaisse ensuite une par une. Le taux est gelé à cet instant : le modifier n'affecte que les inscriptions suivantes. 0 = aucune commission.</div>
                             <div class="or-commission-preview" id="commission-preview" hidden></div>
+                        </div>
+                        <?php // ── Assiette de la commission des BOURSIERS ──
+                              // Seul cas négociable de la règle : certains accords prévoient
+                              // que la commission d'un boursier porte sur sa scolarité, que
+                              // l'établissement perçoit alors de l'ANBG. Les non boursiers
+                              // restent sur la scolarité quoi qu'il arrive — ils ne sont pas
+                              // proposés ici, il n'y a rien à choisir. ?>
+                        <div class="form-group">
+                            <label class="form-label" for="base_commission_boursier">Commission des boursiers — prélevée sur</label>
+                            <select id="base_commission_boursier" name="base_commission_boursier" class="form-select">
+                                <option value="frais_inscription" <?= old('base_commission_boursier','frais_inscription') === 'frais_inscription' ? 'selected' : '' ?>>Les frais d'inscription (par défaut)</option>
+                                <option value="scolarite"         <?= old('base_commission_boursier') === 'scolarite' ? 'selected' : '' ?>>La scolarité annuelle (accord particulier)</option>
+                            </select>
+                            <div class="or-upload-hint"><strong>Ne concerne que les boursiers confirmés.</strong> Par défaut la commission porte sur leurs frais d'inscription, leur scolarité étant prise en charge par l'ANBG. Basculez sur la scolarité si l'accord signé avec cet établissement le prévoit. Les élèves non boursiers restent commissionnés sur la scolarité, quel que soit ce réglage. Comme le taux, l'assiette est gelée à la validation à 100 % : la changer n'affecte que les inscriptions suivantes.</div>
                         </div>
                     </div>
                     <div class="form-group">
@@ -840,7 +961,85 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
                 </div>
             </section>
 
-            <!-- §9 Formations -->
+            <!-- §8 Composition du dossier d'inscription -->
+            <section class="or-section" id="sec-dossier">
+                <div class="or-section-header">
+                    <div class="or-section-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 12h6M9 16h6M9 8h2"/>
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="or-section-title">Dossier d'inscription <span class="or-optional">optionnel</span></p>
+                        <p class="or-section-sub">Pièces à fournir — imprimées sur l'attestation, la proforma et la page publique</p>
+                    </div>
+                </div>
+                <div class="or-section-body">
+                    <div class="or-upload-hint" style="margin:-4px 0 16px;">
+                        Ce que le candidat devra <strong>apporter</strong> pour transformer sa
+                        préinscription en inscription. La liste est reprise telle quelle sur
+                        l'<strong>attestation de préinscription</strong>, sur la <strong>facture
+                        proforma</strong> et sur la <strong>page publique</strong> de l'établissement.
+                        <br>Les pièces <strong>communes</strong> valent pour tout le monde ; celles d'un
+                        cycle <strong>s'y ajoutent</strong>. Un candidat de licence ne voit jamais les
+                        pièces du master, et inversement — le cycle est déduit de son niveau d'entrée
+                        (L1 → L3 = Licence, M1 → M2 = Master).
+                        <br><strong>Tout laisser vide ne casse rien</strong> : les documents gardent alors
+                        leur formulation générique, comme aujourd'hui.
+                    </div>
+                    <?php
+                    // Libellés du FORMULAIRE (plus explicites que ceux imprimés sur les
+                    // documents, qui restent la propriété de CompositionDossier).
+                    $compoChamps = [
+                        'commun'  => [
+                            'Pièces communes à tous les candidats',
+                            'Ex : Acte de naissance légalisé',
+                            'Exigées de tout candidat, quel que soit le cycle visé.',
+                        ],
+                        'licence' => [
+                            'Cycle Licence — pièces supplémentaires',
+                            'Ex : Relevé de notes du baccalauréat',
+                            "S'ajoutent aux pièces communes pour un candidat de Licence 1 à 3.",
+                        ],
+                        'master'  => [
+                            'Cycle Master — pièces supplémentaires',
+                            'Ex : Diplôme de licence et relevés des trois années',
+                            "S'ajoutent aux pièces communes pour un candidat de Master 1 ou 2.",
+                        ],
+                    ];
+                    foreach ($compoChamps as $compoCle => [$compoLabel, $compoExemple, $compoAide]):
+                        $compoListId  = 'compo-' . $compoCle . '-list';
+                        $compoInputId = 'compo-' . $compoCle . '-input';
+                        // addTag() de cette vue construit le name à partir de la
+                        // clé : « composition_licence » donne « composition_licence[] ».
+                        $compoCleJs   = 'composition_' . $compoCle;
+                        $compoChamp   = $compoCleJs . '[]';
+                    ?>
+                    <div class="form-group">
+                        <label class="form-label" for="<?= $compoInputId ?>"><?= e($compoLabel) ?></label>
+                        <div class="or-tag-list" id="<?= $compoListId ?>">
+                            <?php foreach (($compoPrefill[$compoCle] ?? []) as $compoPiece): ?>
+                            <div class="or-tag">
+                                <input type="hidden" name="<?= $compoChamp ?>" value="<?= e($compoPiece) ?>">
+                                <span><?= e($compoPiece) ?></span>
+                                <button type="button" class="or-tag-del" onclick="removeTag(this)">×</button>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="or-add-row">
+                            <input type="text" class="form-input or-add-input" id="<?= $compoInputId ?>"
+                                   placeholder="<?= e($compoExemple) ?>" maxlength="200"
+                                   onkeydown="if(event.key==='Enter'){event.preventDefault();addTag('<?= $compoCleJs ?>','<?= $compoInputId ?>',null,'<?= $compoListId ?>');}">
+                            <button type="button" class="btn-add-tag" onclick="addTag('<?= $compoCleJs ?>','<?= $compoInputId ?>',null,'<?= $compoListId ?>')">+</button>
+                        </div>
+                        <div class="or-upload-hint"><?= e($compoAide) ?></div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+
+            <!-- §10 Formations -->
             <section class="or-section" id="sec-formations">
                 <div class="or-section-header">
                     <div class="or-section-icon">
@@ -866,81 +1065,126 @@ input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
                 </div>
             </section>
 
-            <!-- §10 Gestionnaire -->
+            <!-- §11 Gestionnaires -->
+            <?php
+            // Blocs à ré-afficher : ceux de la soumission précédente (erreur de
+            // validation) ou un bloc vide pour une création neuve. Les mots de
+            // passe ne reviennent jamais (oldSansMotDePasse), seule l'identité
+            // est ré-affichée — l'admin ne resaisit pas tout à cause d'un
+            // email en double.
+            $gBlocs = [];
+            foreach ((array)($GLOBALS['__or_old']['gestionnaires'] ?? []) as $gKey => $gVal) {
+                if (is_array($gVal)) {
+                    $gBlocs[(int)$gKey] = $gVal;
+                }
+            }
+            if ($gBlocs === []) {
+                // Repli sur les champs de l'ancien formulaire mono-gestionnaire.
+                $gBlocs = [0 => [
+                    'prenom' => $GLOBALS['__or_old']['gestionnaire_prenom'] ?? '',
+                    'nom'    => $GLOBALS['__or_old']['gestionnaire_nom']    ?? '',
+                    'email'  => $GLOBALS['__or_old']['gestionnaire_email']  ?? '',
+                ]];
+            }
+            ?>
             <section class="or-section" id="sec-gestionnaire">
                 <div class="or-section-header">
                     <div class="or-section-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
                         </svg>
                     </div>
                     <div>
-                        <p class="or-section-title">Compte gestionnaire <span>*</span></p>
-                        <p class="or-section-sub">Un email avec les identifiants sera envoyé automatiquement</p>
+                        <p class="or-section-title">Comptes gestionnaires <span>*</span></p>
+                        <p class="or-section-sub">Un ou plusieurs comptes — chacun reçoit ses identifiants par email</p>
                     </div>
                 </div>
                 <div class="or-section-body">
-                    <div class="or-grid-2">
-                        <div class="form-group">
-                            <label class="form-label" for="gestionnaire_prenom">Prénom <span>*</span></label>
-                            <input type="text" id="gestionnaire_prenom" name="gestionnaire_prenom"
-                                   class="form-input<?= hasErr('gestionnaire_prenom') ?>"
-                                   value="<?= old('gestionnaire_prenom') ?>" required>
-                            <?= err('gestionnaire_prenom') ?>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="gestionnaire_nom">Nom <span>*</span></label>
-                            <input type="text" id="gestionnaire_nom" name="gestionnaire_nom"
-                                   class="form-input<?= hasErr('gestionnaire_nom') ?>"
-                                   value="<?= old('gestionnaire_nom') ?>" required>
-                            <?= err('gestionnaire_nom') ?>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="gestionnaire_email">Email <span>*</span></label>
-                        <input type="email" id="gestionnaire_email" name="gestionnaire_email"
-                               class="form-input<?= hasErr('gestionnaire_email') ?>"
-                               value="<?= old('gestionnaire_email') ?>" required
-                               placeholder="gestionnaire@ecole.ga">
-                        <?= err('gestionnaire_email') ?>
-                    </div>
-                    <div class="or-grid-2">
-                        <div class="form-group">
-                            <label class="form-label" for="gestionnaire_password">Mot de passe <span class="or-optional">optionnel</span></label>
-                            <div style="position:relative;">
-                                <input type="password" id="gestionnaire_password" name="gestionnaire_password"
-                                       class="form-input<?= hasErr('gestionnaire_password') ?>"
-                                       minlength="8" autocomplete="new-password"
-                                       placeholder="8 caractères minimum" style="padding-right:44px;">
-                                <button type="button" onclick="toggleMdp()" title="Afficher / masquer"
-                                        style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--txt-l);padding:6px;">
-                                    <svg id="mdp-eye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+
+                    <div id="gestionnaires-list">
+                        <?php $gRang = 0; foreach ($gBlocs as $gi => $gb): $gRang++; ?>
+                        <div class="or-gest-block" data-gest-block data-gest-index="<?= (int)$gi ?>">
+                            <div class="or-gest-head">
+                                <span class="or-gest-title">Gestionnaire <span data-gest-rang><?= $gRang ?></span></span>
+                                <button type="button" class="or-gest-del" onclick="removeGestionnaire(this)" title="Retirer ce gestionnaire">×</button>
+                            </div>
+
+                            <div class="or-grid-2">
+                                <div class="form-group">
+                                    <label class="form-label" for="g-prenom-<?= (int)$gi ?>">Prénom <span>*</span></label>
+                                    <input type="text" id="g-prenom-<?= (int)$gi ?>" name="gestionnaires[<?= (int)$gi ?>][prenom]"
+                                           class="form-input<?= hasErr('gestionnaire_prenom_' . (int)$gi) ?>"
+                                           value="<?= e((string)($gb['prenom'] ?? '')) ?>" required>
+                                    <?= err('gestionnaire_prenom_' . (int)$gi) ?>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="g-nom-<?= (int)$gi ?>">Nom <span>*</span></label>
+                                    <input type="text" id="g-nom-<?= (int)$gi ?>" name="gestionnaires[<?= (int)$gi ?>][nom]"
+                                           class="form-input<?= hasErr('gestionnaire_nom_' . (int)$gi) ?>"
+                                           value="<?= e((string)($gb['nom'] ?? '')) ?>" required>
+                                    <?= err('gestionnaire_nom_' . (int)$gi) ?>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="g-email-<?= (int)$gi ?>">Email <span>*</span></label>
+                                <input type="email" id="g-email-<?= (int)$gi ?>" name="gestionnaires[<?= (int)$gi ?>][email]"
+                                       class="form-input<?= hasErr('gestionnaire_email_' . (int)$gi) ?>"
+                                       value="<?= e((string)($gb['email'] ?? '')) ?>" required
+                                       placeholder="gestionnaire@ecole.ga">
+                                <?= err('gestionnaire_email_' . (int)$gi) ?>
+                            </div>
+
+                            <div class="or-grid-2">
+                                <div class="form-group">
+                                    <label class="form-label" for="g-mdp-<?= (int)$gi ?>">Mot de passe <span class="or-optional">optionnel</span></label>
+                                    <div style="position:relative;">
+                                        <input type="password" id="g-mdp-<?= (int)$gi ?>" name="gestionnaires[<?= (int)$gi ?>][password]"
+                                               class="form-input<?= hasErr('gestionnaire_password_' . (int)$gi) ?>"
+                                               data-gest-mdp minlength="8" autocomplete="new-password"
+                                               placeholder="8 caractères minimum" style="padding-right:44px;">
+                                        <button type="button" onclick="toggleMdp(this)" title="Afficher / masquer"
+                                                style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--txt-l);padding:6px;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <?= err('gestionnaire_password_' . (int)$gi) ?>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="g-mdp-c-<?= (int)$gi ?>">Confirmation</label>
+                                    <input type="password" id="g-mdp-c-<?= (int)$gi ?>" name="gestionnaires[<?= (int)$gi ?>][password_confirm]"
+                                           class="form-input<?= hasErr('gestionnaire_password_confirm_' . (int)$gi) ?>"
+                                           data-gest-mdp-confirm minlength="8" autocomplete="new-password"
+                                           placeholder="Retape le mot de passe">
+                                    <?= err('gestionnaire_password_confirm_' . (int)$gi) ?>
+                                </div>
+                            </div>
+
+                            <div style="margin:-6px 0 2px;">
+                                <button type="button" class="btn-outline btn-sm" onclick="genererMdp(this)">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:-2px">
+                                        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/>
                                     </svg>
+                                    Générer un mot de passe fort
                                 </button>
                             </div>
-                            <?= err('gestionnaire_password') ?>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label" for="gestionnaire_password_confirm">Confirmation</label>
-                            <input type="password" id="gestionnaire_password_confirm" name="gestionnaire_password_confirm"
-                                   class="form-input<?= hasErr('gestionnaire_password_confirm') ?>"
-                                   minlength="8" autocomplete="new-password"
-                                   placeholder="Retape le mot de passe">
-                            <?= err('gestionnaire_password_confirm') ?>
-                        </div>
+                        <?php endforeach; ?>
                     </div>
-                    <div style="margin:-6px 0 14px;">
-                        <button type="button" class="btn-outline btn-sm" onclick="genererMdp()">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:-2px">
-                                <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/>
-                            </svg>
-                            Générer un mot de passe fort
-                        </button>
-                    </div>
-                    <div style="background:var(--ap-xl);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--txt-m);">
-                        ℹ️ Laisse le champ vide pour générer un mot de passe temporaire automatiquement. Dans les deux cas, les identifiants sont envoyés par email au gestionnaire.
+
+                    <button type="button" class="btn-outline" style="width:100%;margin-top:4px" onclick="addGestionnaire()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px;vertical-align:-1px">
+                            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Ajouter un gestionnaire
+                    </button>
+
+                    <div style="background:var(--ap-xl);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--txt-m);margin-top:14px;">
+                        ℹ️ Laisse le mot de passe vide pour en générer un temporaire automatiquement. Dans tous les cas, chaque gestionnaire reçoit ses identifiants par email et accède au même espace établissement.
                     </div>
                 </div>
             </section>
@@ -1022,7 +1266,8 @@ function removeFormation(idx) {
 }
 
 // ── Tags dynamiques ───────────────────────────────────────────────────
-var tagData = { badges: [], atouts: [], modes: [] };
+var tagData = { badges: [], atouts: [], modes: [],
+                composition_commun: [], composition_licence: [], composition_master: [] };
 
 function addTag(key, inputId, hiddenId, listId, namedInput) {
     var input = document.getElementById(inputId);
@@ -1064,22 +1309,104 @@ function addStatRow() {
     document.getElementById('stats-rows').appendChild(row);
 }
 
-// ── Mot de passe gestionnaire ──────────────────────────────────────────
-function toggleMdp() {
-    var inp = document.getElementById('gestionnaire_password');
-    var cnf = document.getElementById('gestionnaire_password_confirm');
+// ── Gestionnaires : blocs répétables ───────────────────────────────────
+// Un établissement peut recevoir plusieurs comptes dès sa création. Chaque
+// bloc porte son propre index dans le nom des champs
+// (gestionnaires[3][email]) : retirer un bloc laisse un trou dans la
+// numérotation, ce que PHP accepte sans broncher — seul le rang AFFICHÉ est
+// renuméroté, pour que l'écran reste lisible.
+var gestionnaireIndex = document.querySelectorAll('[data-gest-block]').length;
+
+function addGestionnaire() {
+    var i    = gestionnaireIndex++;
+    var wrap = document.createElement('div');
+    wrap.className = 'or-gest-block';
+    wrap.setAttribute('data-gest-block', '');
+    wrap.setAttribute('data-gest-index', i);
+    wrap.innerHTML =
+        '<div class="or-gest-head">' +
+          '<span class="or-gest-title">Gestionnaire <span data-gest-rang></span></span>' +
+          '<button type="button" class="or-gest-del" onclick="removeGestionnaire(this)" title="Retirer ce gestionnaire">×</button>' +
+        '</div>' +
+        '<div class="or-grid-2">' +
+          '<div class="form-group">' +
+            '<label class="form-label" for="g-prenom-' + i + '">Prénom <span>*</span></label>' +
+            '<input type="text" id="g-prenom-' + i + '" name="gestionnaires[' + i + '][prenom]" class="form-input" required>' +
+          '</div>' +
+          '<div class="form-group">' +
+            '<label class="form-label" for="g-nom-' + i + '">Nom <span>*</span></label>' +
+            '<input type="text" id="g-nom-' + i + '" name="gestionnaires[' + i + '][nom]" class="form-input" required>' +
+          '</div>' +
+        '</div>' +
+        '<div class="form-group">' +
+          '<label class="form-label" for="g-email-' + i + '">Email <span>*</span></label>' +
+          '<input type="email" id="g-email-' + i + '" name="gestionnaires[' + i + '][email]" class="form-input" required placeholder="gestionnaire@ecole.ga">' +
+        '</div>' +
+        '<div class="or-grid-2">' +
+          '<div class="form-group">' +
+            '<label class="form-label" for="g-mdp-' + i + '">Mot de passe <span class="or-optional">optionnel</span></label>' +
+            '<div style="position:relative;">' +
+              '<input type="password" id="g-mdp-' + i + '" name="gestionnaires[' + i + '][password]" class="form-input" data-gest-mdp minlength="8" autocomplete="new-password" placeholder="8 caractères minimum" style="padding-right:44px;">' +
+              '<button type="button" onclick="toggleMdp(this)" title="Afficher / masquer" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--txt-l);padding:6px;">' +
+                '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="form-group">' +
+            '<label class="form-label" for="g-mdp-c-' + i + '">Confirmation</label>' +
+            '<input type="password" id="g-mdp-c-' + i + '" name="gestionnaires[' + i + '][password_confirm]" class="form-input" data-gest-mdp-confirm minlength="8" autocomplete="new-password" placeholder="Retape le mot de passe">' +
+          '</div>' +
+        '</div>' +
+        '<div style="margin:-6px 0 2px;">' +
+          '<button type="button" class="btn-outline btn-sm" onclick="genererMdp(this)">Générer un mot de passe fort</button>' +
+        '</div>';
+
+    document.getElementById('gestionnaires-list').appendChild(wrap);
+    renumeroterGestionnaires();
+    var premier = wrap.querySelector('input');
+    if (premier) premier.focus();
+}
+
+function removeGestionnaire(btn) {
+    var blocs = document.querySelectorAll('[data-gest-block]');
+    // Le dernier bloc n'est jamais supprimable : un établissement sans
+    // gestionnaire n'a personne pour ouvrir son guichet.
+    if (blocs.length <= 1) {
+        alert('Au moins un compte gestionnaire est obligatoire.');
+        return;
+    }
+    btn.closest('[data-gest-block]').remove();
+    renumeroterGestionnaires();
+}
+
+function renumeroterGestionnaires() {
+    var blocs = document.querySelectorAll('[data-gest-block]');
+    blocs.forEach(function (bloc, n) {
+        var rang = bloc.querySelector('[data-gest-rang]');
+        if (rang) rang.textContent = (n + 1);
+        var del = bloc.querySelector('.or-gest-del');
+        if (del) del.style.visibility = blocs.length > 1 ? 'visible' : 'hidden';
+    });
+}
+
+// ── Mot de passe d'UN gestionnaire (bloc courant) ─────────────────────
+function toggleMdp(btn) {
+    var bloc = btn.closest('[data-gest-block]');
+    var inp  = bloc.querySelector('[data-gest-mdp]');
+    var cnf  = bloc.querySelector('[data-gest-mdp-confirm]');
     var t = inp.type === 'password' ? 'text' : 'password';
     inp.type = t; cnf.type = t;
 }
 
-function genererMdp() {
+function genererMdp(btn) {
     var chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%';
     var arr = new Uint32Array(14);
     crypto.getRandomValues(arr);
     var mdp = '';
     for (var i = 0; i < arr.length; i++) mdp += chars[arr[i] % chars.length];
-    var inp = document.getElementById('gestionnaire_password');
-    var cnf = document.getElementById('gestionnaire_password_confirm');
+    var bloc = btn.closest('[data-gest-block]');
+    var inp  = bloc.querySelector('[data-gest-mdp]');
+    var cnf  = bloc.querySelector('[data-gest-mdp-confirm]');
     inp.value = mdp; cnf.value = mdp;
     inp.type = 'text'; cnf.type = 'text'; // visible pour que l'admin puisse le noter
 }
@@ -1189,5 +1516,8 @@ document.getElementById('color-picker').addEventListener('input', function() {
 
 // ── Init : ajouter 1 formation par défaut ─────────────────────────────
 addFormation();
+
+// ── Init : rangs et bouton « retirer » des blocs gestionnaires ────────
+renumeroterGestionnaires();
 </script>
 <script src="<?= asset('js/orientation-media-upload.js') ?>"></script>

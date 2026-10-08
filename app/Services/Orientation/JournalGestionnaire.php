@@ -42,6 +42,7 @@ class JournalGestionnaire
         'gestionnaire.candidature.creation'       => 'Création de dossier',
         'gestionnaire.candidature.modification'   => 'Modification de dossier',
         'gestionnaire.candidature.statut'         => 'Changement de statut',
+        'gestionnaire.candidature.piece.consultation' => 'Pièce justificative consultée',
         'gestionnaire.candidature.sms'            => 'SMS envoyé',
         'gestionnaire.candidature.message'        => 'Message envoyé',
         'gestionnaire.formation.creation'         => 'Formation ajoutée',

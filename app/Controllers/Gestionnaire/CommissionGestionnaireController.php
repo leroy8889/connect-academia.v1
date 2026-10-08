@@ -8,7 +8,8 @@ use Models\Orientation\{Etablissement, CommissionScolarite};
 
 /**
  * Page dédiée aux commissions Connect'Academia (% scolarité recouvré en
- * présentiel, 3 tranches 40/30/30). Auparavant affichée sur la vue d'ensemble,
+ * présentiel, en tranches — cf. CommissionDossier::REPARTITION_TRANCHES).
+ * Auparavant affichée sur la vue d'ensemble,
  * elle dispose désormais de sa propre page pour ne pas surcharger le dashboard.
  */
 class CommissionGestionnaireController

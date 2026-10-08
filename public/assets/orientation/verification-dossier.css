@@ -1,0 +1,477 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   verification-dossier.css — Connect'Academia · écran de résultat du guichet
+   Route : POST /verification/code-court et GET /v/{token}
+
+   ── Ce que l'écran doit être ──────────────────────────────────────────────
+   Un agent debout, un candidat en face, une matinée de rentrée. Il décide en
+   UNE vue : ce dossier est-il payé, en attente, refusé ? La couleur porte la
+   décision avant que le texte soit lu ; tout le reste est de la confirmation.
+
+   ── Langage visuel ───────────────────────────────────────────────────────
+   Même système que candidature.css et scanner.css : « toile crème ». La page
+   est posée sur un crème chaud, jamais sur du blanc pur ni sur du gris froid.
+   La hiérarchie vient du contraste des surfaces et d'un filet d'un pixel —
+   jamais de l'élévation. Aucune ombre portée, aucun dégradé, aucun verre,
+   aucun halo. Une seule famille : Montserrat, du titre à la mention fine.
+
+   Le verdict n'est plus un aplat saturé plein cadre : c'est un bandeau de
+   teinte lavée, filet coloré, pastille pleine et titre à l'encre profonde.
+   Même lisibilité à un mètre, sans crier. Un liseré plein largeur, collé
+   sous la barre supérieure, donne la couleur avant même la lecture.
+
+   ── Règle de rayons, appliquée partout ───────────────────────────────────
+      8 px  champs, boutons, pastilles carrées
+     12 px  cartes et blocs
+    999 px  puces et badges uniquement
+   Un rayon hors de cette échelle est un oubli, pas une intention.
+
+   ── Verrou de thème ──────────────────────────────────────────────────────
+   Cet écran est CLAIR sur toutes les machines. Il lisait auparavant
+   `--bg-main` / `--bg-surface` de tokens.css, qui basculent sous
+   `@media (prefers-color-scheme: dark)` : sur un poste en thème sombre la
+   page passait en #1A1A1A — d'où le fond noir constaté au guichet. Plus
+   aucune règle de cette feuille ne dépend d'un token qui bascule : toutes
+   les couleurs sont posées ci-dessous, en clair, une fois pour toutes. Le
+   gabarit pose en plus `data-theme="light"` sur <html>, et `color-scheme:
+   light` empêche le navigateur de repeindre les contrôles natifs en sombre.
+   tokens.css n'est conservé que pour l'import de la fonte.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@import url('./tokens.css');
+
+:root {
+    /* ── Surfaces ─────────────────────────────────────────────────────────
+       Crème chaud pour le sol, blanc pour le papier posé dessus, crème plus
+       dense pour les blocs en creux. Trois tons, pas quatre. */
+    --v-bg:      #FAF9F5;
+    --v-card:    #FFFFFF;
+    --v-inset:   #F5F0E8;
+
+    /* ── Encres — toutes vérifiées AA sur crème et sur blanc ──────────────*/
+    --v-txt:     #141413;   /* titres et valeurs */
+    --v-txt-m:   #3D3D3A;   /* texte courant */
+    --v-txt-s:   #605E58;   /* libellés */
+    --v-txt-l:   #6C6A64;   /* mentions fines — jamais plus clair que ça */
+
+    /* ── Filets ───────────────────────────────────────────────────────────*/
+    --v-border:  #E6DFD8;
+    --v-border-s:#EFE9E1;
+
+    /* ── Accent unique : le violet de la plateforme, ramené au contraste ──
+       #8B52FA plafonne à 4,1:1 sur le crème, sous le seuil AA. Assombri, il
+       remonte au-dessus de 6:1 sans perdre son identité. */
+    --v-brand:      #6C41C4;
+    --v-brand-hover:#5D37AC;
+    --v-brand-press:#4E2E92;
+    --v-brand-ring: rgba(108, 65, 196, .18);
+
+    /* ── Les quatre tonalités de verdict (spec §7.4) ──────────────────────
+       Vert = on encaisse. Violet = déjà inscrit. Ambre = attendre.
+       Rouge = refuser. Chaque tonalité : un plein, une lavée, un filet, une
+       encre. Aucune cinquième famille de couleur n'existe sur cet écran. */
+    --ok-plein:   #3F7D4E;  --ok-lave:   #EFF5F0;  --ok-filet:   #CFE0D4;  --ok-encre:   #2F6640;
+    --info-plein: #6C41C4;  --info-lave: #F2EEFC;  --info-filet: #DCD1F5;  --info-encre: #5B36A8;
+    --warn-plein: #C98A16;  --warn-lave: #FBF3E3;  --warn-filet: #EEDFBE;  --warn-encre: #8A5A08;
+    --err-plein:  #C43D3D;  --err-lave:  #FBEEED;  --err-filet:  #F0D5D2;  --err-encre:  #A8342C;
+
+    /* ── Typographie ──────────────────────────────────────────────────────*/
+    --v-sans: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --v-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace;
+
+    /* ── Rayons ───────────────────────────────────────────────────────────*/
+    --v-r-champ: 8px;
+    --v-r-carte: 12px;
+
+    color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+    background: var(--v-bg);
+    color: var(--v-txt-m);
+    font-family: var(--v-sans);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+/* Un seul anneau de focus pour toute la page : visible sur crème comme sur
+   blanc, et jamais supprimé — le guichet se manœuvre aussi au clavier. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+    outline: 2px solid var(--v-brand);
+    outline-offset: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   BARRE SUPÉRIEURE
+   Chrome minimal : un retour, rien d'autre. Elle ne doit pas concurrencer le
+   verdict qu'elle surplombe.
+   ══════════════════════════════════════════════════════════════════════════ */
+.v-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 20px;
+    background: rgba(250, 249, 245, .88);
+    backdrop-filter: saturate(180%) blur(12px);
+    -webkit-backdrop-filter: saturate(180%) blur(12px);
+    border-bottom: 1px solid var(--v-border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.v-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px 7px 9px;
+    margin: -7px 0 -7px -9px;
+    border-radius: var(--v-r-champ);
+    color: var(--v-txt-s);
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 600;
+    transition: background .15s ease, color .15s ease;
+}
+.v-back:hover {
+    background: var(--v-inset);
+    color: var(--v-txt);
+}
+.v-back svg { flex: 0 0 auto; }
+
+/* Liseré de verdict, plein largeur, collé sous la barre : la couleur est lue
+   à un mètre avant que le bandeau lui-même entre dans le champ de vision. */
+.v-lisere { height: 4px; }
+.v-lisere.v-t-succes  { background: var(--ok-plein); }
+.v-lisere.v-t-info    { background: var(--info-plein); }
+.v-lisere.v-t-attente { background: var(--warn-plein); }
+.v-lisere.v-t-danger  { background: var(--err-plein); }
+.v-lisere.v-t-neutre  { background: var(--v-border); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   COLONNE
+   ══════════════════════════════════════════════════════════════════════════ */
+.v-page {
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 22px 20px 56px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   BANDEAU DE VERDICT
+   Teinte lavée, filet coloré, pastille pleine. Le titre porte l'encre
+   profonde de la tonalité : il reste lisible en photocopie et en plein
+   soleil, ce que le blanc sur aplat saturé ne garantissait pas.
+   ══════════════════════════════════════════════════════════════════════════ */
+.v-bandeau {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px;
+    border: 1px solid var(--v-border);
+    border-radius: var(--v-r-carte);
+    background: var(--v-card);
+    margin-bottom: 16px;
+}
+.v-bandeau-ico {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--v-r-champ);
+    background: var(--v-inset);
+    color: var(--v-txt-s);
+}
+.v-bandeau-txt { min-width: 0; }
+.v-bandeau h1 {
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -.011em;
+    color: var(--v-txt);
+}
+.v-bandeau p {
+    margin-top: 5px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--v-txt-m);
+}
+
+.v-succes  { background: var(--ok-lave);   border-color: var(--ok-filet); }
+.v-info    { background: var(--info-lave); border-color: var(--info-filet); }
+.v-attente { background: var(--warn-lave); border-color: var(--warn-filet); }
+.v-danger  { background: var(--err-lave);  border-color: var(--err-filet); }
+
+.v-succes  .v-bandeau-ico { background: var(--ok-plein);   color: #fff; }
+.v-info    .v-bandeau-ico { background: var(--info-plein); color: #fff; }
+.v-attente .v-bandeau-ico { background: var(--warn-plein); color: #fff; }
+.v-danger  .v-bandeau-ico { background: var(--err-plein);  color: #fff; }
+
+.v-succes  h1 { color: var(--ok-encre); }
+.v-info    h1 { color: var(--info-encre); }
+.v-attente h1 { color: var(--warn-encre); }
+.v-danger  h1 { color: var(--err-encre); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   IDENTITÉ DU CANDIDAT
+   ══════════════════════════════════════════════════════════════════════════ */
+.v-identite {
+    display: flex;
+    gap: 16px;
+    padding: 18px;
+    background: var(--v-card);
+    border: 1px solid var(--v-border);
+    border-radius: var(--v-r-carte);
+    margin-bottom: 14px;
+}
+.v-photo {
+    flex: 0 0 auto;
+    width: 72px;
+    height: 88px;
+    object-fit: cover;
+    border-radius: var(--v-r-champ);
+    background: var(--v-inset);
+}
+.v-photo-vide {
+    display: grid;
+    place-items: center;
+    color: #A8A49C;
+    border: 1px solid var(--v-border-s);
+}
+.v-identite-txt { min-width: 0; }
+
+.v-reference {
+    font-family: var(--v-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    color: var(--v-txt-l);
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+}
+.v-nom {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -.014em;
+    color: var(--v-txt);
+    margin-top: 4px;
+}
+.v-meta {
+    font-size: 13.5px;
+    color: var(--v-txt-s);
+    margin-top: 3px;
+}
+
+.v-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 11px; }
+.v-chip {
+    display: inline-block;
+    padding: 4px 11px;
+    border-radius: 999px;
+    background: var(--v-inset);
+    border: 1px solid var(--v-border-s);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .01em;
+    color: var(--v-txt-s);
+    white-space: nowrap;
+}
+.v-chip-succes  { background: var(--ok-lave);   border-color: var(--ok-filet);   color: var(--ok-encre); }
+.v-chip-info    { background: var(--info-lave); border-color: var(--info-filet); color: var(--info-encre); }
+.v-chip-attente { background: var(--warn-lave); border-color: var(--warn-filet); color: var(--warn-encre); }
+.v-chip-danger  { background: var(--err-lave);  border-color: var(--err-filet);  color: var(--err-encre); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   FAITS
+   Grille de deux, séparée par des filets d'un pixel — pas par des blocs
+   posés les uns à côté des autres.
+   ══════════════════════════════════════════════════════════════════════════ */
+.v-faits {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--v-border-s);
+    border: 1px solid var(--v-border);
+    border-radius: var(--v-r-carte);
+    overflow: hidden;
+    margin-bottom: 14px;
+}
+.v-faits > div { background: var(--v-card); padding: 13px 15px; }
+.v-faits dt {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--v-txt-l);
+}
+.v-faits dd {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--v-txt);
+    margin-top: 3px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PIÈCES
+   La liste seule : jamais les pièces elles-mêmes (spec §7.5).
+   ══════════════════════════════════════════════════════════════════════════ */
+.v-pieces {
+    padding: 16px 18px;
+    background: var(--v-card);
+    border: 1px solid var(--v-border);
+    border-radius: var(--v-r-carte);
+    margin-bottom: 18px;
+}
+.v-pieces h2 {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--v-txt-l);
+    margin-bottom: 8px;
+}
+.v-pieces ul { list-style: none; }
+.v-pieces li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    font-size: 14px;
+    color: var(--v-txt);
+}
+.v-pieces li + li { border-top: 1px solid var(--v-border-s); }
+.v-piece-nom { min-width: 0; overflow-wrap: anywhere; }
+.v-piece-etat {
+    flex: 0 0 auto;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--v-txt-l);
+    white-space: nowrap;
+}
+.v-etat-accepte { color: var(--ok-encre); }
+.v-etat-refuse  { color: var(--err-encre); }
+.v-vide { font-size: 13.5px; color: var(--v-txt-l); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ACTIONS
+   ══════════════════════════════════════════════════════════════════════════ */
+.v-actions { display: flex; flex-direction: column; gap: 10px; }
+
+.v-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 22px;
+    border: 1px solid transparent;
+    border-radius: var(--v-r-champ);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -.005em;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.v-btn-primaire {
+    background: var(--v-brand);
+    border-color: var(--v-brand);
+    color: #fff;
+}
+.v-btn-primaire:hover  { background: var(--v-brand-hover); border-color: var(--v-brand-hover); }
+.v-btn-primaire:active { background: var(--v-brand-press); border-color: var(--v-brand-press); }
+
+.v-btn-secondaire {
+    background: var(--v-card);
+    border-color: var(--v-border);
+    color: var(--v-txt);
+}
+.v-btn-secondaire:hover { border-color: #D6CEC4; background: var(--v-inset); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   REPLI : SAISIE DU CODE COURT
+   Affiché quand aucun dossier n'est présentable. C'est le seul chemin qui
+   marche toujours : il reste donc sur l'écran d'échec, prêt à la frappe.
+   ══════════════════════════════════════════════════════════════════════════ */
+.v-repli {
+    padding: 20px;
+    background: var(--v-card);
+    border: 1px solid var(--v-border);
+    border-radius: var(--v-r-carte);
+}
+.v-repli label {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--v-txt);
+    margin-bottom: 9px;
+}
+.v-repli-ligne { display: flex; gap: 10px; flex-wrap: wrap; }
+.v-repli input {
+    flex: 1 1 190px;
+    min-width: 0;
+    padding: 13px 15px;
+    border: 1px solid var(--v-border);
+    border-radius: var(--v-r-champ);
+    background: var(--v-bg);
+    font-family: var(--v-mono);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--v-txt);
+}
+.v-repli input:focus {
+    outline: none;
+    border-color: var(--v-brand);
+    box-shadow: 0 0 0 3px var(--v-brand-ring);
+    background: var(--v-card);
+}
+.v-repli input::placeholder {
+    color: #A8A49C;
+    font-weight: 500;
+    letter-spacing: .12em;
+}
+.v-repli .v-btn { flex: 0 0 auto; }
+
+.v-note {
+    margin-top: 11px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--v-txt-l);
+}
+.v-page > .v-note { margin: -6px 0 16px 2px; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TÉLÉPHONE
+   L'écran est tenu d'une main, souvent debout. Les faits passent sur une
+   colonne et le bouton de validation prend toute la largeur.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 460px) {
+    .v-page   { padding: 18px 16px 44px; }
+    .v-faits  { grid-template-columns: minmax(0, 1fr); }
+    .v-bandeau { padding: 16px; }
+    .v-bandeau h1 { font-size: 17.5px; }
+    .v-identite { gap: 13px; padding: 16px; }
+    .v-photo { width: 62px; height: 76px; }
+    .v-nom { font-size: 18px; }
+    .v-repli-ligne .v-btn { flex: 1 1 100%; }
+}
+
+/* Impression : un agent archive parfois la vérification au dossier papier. */
+@media print {
+    .v-topbar, .v-actions, .v-repli { display: none; }
+    body { background: #fff; }
+    .v-bandeau, .v-identite, .v-faits, .v-pieces { break-inside: avoid; }
+}

@@ -1,7 +1,21 @@
 <?php
-// Variables : $filieres (chaque filière contient 'specialites'), $etab
+// Variables : $filieres (chaque filière contient 'specialites'), $etab, $grilles
 $filieres = $filieres ?? [];
+$grilles  = $grilles ?? [];
 $csrf     = \Core\Session::getCsrfToken();
+
+// Tarifs par défaut de l'établissement, montrés en indication dans chaque
+// grille : c'est ce qui s'applique tant qu'une case reste vide.
+$heritageEtab = [
+    \Services\Orientation\TarifCycle::LICENCE => [
+        'non_boursier' => (int)($etab['frais_scolarite'] ?? 0),
+        'boursier'     => (int)($etab['frais_scolarite_boursier'] ?? 0),
+    ],
+    \Services\Orientation\TarifCycle::MASTER => [
+        'non_boursier' => (int)($etab['frais_scolarite_master'] ?? 0),
+        'boursier'     => (int)($etab['frais_scolarite_master_boursier'] ?? 0),
+    ],
+];
 ?>
 
 <div class="g-page-header">
@@ -72,6 +86,19 @@ $csrf     = \Core\Session::getCsrfToken();
           <?php endforeach; ?>
         </div>
       <?php endif; ?>
+
+      <?php
+        // Grille tarifaire de la filière — même gabarit que la console du
+        // super administrateur, pour que les deux back-offices n'aient pas
+        // deux lectures différentes des mêmes prix.
+        $gtFiliere  = $f;
+        $gtGrille   = $grilles[(int)$f['id']] ?? [];
+        $gtAction   = url('/gestionnaire/filieres/' . (int)$f['id'] . '/tarifs');
+        $gtCsrf     = $csrf;
+        $gtChamp    = 'csrf_token';
+        $gtHeritage = $heritageEtab;
+        include BASE_PATH . '/app/Views/partials/_grille-tarifs.php';
+      ?>
     </div>
   <?php endforeach; ?>
 <?php endif; ?>

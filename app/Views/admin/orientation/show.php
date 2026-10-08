@@ -30,6 +30,10 @@ $scoLicence   = (int)($etab['frais_scolarite'] ?? 0);
 $scoLicenceB  = (int)($etab['frais_scolarite_boursier'] ?? 0);
 $scoMaster    = (int)($etab['frais_scolarite_master'] ?? 0);
 $scoMasterB   = (int)($etab['frais_scolarite_master_boursier'] ?? 0);
+$insLicence   = (int)($etab['frais_inscription_licence'] ?? 0);
+$insLicenceB  = (int)($etab['frais_inscription_licence_boursier'] ?? 0);
+$insMaster    = (int)($etab['frais_inscription_master'] ?? 0);
+$insMasterB   = (int)($etab['frais_inscription_master_boursier'] ?? 0);
 $fraisUnif    = (int)($etab['frais_uniforme'] ?? 0);
 
 // Localisation : embed Google Maps configuré prioritaire, sinon GPS legacy,
@@ -197,6 +201,21 @@ $row = static function (string $label, ?string $value, bool $raw = false): void 
                 <span class="ef-cycle-label">Commission plateforme</span>
                 <span class="ef-cycle-val"><?= e(rtrim(rtrim(number_format((float)($etab['taux_commission_scolarite'] ?? 10), 2, ',', ' '), '0'), ',')) ?><span class="ef-cycle-unit">% de la scolarité Licence</span></span>
             </div>
+            <?php // L'assiette des boursiers est le seul terme négociable de la
+                  // règle de commission : elle doit se lire sur la fiche, sinon
+                  // il faut ouvrir le formulaire d'édition pour savoir ce qui a
+                  // été convenu avec ce partenaire.
+                  $baseBoursier = \Services\Orientation\TarifCycle::normaliserBaseBoursier(
+                      ($etab['base_commission_boursier'] ?? null) !== null
+                          ? (string)$etab['base_commission_boursier'] : null
+                  ); ?>
+            <div class="ef-cycle ef-cycle-soft">
+                <span class="ef-cycle-label">Commission des boursiers</span>
+                <span class="ef-cycle-val" style="font-size:15px;">
+                    <?= e(\Services\Orientation\TarifCycle::libelleBase($baseBoursier)) ?>
+                    <span class="ef-cycle-unit"><?= $baseBoursier === \Services\Orientation\TarifCycle::BASE_SCOLARITE ? 'accord particulier' : 'règle par défaut' ?></span>
+                </span>
+            </div>
         </div>
     </section>
 
@@ -244,6 +263,17 @@ $row = static function (string $label, ?string $value, bool $raw = false): void 
                 $row('Préinscription', number_format((int)($etab['prix_preinscription'] ?? 0), 0, ',', ' ') . ' FCFA');
                 $row('Inscription', number_format((int)($etab['prix_inscription'] ?? 0), 0, ',', ' ') . ' FCFA');
                 $row('Frais de dossier', number_format((int)($etab['frais_dossier'] ?? 0), 0, ',', ' ') . ' FCFA');
+
+                // Les quatre frais d'inscription par cycle et bourse : ce sont EUX qui
+                // s'appliquent à un dossier dès qu'ils sont renseignés. Un montant à 0
+                // s'affiche « — » et non « 0 FCFA » : il signifie « non renseigné, hérite
+                // du tarif public ci-dessus », et un zéro imprimé laisserait croire que
+                // l'établissement n'a pas de frais d'inscription.
+                $row('Inscription Licence', $insLicence  > 0 ? number_format($insLicence,  0, ',', ' ') . ' FCFA' : null);
+                $row('Inscription Licence (boursier)', $insLicenceB > 0 ? number_format($insLicenceB, 0, ',', ' ') . ' FCFA' : null);
+                $row('Inscription Master',  $insMaster   > 0 ? number_format($insMaster,   0, ',', ' ') . ' FCFA' : null);
+                $row('Inscription Master (boursier)',  $insMasterB  > 0 ? number_format($insMasterB,  0, ',', ' ') . ' FCFA' : null);
+
                 $row('Scolarité Licence', $scoLicence > 0 ? number_format($scoLicence, 0, ',', ' ') . ' FCFA / an' : null);
                 $row('Scolarité Licence (boursier)', $scoLicenceB > 0 ? number_format($scoLicenceB, 0, ',', ' ') . ' FCFA / an' : null);
                 $row('Scolarité Master', $scoMaster > 0 ? number_format($scoMaster, 0, ',', ' ') . ' FCFA / an' : null);
@@ -254,10 +284,22 @@ $row = static function (string $label, ?string $value, bool $raw = false): void 
                     (int)($etab['preinscription_active'] ?? 0)
                         ? '<span class="ef-state ef-state-on">Activée</span>'
                         : '<span class="ef-state ef-state-off">Désactivée</span>', true);
-                $row('Inscriptions payantes',
-                    (int)($etab['inscription_active'] ?? 0)
+                // Inscriptions en ligne : l'état était affiché sans aucun moyen
+                // de le changer depuis cette fiche. Le bouton pousse sur la même
+                // route que la liste — un seul point d'écriture, qui journalise
+                // et purge le cache de la page publique.
+                $insActive = (int)($etab['inscription_active'] ?? 0) === 1;
+                $row('Inscriptions en ligne',
+                    ($insActive
                         ? '<span class="ef-state ef-state-on">Activées</span>'
-                        : '<span class="ef-state ef-state-off">Désactivées</span>', true);
+                        : '<span class="ef-state ef-state-off">Désactivées</span>')
+                    . '<form method="post" action="' . url('/admin/orientation/' . (int)$etab['id'] . '/activer-inscription') . '"'
+                    . ' style="display:inline-block;margin-left:10px;"'
+                    . ' onsubmit="return confirm(' . e(json_encode(($insActive ? 'Fermer' : 'Ouvrir') . ' les inscriptions en ligne de « ' . ($etab['nom'] ?? '') . ' » ?', JSON_UNESCAPED_UNICODE)) . ');">'
+                    . '<input type="hidden" name="_csrf_token" value="' . e(\Core\Session::getCsrfToken()) . '">'
+                    . '<button type="submit" class="btn btn-sm btn-outline" style="font-size:12px;padding:4px 10px;">'
+                    . ($insActive ? 'Fermer les inscriptions' : 'Ouvrir les inscriptions')
+                    . '</button></form>', true);
                 $row('Compte Mobile Money',
                     $ps
                         ? '<span class="badge ' . $pBadge . '">' . e($ps) . '</span> '
@@ -295,6 +337,9 @@ $row = static function (string $label, ?string $value, bool $raw = false): void 
                         : e($etab['video_url'] ?? ''), true);
                 $row('Attestation de préinscription', (int)($etab['genere_recepisse'] ?? 0) ? 'Oui' : 'Non');
                 $row('Attestation d\'inscription', (int)($etab['genere_attestation'] ?? 1) ? 'Oui' : 'Non');
+                // Colonne absente (migration non rejouée) → « Oui », qui est le
+                // comportement effectif de la plateforme dans ce cas.
+                $row('Candidatures de boursiers', (int)($etab['accepte_boursiers'] ?? 1) ? 'Acceptées' : 'Fermées');
                 ?>
             </dl>
 

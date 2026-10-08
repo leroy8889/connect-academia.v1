@@ -259,69 +259,161 @@ html, body { overflow-x: hidden; max-width: 100%; }
    FILIÈRES
    ============================================================= */
 .filieres { background: var(--paper); }
-.filiere-grid { margin-top: 56px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+/* ---- Carte de formation -------------------------------------------------
+   Refonte au langage Claude. Ce qui a sauté et pourquoi :
+     · les dégradés radiaux et le halo d'angle — le système ne connaît que des
+       aplats, la profondeur vient du contraste de surfaces ;
+     · l'ombre portée et le décollage au survol — l'élévation se lit sur un
+       filet qui se renforce, pas sur un objet qui saute ;
+     · la tuile d'icône dégradée, identique sur les vingt cartes — un
+       pictogramme répété à l'identique n'informe personne, il décore ;
+     · l'accent de marque sur le badge, l'icône et les métadonnées — il est
+       désormais réservé au seul bouton d'action, comme le coral chez Claude.
+   Reste la hiérarchie typographique : taille et interlettrage avant graisse. */
+.filiere-grid { margin-top: 56px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .filiere {
-  position: relative; isolation: isolate; overflow: hidden;
-  border: 1px solid var(--border-subtle); border-radius: var(--radius-xl);
-  background:
-    radial-gradient(130% 90% at 100% -10%, var(--brand-tint) 0%, transparent 46%),
-    var(--card);
-  padding: 30px 28px 26px; display: flex; flex-direction: column; gap: 16px;
-  box-shadow: var(--shadow-sm);
-  transition: transform 320ms var(--ease), box-shadow 320ms var(--ease);
+  position: relative;
+  border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);
+  background: var(--card);
+  padding: 26px 24px 22px; display: flex; flex-direction: column; gap: 14px;
+  transition: border-color 150ms var(--ease), box-shadow 150ms var(--ease);
 }
-/* Halo d'angle qui s'illumine au survol */
-.filiere::after {
-  content: ''; position: absolute; z-index: -1; right: -60px; top: -60px;
-  width: 180px; height: 180px; border-radius: 50%;
-  background: radial-gradient(circle, var(--brand-glow) 0%, transparent 70%);
-  opacity: 0; transition: opacity 400ms var(--ease);
-}
-.filiere:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
-.filiere:hover::after { opacity: 1; }
-.filiere-ic {
-  order: -1;
-  width: 58px; height: 58px; border-radius: 18px; flex: none;
-  background: linear-gradient(150deg, color-mix(in srgb, var(--brand) 16%, #fff), var(--brand-tint));
-  color: var(--brand);
-  border: 1px solid var(--brand-line);
-  display: grid; place-items: center;
-  box-shadow: 0 6px 18px var(--brand-glow), inset 0 1px 0 rgba(255,255,255,0.75);
-  transition: transform 320ms var(--ease), box-shadow 320ms var(--ease);
-}
-.filiere:hover .filiere-ic { transform: translateY(-2px) scale(1.05) rotate(-4deg); box-shadow: 0 12px 28px var(--brand-glow), inset 0 1px 0 rgba(255,255,255,0.75); }
-.filiere-ic svg { width: 28px; height: 28px; }
-.filiere-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.filiere:hover { border-color: var(--border-strong); box-shadow: 0 1px 3px rgba(54, 44, 32, 0.08); }
+.filiere[hidden] { display: none; }
+
+.filiere-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 26px; }
 .filiere-niveau {
-  font-size: 11.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
-  color: var(--brand); background: var(--brand-tint);
-  border: 1px solid var(--brand-line);
-  padding: 5px 12px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--ink-3); background: var(--paper-2);
+  border: 1px solid var(--border-subtle);
+  padding: 5px 11px; border-radius: var(--radius-pill);
 }
-.filiere-statut { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #2E7D32; }
-.filiere-statut .dot { width: 7px; height: 7px; border-radius: 999px; background: #00C853; box-shadow: 0 0 0 3px rgba(0,200,83,0.16); }
-.filiere-statut:not(.closed) .dot { animation: filiere-pulse 2s var(--ease) infinite; }
-@keyframes filiere-pulse {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(0,200,83,0.16); }
-  50%      { box-shadow: 0 0 0 5px rgba(0,200,83,0.05); }
-}
+/* Le point de statut porte une information réelle (candidature ouverte ou
+   non) : il reste. Sa pulsation infinie, elle, ne disait rien. */
+.filiere-statut { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: #2E7D32; }
+.filiere-statut .dot { width: 6px; height: 6px; border-radius: 999px; background: #2E7D32; flex: none; }
 .filiere-statut.closed { color: var(--ink-3); }
-.filiere-statut.closed .dot { background: var(--ink-3); box-shadow: 0 0 0 3px rgba(120,120,120,0.14); }
-.filiere h3 { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.25; }
-.filiere-meta { display: flex; flex-direction: column; gap: 10px; margin-top: 2px; }
-.filiere-meta .row { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-2); }
-.filiere-meta .row svg { width: 16px; height: 16px; color: var(--brand); flex: none; }
-.filiere-foot {
-  margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border-subtle);
-  display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+.filiere-statut.closed .dot { background: var(--ink-3); }
+
+.filiere-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.filiere h3 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.28; }
+.filiere h3 a { color: inherit; }
+/* Lien « voir le détail » : filet neutre, il ne concurrence pas le CTA. */
+.filiere-eye {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; flex: none; border-radius: var(--radius-pill);
+  color: var(--ink-3); border: 1px solid var(--border-subtle); background: var(--paper);
+  transition: color 150ms var(--ease), border-color 150ms var(--ease);
 }
-.filiere-price small { display: block; font-size: 12px; color: var(--ink-3); font-weight: 600; }
-.filiere-price b { font-size: 23px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
-.filiere-price b span { font-size: 13px; font-weight: 600; color: var(--ink-3); }
-/* CTA — flèche qui glisse */
-.filiere-foot .btn { transition: gap 240ms var(--ease), transform 240ms var(--ease), box-shadow 240ms var(--ease), background 240ms var(--ease); }
-.filiere-foot .btn svg.filiere-arrow { width: 15px; height: 15px; transition: transform 240ms var(--ease); }
-.filiere:hover .filiere-foot .btn svg.filiere-arrow { transform: translateX(3px); }
+.filiere-eye:hover { color: var(--ink); border-color: var(--border-strong); }
+.filiere-eye svg { width: 15px; height: 15px; }
+
+.filiere-meta { font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.filiere-foot {
+  margin-top: auto; padding-top: 18px; border-top: 1px solid var(--border-subtle);
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 14px;
+}
+.filiere-price small {
+  display: block; margin-bottom: 3px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.filiere-price { min-width: 0; }
+.filiere-price b {
+  font-size: 19px; font-weight: 600; letter-spacing: -0.015em; color: var(--ink);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.filiere-price b span { font-size: 12px; font-weight: 500; color: var(--ink-3); }
+/* Le CTA garde la pilule des boutons du site — une seule forme de bouton sur
+   toute la page — mais perd son halo coloré et son décollage au survol. */
+.filiere-foot .btn {
+  box-shadow: none; padding: 10px 16px; font-size: 13.5px;
+  transition: background 150ms var(--ease), border-color 150ms var(--ease), color 150ms var(--ease);
+}
+.filiere-foot .btn:hover { transform: none; box-shadow: none; }
+.filiere-foot .btn-primary:hover { background: var(--brand-deep); }
+.filiere-foot .btn:active { transform: none; }
+.filiere-foot .btn svg.filiere-arrow { width: 15px; height: 15px; }
+
+/* ---- Groupes de formations par cycle (Licence / Master / …) ------------
+   Vingt formations d'un bloc, c'est un mur. Elles sont rangées par cycle
+   dans des groupes qu'on ouvre et ferme ; le premier est déplié à
+   l'arrivée pour que la section ne soit jamais vide. */
+.cyc-acc { margin-top: 56px; display: flex; flex-direction: column; gap: 16px; }
+.cyc-item {
+  position: relative;
+  border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);
+  background: var(--card);
+  transition: border-color 150ms var(--ease);
+}
+.cyc-item.is-open { border-color: var(--border-strong); }
+/* Pas d'`overflow: hidden` sur l'item : il rognerait le filet des cartes au
+   survol. Les angles sont portés par le déclencheur lui-même. */
+.cyc-trigger {
+  width: 100%; display: flex; align-items: center; gap: 20px;
+  padding: 22px 26px; background: none; border: 0; cursor: pointer;
+  font-family: inherit; text-align: left; color: var(--ink);
+  border-radius: inherit;
+  transition: background 150ms var(--ease);
+}
+/* Groupe ouvert : l'en-tête passe en aplat chaud. C'est la bande de couleur
+   qui dit l'état, pas une ombre ni un halo. */
+.cyc-item.is-open .cyc-trigger {
+  background: var(--paper-2);
+  border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+}
+.cyc-trigger:hover { background: var(--paper-2); }
+.cyc-trigger:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+.cyc-txt { display: flex; flex-direction: column; gap: 5px; min-width: 0; flex: 1 1 auto; }
+.cyc-name { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+.cyc-sub { font-size: 13.5px; font-weight: 500; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.cyc-aside { display: inline-flex; align-items: center; gap: 16px; flex: none; }
+.cyc-count {
+  min-width: 30px; text-align: center;
+  font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--ink-2); background: var(--paper-2);
+  border: 1px solid var(--border-subtle);
+  padding: 4px 10px; border-radius: var(--radius-pill);
+}
+.cyc-item.is-open .cyc-count { background: var(--card); }
+.cyc-chevron {
+  width: 19px; height: 19px; color: var(--ink-3); flex: none;
+  transition: transform 200ms var(--ease);
+}
+.cyc-item.is-open .cyc-chevron { transform: rotate(180deg); color: var(--ink-2); }
+.cyc-panel { height: 0; overflow: hidden; transition: height 320ms var(--ease); }
+/* Panneau entièrement déplié : on rend la main au débordement, sinon les
+   cartes survolées seraient coupées net par le cadre du panneau. */
+.cyc-panel.is-full { overflow: visible; }
+.cyc-panel-in {
+  padding: 0 22px 22px; background: var(--paper);
+  border-top: 1px solid var(--border-subtle);
+  border-bottom-left-radius: calc(var(--radius-lg) - 1px);
+  border-bottom-right-radius: calc(var(--radius-lg) - 1px);
+}
+.cyc-grid { margin-top: 22px; }
+
+/* ---- « Voir les N autres » (cycles) et « Afficher les restantes » (filières) ---- */
+.cyc-more { margin-top: 24px; display: flex; justify-content: center; }
+.fil-more { max-width: 760px; margin: 22px auto 0; display: flex; justify-content: center; }
+.cyc-more-btn,
+.fil-more-btn {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 11px 20px; border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle); background: var(--card);
+  font-family: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink-2);
+  cursor: pointer;
+  transition: background 220ms var(--ease), border-color 220ms var(--ease), color 220ms var(--ease);
+}
+.cyc-more-btn:hover,
+.fil-more-btn:hover { background: var(--paper-2); border-color: var(--border-strong); color: var(--ink); }
+.cyc-more-btn:focus-visible,
+.fil-more-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.cyc-more-btn svg,
+.fil-more-btn svg { width: 16px; height: 16px; transition: transform 300ms var(--ease); }
+.cyc-more-btn.is-open svg,
+.fil-more-btn.is-open svg { transform: rotate(180deg); }
 
 /* ---- Filières & spécialités (accordéon déroulant) ---- */
 .fil-spec { margin-top: 56px; }
@@ -331,66 +423,216 @@ html, body { overflow-x: hidden; max-width: 100%; }
 }
 .fil-spec-head { text-align: center; margin-bottom: 32px; }
 .fil-spec-head h3 {
-  margin: 0; font-size: 26px; font-weight: 800;
-  letter-spacing: -0.02em; color: var(--ink);
+  margin: 0; font-size: 28px; font-weight: 600;
+  letter-spacing: -0.025em; color: var(--ink);
 }
-.fil-spec-head p { margin: 10px 0 0; font-size: 16px; color: var(--ink-2); font-weight: 400; }
+.fil-spec-head p { margin: 12px 0 0; font-size: 16px; color: var(--ink-2); font-weight: 400; }
 
+/* ---- Barre d'outils : recherche + puces de cycle ----------------------
+   Au-delà de six filières, parcourir ne suffit plus. La barre n'est rendue
+   visible que par le script : sans JavaScript, un champ de recherche mort
+   serait pire que pas de champ du tout. */
+.fil-tools {
+  max-width: 760px; margin: 0 auto 22px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.fil-search { position: relative; display: flex; align-items: center; flex: 1 1 260px; min-width: 0; }
+.fil-search > svg {
+  position: absolute; left: 15px; width: 16px; height: 16px;
+  color: var(--ink-3); pointer-events: none;
+}
+.fil-search-input {
+  width: 100%; padding: 11px 40px; border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle); background: var(--card);
+  font-family: inherit; font-size: 14px; color: var(--ink);
+  transition: border-color 150ms var(--ease), box-shadow 150ms var(--ease);
+}
+.fil-search-input::placeholder { color: var(--ink-3); }
+/* Focus : filet à la couleur de marque + anneau à faible alpha, la seule
+   signature colorée que le système accorde à un champ. */
+.fil-search-input:focus {
+  outline: 0; border-color: var(--brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent);
+}
+/* La croix native de Safari/Chrome doublerait notre propre bouton. */
+.fil-search-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.fil-search-clear {
+  position: absolute; right: 8px; width: 26px; height: 26px;
+  display: grid; place-items: center; border: 0; border-radius: 999px;
+  background: none; color: var(--ink-3); cursor: pointer;
+  transition: background 150ms var(--ease), color 150ms var(--ease);
+}
+.fil-search-clear:hover { background: var(--paper-2); color: var(--ink); }
+.fil-search-clear svg { width: 14px; height: 14px; }
+.fil-chips { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fil-chip {
+  padding: 10px 16px; border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle); background: var(--card);
+  font-family: inherit; font-size: 13px; font-weight: 600; color: var(--ink-2);
+  cursor: pointer; white-space: nowrap;
+  transition: background 150ms var(--ease), border-color 150ms var(--ease), color 150ms var(--ease);
+}
+.fil-chip:hover { background: var(--paper-2); border-color: var(--border-strong); color: var(--ink); }
+.fil-chip.is-on { background: var(--brand); border-color: var(--brand); color: #fff; }
+.fil-chip:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.fil-vide {
+  max-width: 760px; margin: 20px auto 0; text-align: center;
+  font-size: 14.5px; color: var(--ink-3);
+}
+
+/* Une seule surface, des filets à l'intérieur — au lieu de huit boîtes
+   arrondies identiques posées les unes sous les autres. La liste se lit
+   comme un sommaire ; l'état ouvert se dit par un aplat chaud, pas par une
+   bordure qui s'épaissit. */
 .fil-acc {
   max-width: 760px; margin: 0 auto;
-  display: flex; flex-direction: column; gap: 14px;
-}
-.fil-item {
   border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);
-  background: var(--card); box-shadow: var(--shadow-sm); overflow: hidden;
-  transition: border-color 260ms var(--ease), box-shadow 260ms var(--ease);
+  background: var(--card); overflow: hidden;
 }
-.fil-item.is-open {
-  border-color: var(--brand-line);
-  box-shadow: var(--shadow-md);
-}
+.fil-acc[hidden] { display: none; }
+/* Filière écartée par un filtre ou par le plafond d'affichage. */
+.fil-item[hidden] { display: none; }
+.fil-item { border-bottom: 1px solid var(--border-subtle); }
+/* `is-derniere` est posée par le script sur la dernière filière VISIBLE :
+   `:last-child` désignerait une ligne masquée par le filtre et laisserait un
+   double filet au bas du cadre. */
+.fil-item:last-child,
+.fil-item.is-derniere { border-bottom: 0; }
 .fil-trigger {
   width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  padding: 20px 24px; background: none; border: 0; cursor: pointer;
+  padding: 18px 22px; background: none; border: 0; cursor: pointer;
   font-family: inherit; text-align: left; color: var(--ink);
-  transition: background 220ms var(--ease);
+  transition: background 150ms var(--ease);
 }
-.fil-trigger:hover:not([disabled]) { background: var(--brand-tint); }
+.fil-trigger:hover:not([disabled]) { background: var(--paper-2); }
+.fil-item.is-open .fil-trigger { background: var(--paper-2); }
 .fil-trigger[disabled] { cursor: default; }
 .fil-trigger:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
-.fil-name { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+.fil-name { font-size: 17px; font-weight: 600; letter-spacing: -0.015em; }
 .fil-aside { display: inline-flex; align-items: center; gap: 14px; flex: none; }
 .fil-count {
-  font-size: 12px; font-weight: 700; letter-spacing: 0.03em;
-  color: var(--brand); background: var(--brand-tint);
-  border: 1px solid var(--brand-line);
-  padding: 5px 12px; border-radius: var(--radius-pill); white-space: nowrap;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.01em;
+  color: var(--ink-2); background: var(--paper-2);
+  border: 1px solid var(--border-subtle);
+  padding: 4px 11px; border-radius: var(--radius-pill); white-space: nowrap;
 }
-.fil-count-solo { color: var(--ink-3); background: var(--bg-surface); border-color: var(--border-subtle); }
+.fil-item.is-open .fil-count { background: var(--card); }
+.fil-count-solo { color: var(--ink-3); }
 .fil-chevron {
-  width: 20px; height: 20px; color: var(--brand); flex: none;
-  transition: transform 300ms var(--ease);
+  width: 19px; height: 19px; color: var(--ink-3); flex: none;
+  transition: transform 200ms var(--ease);
 }
-.fil-item.is-open .fil-chevron { transform: rotate(180deg); }
+.fil-item.is-open .fil-chevron { transform: rotate(180deg); color: var(--ink-2); }
 .fil-panel {
   height: 0; overflow: hidden;
   transition: height 320ms var(--ease);
 }
+.fil-panel-in { border-top: 1px solid var(--border-subtle); }
 .fil-list {
-  list-style: none; margin: 0; padding: 4px 24px 22px;
-  display: flex; flex-direction: column; gap: 2px;
-  border-top: 1px solid var(--border-subtle);
+  list-style: none; margin: 0; padding: 8px 22px 20px;
+  display: flex; flex-direction: column; gap: 0;
 }
 .fil-list li {
-  display: flex; align-items: center; gap: 12px;
-  padding: 11px 4px; font-size: 15px; color: var(--ink);
+  padding: 11px 2px; font-size: 15px; color: var(--ink-2);
   border-bottom: 1px solid var(--border-subtle);
 }
 .fil-list li:last-child { border-bottom: 0; }
-.fil-list li svg { width: 15px; height: 15px; color: var(--brand); flex: none; }
+
+/* ── Prix d'une formation ────────────────────────────────────────────────
+   La grille tarifaire saisie par l'établissement s'affiche enfin ici : le
+   candidat lit le prix de SON niveau avant de déposer un dossier, au lieu de
+   le découvrir au guichet. Le repère « à partir de » vit sur l'en-tête, le
+   détail par niveau dans le panneau déroulé. */
+.fil-prix {
+  display: inline-flex; flex-direction: column; align-items: flex-end;
+  line-height: 1.15; text-align: right; min-width: 0;
+}
+.fil-prix small {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.fil-prix b {
+  font-size: 16px; font-weight: 600; color: var(--ink);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.fil-prix b span { font-size: 11.5px; font-weight: 600; color: var(--ink-2); }
+
+.fil-tarifs { padding: 4px 24px 22px; }
+.fil-spec .fil-list + .fil-tarifs {
+  border-top: 1px solid var(--border-subtle); padding-top: 18px;
+}
+.fil-tarifs-t {
+  font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-3); margin-bottom: 12px;
+}
+.fil-tarifs-cycle + .fil-tarifs-cycle { margin-top: 16px; }
+.fil-tarifs-cycle-t {
+  font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 6px;
+}
+/* Le tableau défile DANS son cadre : sur un téléphone étroit, il déborderait
+   sinon la carte et pousserait toute la page en scroll horizontal. */
+.fil-tarifs-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+/* Deux colonnes étalées sur 700 px se lisent comme deux listes sans rapport :
+   la grille est bornée pour que le niveau et son montant restent voisins. */
+.fil-tarifs-table {
+  width: 100%; min-width: 260px; max-width: 520px;
+  border-collapse: collapse; font-size: 14px;
+}
+.fil-tarifs-table th,
+.fil-tarifs-table td {
+  text-align: left; padding: 9px 10px 9px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.fil-tarifs-table thead th {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--ink-3);
+  padding-bottom: 6px;
+}
+.fil-tarifs-table tbody th { font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+.fil-tarifs-table tbody td {
+  font-weight: 700; color: var(--ink);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.fil-tarifs-table tbody td span { font-size: 11.5px; font-weight: 600; color: var(--ink-3); }
+.fil-tarifs-table tbody tr:last-child th,
+.fil-tarifs-table tbody tr:last-child td { border-bottom: 0; }
+.fil-tarifs-idem { font-weight: 600; color: var(--ink-3); }
+.fil-tarifs-note {
+  margin: 12px 0 0; font-size: 12px; line-height: 1.5; color: var(--ink-3);
+}
+
+@media (max-width: 560px) {
+  /* Le prix repasse sous le nom : côte à côte, l'un des deux se faisait
+     écraser dès que l'intitulé de formation dépassait deux mots. */
+  .fil-trigger { flex-wrap: wrap; gap: 8px 12px; padding: 18px 18px; }
+  .fil-name { flex: 1 1 100%; font-size: 16px; }
+  .fil-aside { flex: 1 1 100%; justify-content: space-between; gap: 10px; }
+  .fil-prix { align-items: flex-start; text-align: left; }
+  .fil-list, .fil-tarifs { padding-left: 18px; padding-right: 18px; }
+  .cyc-trigger { padding: 18px; gap: 14px; }
+  .cyc-name { font-size: 18px; }
+  .cyc-sub { font-size: 12.5px; }
+  .cyc-aside { gap: 10px; }
+  .cyc-panel-in { padding: 0 18px 22px; }
+  .cyc-grid { margin-top: 20px; }
+  .fil-tools { gap: 10px; }
+  .filiere { padding: 22px 20px 20px; }
+  .filiere h3 { font-size: 19px; }
+  /* Sous 360 px, le prix et le bouton ne tiennent plus côte à côte : le
+     bouton passe dessous au lieu de déborder la carte. */
+  .filiere-foot { flex-wrap: wrap; row-gap: 14px; }
+  .filiere-foot .btn { flex: 1 1 auto; justify-content: center; }
+  .fil-search { flex: 1 1 100%; }
+  .fil-chips { width: 100%; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fil-panel { transition: none; }
   .fil-chevron { transition: none; }
+  .cyc-panel { transition: none; }
+  .cyc-chevron { transition: none; }
+  .cyc-more-btn svg,
+  .fil-more-btn svg { transition: none; }
 }
 
 /* =============================================================
@@ -808,4 +1050,62 @@ html, body { overflow-x: hidden; max-width: 100%; }
 @media (max-width: 760px) {
   .galerie-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .galerie-lightbox .lb-nav { width: 40px; height: 40px; }
+}
+
+/* =============================================================
+   DOSSIER D'INSCRIPTION
+   -------------------------------------------------------------
+   Les pièces à réunir, saisies par l'établissement sur sa fiche
+   (Services\Orientation\CompositionDossier) et rendues en autant de cartes
+   qu'il y a de groupes non vides : commun, licence, master.
+
+   Aplats + filets fins, comme les cartes de cycle des tarifs — aucun dégradé,
+   aucune ombre portée : l'élévation se lit au contraste de surface. La grille
+   est en `auto-fit` parce que le nombre de cartes n'est pas connu à l'avance :
+   un établissement qui ne renseigne que le commun obtient une carte pleine
+   largeur, pas une colonne orpheline suivie de deux trous.
+   ============================================================= */
+.dossier-sec { background: var(--card); }
+.dossier-grid {
+  margin-top: 56px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;
+  align-items: start;
+}
+.dossier-card {
+  background: var(--paper); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg); padding: 28px 30px;
+}
+.dossier-card-head { display: flex; align-items: center; gap: 11px; }
+.dossier-card-head h3 {
+  margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -0.01em;
+  color: var(--ink); line-height: 1.3;
+}
+.dossier-dot { width: 8px; height: 8px; border-radius: 999px; flex: none; background: var(--brand); }
+/* Les cartes de cycle reprennent la nuance des puces de tarifs : le lecteur
+   qui a parcouru les frais retrouve le même code sans qu'on le lui explique. */
+.dossier-card--licence .dossier-dot { opacity: 0.66; }
+.dossier-card--master  .dossier-dot { opacity: 0.42; }
+.dossier-count {
+  margin-left: auto; flex: none;
+  font-size: 12px; font-weight: 700; color: var(--brand);
+  background: var(--brand-tint); border: 1px solid var(--brand-line);
+  border-radius: 999px; padding: 3px 10px; line-height: 1.5;
+}
+.dossier-list { list-style: none; margin: 22px 0 0; padding: 0; display: flex; flex-direction: column; gap: 13px; }
+.dossier-list li {
+  display: flex; align-items: flex-start; gap: 12px;
+  font-size: 15px; line-height: 1.5; font-weight: 500; color: var(--ink);
+}
+.dossier-ck {
+  width: 21px; height: 21px; margin-top: 1px; border-radius: 999px; flex: none;
+  background: var(--brand-tint); color: var(--brand);
+  display: grid; place-items: center;
+}
+.dossier-ck svg { width: 11px; height: 11px; }
+.dossier-note {
+  margin: 28px auto 0; max-width: 760px; text-align: center;
+  font-size: 14px; line-height: 1.6; color: var(--ink-3);
+}
+@media (max-width: 640px) {
+  .dossier-card { padding: 24px 22px; }
 }

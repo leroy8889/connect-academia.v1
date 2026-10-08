@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace Controllers\Admin;
 
 use Core\{Queue, Redis, Response, Session};
-use Models\Orientation\{Avis, ChampFormulaire, Dossier, Etablissement, Reversement};
-use Services\Orientation\{AuditService, DocumentStorage, SlugService};
+use Models\Orientation\{Avis, ChampFormulaire, Dossier, Etablissement, Filiere, Reversement, TarifFormation};
+use Services\Orientation\{AuditService, DocumentStorage, SlugService, TarifCycle};
 
 class OrientationController
 {
@@ -238,11 +238,9 @@ class OrientationController
         $type  = $_POST['type'] ?? '';
         $ville = trim($_POST['ville'] ?? '');
         $email = trim($_POST['email_contact'] ?? '');
-        $gNom    = trim($_POST['gestionnaire_nom'] ?? '');
-        $gPrenom = trim($_POST['gestionnaire_prenom'] ?? '');
-        $gEmail  = trim($_POST['gestionnaire_email'] ?? '');
-        $gPassword        = $_POST['gestionnaire_password'] ?? '';
-        $gPasswordConfirm = $_POST['gestionnaire_password_confirm'] ?? '';
+        // Comptes gestionnaires : un établissement en reçoit AUTANT QU'IL EN
+        // FAUT dès sa création (direction des études, scolarité, comptabilité…).
+        $gestionnaires = self::gestionnairesSoumis($_POST);
 
         if ($nom   === '') $errors['nom']   = 'Nom obligatoire.';
         if (!in_array($type, ['universite', 'grande_ecole', 'institut'], true))
@@ -254,19 +252,10 @@ class OrientationController
         $logoKeyPre = trim($_POST['logo_key'] ?? '');
         if ($logoKeyPre === '' && empty($_FILES['logo']['tmp_name']))
             $errors['logo'] = 'Logo obligatoire.';
-        if ($gNom    === '') $errors['gestionnaire_nom']    = 'Nom du gestionnaire obligatoire.';
-        if ($gPrenom === '') $errors['gestionnaire_prenom'] = 'Prénom du gestionnaire obligatoire.';
-        if (!filter_var($gEmail, FILTER_VALIDATE_EMAIL))
-            $errors['gestionnaire_email'] = 'Email du gestionnaire invalide.';
-
-        // Mot de passe gestionnaire : optionnel — vide = généré automatiquement
-        if ($gPassword !== '') {
-            if (strlen($gPassword) < 8) {
-                $errors['gestionnaire_password'] = 'Mot de passe : 8 caractères minimum.';
-            } elseif ($gPassword !== $gPasswordConfirm) {
-                $errors['gestionnaire_password_confirm'] = 'La confirmation ne correspond pas au mot de passe.';
-            }
-        }
+        // Chaque compte gestionnaire est validé séparément : une erreur sur le
+        // troisième bloc ne doit pas renvoyer un message qui semble parler du
+        // premier.
+        self::validerGestionnaires($gestionnaires, $errors);
 
         $formations = $_POST['formations'] ?? [];
         if (empty($formations) || !isset($formations[0]['intitule']) || trim($formations[0]['intitule'] ?? '') === '') {
@@ -287,6 +276,15 @@ class OrientationController
         // commission créée sur un dossier « inscrit » de cet établissement
         $tauxCommission = self::parseTauxCommission($_POST['taux_commission'] ?? '', $errors);
 
+        // Assiette de la commission d'un BOURSIER confirmé — négociée accord
+        // par accord. Normalisée plutôt que validée : un `select` renvoie
+        // toujours l'une des deux valeurs, et une valeur forgée ne doit pas
+        // bloquer l'enregistrement d'une fiche, seulement retomber sur le
+        // défaut. Les autres situations de bourse ne sont pas concernées.
+        $baseBoursier = TarifCycle::normaliserBaseBoursier(
+            isset($_POST['base_commission_boursier']) ? (string)$_POST['base_commission_boursier'] : null
+        );
+
         // Localisation : code d'intégration Google Maps (iframe ou URL src directe)
         $mapEmbedUrl = self::parseMapEmbed($_POST['map_embed'] ?? '', $errors);
 
@@ -301,25 +299,15 @@ class OrientationController
             return;
         }
 
-        // Email gestionnaire : réutiliser un compte gestionnaire orphelin d'une
+        // Emails gestionnaires : réutiliser un compte gestionnaire orphelin d'une
         // tentative précédente, mais ne JAMAIS toucher un compte élève/admin existant.
-        $gestionnaireExistant = null;
-        $existingUser = $model->findUserByEmail($gEmail);
-        if ($existingUser) {
-            if ($model->emailExistsAndLinked($gEmail)) {
-                Session::flash('form_errors', ['gestionnaire_email' => 'Cet email est déjà utilisé par un gestionnaire d\'un autre établissement.']);
-                Session::flash('form_old', self::oldSansMotDePasse($_POST));
-                Response::redirect('/admin/orientation/creer');
-                return;
-            }
-            if ($existingUser['role'] !== 'gestionnaire') {
-                Session::flash('form_errors', ['gestionnaire_email' => 'Cet email appartient déjà à un compte utilisateur de la plateforme. Utilisez une autre adresse pour le gestionnaire.']);
-                Session::flash('form_old', self::oldSansMotDePasse($_POST));
-                Response::redirect('/admin/orientation/creer');
-                return;
-            }
-            // Compte gestionnaire orphelin (créé lors d'une tentative avortée) → réutilisé
-            $gestionnaireExistant = $existingUser;
+        [$gestionnaires, $erreursComptes] = self::resoudreComptesGestionnaires($gestionnaires, $model);
+
+        if ($erreursComptes !== []) {
+            Session::flash('form_errors', $erreursComptes);
+            Session::flash('form_old', self::oldSansMotDePasse($_POST));
+            Response::redirect('/admin/orientation/creer');
+            return;
         }
 
         // ── [2] Slug ──────────────────────────────────────────────────────
@@ -334,7 +322,11 @@ class OrientationController
         // classique, couvert par set_time_limit.
         set_time_limit(600);
 
-        $storage   = new DocumentStorage();
+        // Borne de durée B2 levée SUR CE CHEMIN seulement : le repli sans
+        // JavaScript pousse une vidéo de présentation depuis le serveur, et
+        // c'est le seul upload de la plateforme qui peut légitimement durer
+        // plus longtemps que la borne par défaut de DocumentStorage.
+        $storage   = new DocumentStorage(0);
         $logoKey   = '';
         $cachetKey = null;
         $imgKeys   = [];
@@ -387,6 +379,10 @@ class OrientationController
         // ── [4] Préparation JSON ──────────────────────────────────────────
         $badges   = array_values(array_filter(array_map('trim', (array)($_POST['badges'] ?? []))));
         $atouts   = array_values(array_filter(array_map('trim', (array)($_POST['atouts'] ?? []))));
+        // Composition du dossier d'inscription : le service nettoie, dédoublonne
+        // et borne la saisie (cf. CompositionDossier), et rend null quand les
+        // trois groupes sont vides — « non renseigné » s'écrit NULL en base.
+        $compositionDossier = \Services\Orientation\CompositionDossier::encoder($_POST);
         $stats    = [];
         foreach ((array)($_POST['stat_label'] ?? []) as $i => $label) {
             $label = trim($label);
@@ -402,11 +398,10 @@ class OrientationController
         }
 
         // ── [5-8] Toutes les écritures DB dans une transaction atomique ───
-        $pdo         = \Core\Database::getInstance()->getConnection();
-        $mdpPersonnalise = ($gPassword !== '');
-        $mdpTemp     = $mdpPersonnalise ? $gPassword : bin2hex(random_bytes(6));
-        $etabId      = 0;
-        $userId      = 0;
+        $pdo    = \Core\Database::getInstance()->getConnection();
+        $etabId = 0;
+
+        $gestionnaires = self::preparerMotsDePasse($gestionnaires);
 
         $pdo->beginTransaction();
         try {
@@ -439,19 +434,38 @@ class OrientationController
                 'prix_preinscription'  => self::toInt($_POST['prix_preinscription'] ?? 0),
                 'prix_inscription'     => self::toInt($_POST['prix_inscription'] ?? 0),
                 'frais_dossier'        => self::toInt($_POST['frais_dossier'] ?? 0),
+                // Frais d'inscription par cycle et situation de bourse. 0 =
+                // non renseigné : la résolution retombe alors sur
+                // prix_inscription + frais_dossier (cf. TarifCycle).
+                'frais_inscription_licence'          => self::toInt($_POST['frais_inscription_licence'] ?? 0),
+                'frais_inscription_licence_boursier' => self::toInt($_POST['frais_inscription_licence_boursier'] ?? 0),
+                'frais_inscription_master'           => self::toInt($_POST['frais_inscription_master'] ?? 0),
+                'frais_inscription_master_boursier'  => self::toInt($_POST['frais_inscription_master_boursier'] ?? 0),
                 'frais_scolarite'      => self::toInt($_POST['frais_scolarite'] ?? 0),
                 'frais_scolarite_boursier' => self::toInt($_POST['frais_scolarite_boursier'] ?? 0),
                 'frais_scolarite_master' => self::toInt($_POST['frais_scolarite_master'] ?? 0),
                 'frais_scolarite_master_boursier' => self::toInt($_POST['frais_scolarite_master_boursier'] ?? 0),
                 'frais_uniforme'       => self::toInt($_POST['frais_uniforme'] ?? 0),
                 'taux_commission_scolarite' => $tauxCommission,
+                'base_commission_boursier'  => $baseBoursier,
                 'infos_paiement'       => !empty($infosPaiement) ? json_encode($infosPaiement) : null,
                 'preinscription_active'=> isset($_POST['preinscription_active']) ? 1 : 0,
+                // Ouverture des INSCRIPTIONS en ligne. Elle n'existait que dans
+                // les paramètres du gestionnaire et derrière une route de
+                // bascule sans interface : le super administrateur ne pouvait
+                // ouvrir les inscriptions d'aucun établissement.
+                'inscription_active'   => isset($_POST['inscription_active']) ? 1 : 0,
                 'genere_recepisse'     => isset($_POST['genere_recepisse']) ? 1 : 0,
                 'genere_attestation'   => isset($_POST['genere_attestation']) ? 1 : 0,
+                // Ouverture aux boursiers : case cochée = l'établissement les
+                // accepte. Certains partenaires les refusent (conventions ANBG
+                // absentes, quotas pourvus) ; le front-office masque alors tout
+                // ce qui concerne la bourse (PolitiqueBoursiers).
+                'accepte_boursiers'    => isset($_POST['accepte_boursiers']) ? 1 : 0,
                 'badges_confiance'     => !empty($badges) ? json_encode($badges) : null,
                 'atouts'               => !empty($atouts) ? json_encode($atouts) : null,
                 'statistiques'         => !empty($stats) ? json_encode($stats) : null,
+                'composition_dossier'  => $compositionDossier,
                 'images_cles'          => !empty($imgKeys) ? json_encode($imgKeys) : null,
             ]);
 
@@ -484,19 +498,7 @@ class OrientationController
 
             (new ChampFormulaire())->insertDefaultSet($etabId);
 
-            if ($gestionnaireExistant !== null) {
-                // Réutiliser le compte orphelin : nouveau mot de passe + identité à jour
-                $userId = (int)$gestionnaireExistant['id'];
-                $model->resetGestionnaire($userId, $gNom, $gPrenom, $mdpTemp);
-            } else {
-                $userId = $model->createGestionnaire([
-                    'nom'      => $gNom,
-                    'prenom'   => $gPrenom,
-                    'email'    => $gEmail,
-                    'password' => $mdpTemp,
-                ]);
-            }
-            $model->linkGestionnaire($etabId, $userId);
+            self::creerEtLierGestionnaires($model, $etabId, $gestionnaires);
 
             $pdo->commit();
 
@@ -509,8 +511,11 @@ class OrientationController
             return;
         }
 
-        // ── [9] Email identifiants (hors transaction — timeout SMTP ne rompt pas la DB)
-        $emailSent = $this->sendCredentials($gPrenom, $gNom, $gEmail, $mdpTemp, $nom, $mdpPersonnalise);
+        // ── [9] Emails d'identifiants (hors transaction — un timeout SMTP ne
+        //        doit pas faire tomber un établissement déjà enregistré).
+        //        Un envoi raté est signalé nommément : sans cela le super
+        //        administrateur ne saurait pas QUEL gestionnaire relancer.
+        $envoisRates = $this->envoyerIdentifiants($gestionnaires, $nom);
 
         // ── [10] Audit + invalidation cache + Succès ─────────────────────
         AuditService::log(
@@ -529,17 +534,11 @@ class OrientationController
             "orientation:stats:global"
         );
 
-        $msg = "Établissement « {$nom} » créé (slug : {$slug}).";
-        if (!$emailSent) {
-            $msg .= ' ⚠ Email gestionnaire non envoyé — vérifier config SMTP.';
-            if ($mdpPersonnalise) {
-                $msg .= ' Le mot de passe défini est bien enregistré — communique-le au gestionnaire.';
-            } else {
-                $msg .= self::isLocal()
-                    ? " [DEV] Mot de passe temporaire du gestionnaire : {$mdpTemp}"
-                    : ' Mot de passe temporaire à communiquer manuellement.';
-            }
-        }
+        $nbG = count($gestionnaires);
+        $msg = "Établissement « {$nom} » créé (slug : {$slug}) avec {$nbG} compte"
+             . ($nbG > 1 ? 's' : '') . ' gestionnaire' . ($nbG > 1 ? 's' : '') . '.';
+
+        $msg .= self::messageEnvoisRates($envoisRates);
         // Sitemap : un nouvel établissement actif doit être référencé.
         (new \Services\SitemapGenerator())->writeToDisk();
 
@@ -680,8 +679,301 @@ class OrientationController
     /** Ne jamais re-remplir les champs mot de passe dans le formulaire après erreur. */
     private static function oldSansMotDePasse(array $post): array
     {
+        // Champs historiques (formulaire mono-gestionnaire)
         unset($post['gestionnaire_password'], $post['gestionnaire_password_confirm']);
+
+        // Blocs répétables : le mot de passe de CHAQUE gestionnaire est retiré.
+        if (isset($post['gestionnaires']) && is_array($post['gestionnaires'])) {
+            foreach ($post['gestionnaires'] as $i => $g) {
+                if (is_array($g)) {
+                    unset($post['gestionnaires'][$i]['password'], $post['gestionnaires'][$i]['password_confirm']);
+                }
+            }
+        }
+
         return $post;
+    }
+
+    // ── Comptes gestionnaires du formulaire de création ───────────────────
+
+    /**
+     * Comptes gestionnaires soumis, normalisés.
+     *
+     * Un établissement peut en recevoir plusieurs dès sa création : la
+     * scolarité, la comptabilité et la direction des études ne partagent pas
+     * un compte, sinon aucune trace du guichet n'est imputable à quelqu'un.
+     *
+     * · L'index d'origine du bloc est conservé (`index`) : c'est lui qui
+     *   rattache un message d'erreur au bon bloc de l'écran.
+     * · Un bloc entièrement vide est IGNORÉ, pas refusé — c'est un bloc ajouté
+     *   par erreur puis laissé de côté.
+     * · Les noms de champs historiques (`gestionnaire_nom`…) restent acceptés :
+     *   une page ouverte avant le déploiement, ou mise en cache par le
+     *   navigateur, continue de fonctionner.
+     *
+     * @param array<string,mixed> $post
+     * @return list<array{index:int,prenom:string,nom:string,email:string,password:string,confirm:string}>
+     */
+    private static function gestionnairesSoumis(array $post): array
+    {
+        $sortie = [];
+
+        foreach ((array)($post['gestionnaires'] ?? []) as $i => $g) {
+            if (!is_array($g)) {
+                continue;
+            }
+
+            $ligne = [
+                'index'    => (int)$i,
+                'prenom'   => trim((string)($g['prenom'] ?? '')),
+                'nom'      => trim((string)($g['nom'] ?? '')),
+                'email'    => trim((string)($g['email'] ?? '')),
+                'password' => (string)($g['password'] ?? ''),
+                'confirm'  => (string)($g['password_confirm'] ?? ''),
+            ];
+
+            if ($ligne['prenom'] === '' && $ligne['nom'] === ''
+                && $ligne['email'] === '' && $ligne['password'] === '') {
+                continue;
+            }
+
+            $sortie[] = $ligne;
+        }
+
+        // Repli sur les champs de l'ancien formulaire mono-gestionnaire.
+        if ($sortie === [] && trim((string)($post['gestionnaire_email'] ?? '')) !== '') {
+            $sortie[] = [
+                'index'    => 0,
+                'prenom'   => trim((string)($post['gestionnaire_prenom'] ?? '')),
+                'nom'      => trim((string)($post['gestionnaire_nom'] ?? '')),
+                'email'    => trim((string)($post['gestionnaire_email'] ?? '')),
+                'password' => (string)($post['gestionnaire_password'] ?? ''),
+                'confirm'  => (string)($post['gestionnaire_password_confirm'] ?? ''),
+            ];
+        }
+
+        return $sortie;
+    }
+
+    /**
+     * Valide les comptes gestionnaires soumis.
+     *
+     * Les clés d'erreur sont suffixées par l'index du bloc
+     * (`gestionnaire_email_2`) : l'écran replace ainsi chaque message sous le
+     * champ qui l'a provoqué, et la navigation latérale continue de repérer la
+     * section fautive (elle teste le préfixe `gestionnaire`).
+     *
+     * `$auMoinsUn` distingue les deux écrans : à la CRÉATION un établissement
+     * sans gestionnaire n'a personne pour ouvrir son guichet, donc le vide est
+     * une erreur ; à la MODIFICATION le cas normal est de n'en ajouter aucun,
+     * donc le vide n'est rien du tout.
+     *
+     * @param list<array<string,mixed>> $gestionnaires
+     * @param array<string,string>      $errors
+     */
+    private static function validerGestionnaires(array $gestionnaires, array &$errors, bool $auMoinsUn = true): void
+    {
+        if ($gestionnaires === []) {
+            if ($auMoinsUn) {
+                $errors['gestionnaire_email_0'] = 'Au moins un compte gestionnaire est obligatoire.';
+            }
+            return;
+        }
+
+        $emailsVus = [];
+
+        foreach ($gestionnaires as $g) {
+            $i = (int)$g['index'];
+
+            if ($g['prenom'] === '') $errors["gestionnaire_prenom_{$i}"] = 'Prénom du gestionnaire obligatoire.';
+            if ($g['nom']    === '') $errors["gestionnaire_nom_{$i}"]    = 'Nom du gestionnaire obligatoire.';
+
+            if (!filter_var($g['email'], FILTER_VALIDATE_EMAIL)) {
+                $errors["gestionnaire_email_{$i}"] = 'Email du gestionnaire invalide.';
+            } else {
+                // Doublon DANS le formulaire : deux blocs sur la même adresse
+                // créeraient un seul compte, dont le second écraserait le mot
+                // de passe du premier sans que personne ne le voie.
+                $cle = mb_strtolower($g['email']);
+                if (isset($emailsVus[$cle])) {
+                    $errors["gestionnaire_email_{$i}"] = 'Cet email est déjà saisi pour un autre gestionnaire de cette fiche.';
+                } else {
+                    $emailsVus[$cle] = true;
+                }
+            }
+
+            // Mot de passe : optionnel — vide = généré automatiquement
+            if ($g['password'] !== '') {
+                if (strlen($g['password']) < 8) {
+                    $errors["gestionnaire_password_{$i}"] = 'Mot de passe : 8 caractères minimum.';
+                } elseif ($g['password'] !== $g['confirm']) {
+                    $errors["gestionnaire_password_confirm_{$i}"] = 'La confirmation ne correspond pas au mot de passe.';
+                }
+            }
+        }
+    }
+
+    /**
+     * Confronte chaque email soumis aux comptes DÉJÀ en base.
+     *
+     * Trois issues par compte :
+     *   · aucun compte → création (`existant` reste null) ;
+     *   · compte gestionnaire ORPHELIN (aucun établissement lié) → réutilisé,
+     *     identité et mot de passe réécrits ;
+     *   · compte déjà lié, ou compte élève/administrateur → REFUS. On ne
+     *     détourne jamais un compte existant : ce serait donner l'accès au
+     *     guichet d'un établissement à quelqu'un qui ne l'a pas demandé.
+     *
+     * Le contrôle porte sur TOUS les comptes soumis avant d'en écrire un seul :
+     * mieux vaut renvoyer le formulaire intact qu'un établissement à moitié
+     * doté de ses gestionnaires.
+     *
+     * `$etablissementId` n'est renseigné qu'en modification : il sert
+     * uniquement à dire « déjà gestionnaire de CET établissement » plutôt que
+     * « d'un autre », un message qui laisserait l'administrateur chercher
+     * lequel.
+     *
+     * @param list<array<string,mixed>> $gestionnaires
+     * @return array{0: list<array<string,mixed>>, 1: array<string,string>}
+     */
+    private static function resoudreComptesGestionnaires(
+        array $gestionnaires,
+        Etablissement $model,
+        ?int $etablissementId = null
+    ): array {
+        $errors = [];
+
+        foreach ($gestionnaires as $i => $g) {
+            $gestionnaires[$i]['existant'] = null;
+
+            $existingUser = $model->findUserByEmail($g['email']);
+            if (!$existingUser) {
+                continue;
+            }
+
+            $cle = 'gestionnaire_email_' . $g['index'];
+
+            if ($model->emailExistsAndLinked($g['email'])) {
+                $errors[$cle] = ($etablissementId !== null
+                    && $model->estLieAEtablissement((int)$existingUser['id'], $etablissementId))
+                        ? 'Ce compte est déjà gestionnaire de cet établissement.'
+                        : 'Cet email est déjà utilisé par un gestionnaire d\'un autre établissement.';
+                continue;
+            }
+            if ($existingUser['role'] !== 'gestionnaire') {
+                $errors[$cle] = 'Cet email appartient déjà à un compte utilisateur de la plateforme. Utilisez une autre adresse pour le gestionnaire.';
+                continue;
+            }
+            // Compte gestionnaire orphelin (créé lors d'une tentative avortée) → réutilisé
+            $gestionnaires[$i]['existant'] = $existingUser;
+        }
+
+        return [$gestionnaires, $errors];
+    }
+
+    /**
+     * Mot de passe de chaque compte : celui saisi, ou un temporaire.
+     *
+     * Calculé AVANT la transaction pour que l'email d'identifiants envoyé après
+     * le commit porte exactement ce qui a été enregistré.
+     *
+     * @param list<array<string,mixed>> $gestionnaires
+     * @return list<array<string,mixed>>
+     */
+    private static function preparerMotsDePasse(array $gestionnaires): array
+    {
+        foreach ($gestionnaires as $i => $g) {
+            $gestionnaires[$i]['mdp_personnalise'] = ($g['password'] !== '');
+            $gestionnaires[$i]['mdp']              = $g['password'] !== ''
+                ? $g['password']
+                : bin2hex(random_bytes(6));
+        }
+
+        return $gestionnaires;
+    }
+
+    /**
+     * Crée (ou réutilise) puis rattache les comptes gestionnaires à un
+     * établissement. Appelée DANS la transaction de l'appelant : elle n'ouvre
+     * ni ne valide aucune transaction elle-même.
+     *
+     * @param list<array<string,mixed>> $gestionnaires
+     */
+    private static function creerEtLierGestionnaires(
+        Etablissement $model,
+        int $etablissementId,
+        array $gestionnaires
+    ): void {
+        foreach ($gestionnaires as $g) {
+            if ($g['existant'] !== null) {
+                // Réutiliser le compte orphelin : nouveau mot de passe + identité à jour
+                $userId = (int)$g['existant']['id'];
+                $model->resetGestionnaire($userId, $g['nom'], $g['prenom'], $g['mdp']);
+            } else {
+                $userId = $model->createGestionnaire([
+                    'nom'      => $g['nom'],
+                    'prenom'   => $g['prenom'],
+                    'email'    => $g['email'],
+                    'password' => $g['mdp'],
+                ]);
+            }
+            $model->linkGestionnaire($etablissementId, $userId);
+        }
+    }
+
+    /**
+     * Envoie ses identifiants à chaque gestionnaire et retourne ceux dont
+     * l'email n'est pas parti — sans cela le super administrateur ne saurait
+     * pas QUI relancer.
+     *
+     * Appelée HORS transaction : un timeout SMTP ne doit pas faire tomber des
+     * écritures déjà validées.
+     *
+     * @param list<array<string,mixed>> $gestionnaires
+     * @return list<array<string,mixed>>
+     */
+    private function envoyerIdentifiants(array $gestionnaires, string $etabNom): array
+    {
+        $rates = [];
+
+        foreach ($gestionnaires as $g) {
+            $envoye = $this->sendCredentials(
+                $g['prenom'],
+                $g['nom'],
+                $g['email'],
+                $g['mdp'],
+                $etabNom,
+                $g['mdp_personnalise']
+            );
+            if (!$envoye) {
+                $rates[] = $g;
+            }
+        }
+
+        return $rates;
+    }
+
+    /**
+     * Complément de message signalant les identifiants non délivrés.
+     *
+     * @param list<array<string,mixed>> $envoisRates
+     */
+    private static function messageEnvoisRates(array $envoisRates): string
+    {
+        $msg = '';
+
+        foreach ($envoisRates as $g) {
+            $msg .= " ⚠ Email non envoyé à {$g['email']} — vérifier config SMTP.";
+            if ($g['mdp_personnalise']) {
+                $msg .= ' Le mot de passe défini est bien enregistré — communique-le au gestionnaire.';
+            } else {
+                $msg .= self::isLocal()
+                    ? " [DEV] Mot de passe temporaire : {$g['mdp']}"
+                    : ' Mot de passe temporaire à communiquer manuellement.';
+            }
+        }
+
+        return $msg;
     }
 
     private static function isLocal(): bool
@@ -751,10 +1043,23 @@ class OrientationController
             return;
         }
 
+        // Formations de l'établissement et leurs grilles tarifaires. Elles
+        // n'existent qu'après création de l'établissement : le formulaire de
+        // création ne peut donc pas les proposer, et l'écran de modification
+        // est le seul endroit où la grille est saisissable.
+        $filieres = (new Filiere())->findByEtab($id);
+
         Response::view('admin/orientation/edit', [
             'pageTitle'  => 'Modifier — ' . $etab['nom'],
             'etab'       => $etab,
             'formations' => $model->getFormations($id),
+            // Comptes déjà rattachés : l'écran de modification les montre pour
+            // qu'on sache à qui on ajoute quelqu'un. Ils ne sont pas
+            // modifiables ici — suspendre un accès reste une action à part,
+            // sur la vue d'ensemble.
+            'gestionnaires' => $model->findGestionnairesByEtab($id),
+            'filieres'   => $filieres,
+            'grilles'    => (new TarifFormation())->grillesPour(array_column($filieres, 'id')),
             'old'        => Session::getFlash('form_old') ?? [],
             'errors'     => Session::getFlash('form_errors') ?? [],
         ], 'admin');
@@ -804,6 +1109,14 @@ class OrientationController
             $errors['formations'] = 'Au moins une formation obligatoire.';
         }
 
+        // Comptes gestionnaires AJOUTÉS depuis cet écran. Le cas normal est de
+        // n'en ajouter aucun : la liste vide n'est donc pas une erreur, à la
+        // différence de la création (`$auMoinsUn = false`). Les comptes déjà
+        // rattachés ne passent pas par ici — ils ne sont ni renommés ni
+        // supprimés par un enregistrement de fiche.
+        $nouveauxGestionnaires = self::gestionnairesSoumis($_POST);
+        self::validerGestionnaires($nouveauxGestionnaires, $errors, false);
+
         $couleur = trim($_POST['couleur_principale'] ?? '#1F4E79');
         if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $couleur)) {
             $couleur = '#1F4E79';
@@ -818,6 +1131,15 @@ class OrientationController
         // commission créée sur un dossier « inscrit » de cet établissement
         $tauxCommission = self::parseTauxCommission($_POST['taux_commission'] ?? '', $errors);
 
+        // Assiette de la commission d'un BOURSIER confirmé — négociée accord
+        // par accord. Normalisée plutôt que validée : un `select` renvoie
+        // toujours l'une des deux valeurs, et une valeur forgée ne doit pas
+        // bloquer l'enregistrement d'une fiche, seulement retomber sur le
+        // défaut. Les autres situations de bourse ne sont pas concernées.
+        $baseBoursier = TarifCycle::normaliserBaseBoursier(
+            isset($_POST['base_commission_boursier']) ? (string)$_POST['base_commission_boursier'] : null
+        );
+
         // Localisation : code d'intégration Google Maps (iframe ou URL src directe)
         $mapEmbedUrl = self::parseMapEmbed($_POST['map_embed'] ?? '', $errors);
 
@@ -827,10 +1149,27 @@ class OrientationController
 
         if (!empty($errors)) {
             Session::flash('form_errors', $errors);
-            Session::flash('form_old', $_POST);
+            Session::flash('form_old', self::oldSansMotDePasse($_POST));
             Response::redirect('/admin/orientation/' . $id . '/modifier');
             return;
         }
+
+        // Comptes existants confrontés aux emails saisis, AVANT toute écriture :
+        // un email déjà pris ne doit pas faire échouer la fiche à mi-chemin.
+        [$nouveauxGestionnaires, $erreursComptes] = self::resoudreComptesGestionnaires(
+            $nouveauxGestionnaires,
+            $model,
+            $id
+        );
+
+        if ($erreursComptes !== []) {
+            Session::flash('form_errors', $erreursComptes);
+            Session::flash('form_old', self::oldSansMotDePasse($_POST));
+            Response::redirect('/admin/orientation/' . $id . '/modifier');
+            return;
+        }
+
+        $nouveauxGestionnaires = self::preparerMotsDePasse($nouveauxGestionnaires);
 
         // ── [2] Slug conservé — les liens publics ne cassent jamais ──────
         $slug = $etab['slug'];
@@ -855,7 +1194,8 @@ class OrientationController
         $videoKeyPre = trim($_POST['video_key'] ?? '');
 
         try {
-            $storage = new DocumentStorage();
+            // Même raison qu'à la création : repli vidéo sans JavaScript.
+            $storage = new DocumentStorage(0);
 
             // Logo
             if ($logoKeyPre !== '' || !empty($_FILES['logo']['tmp_name'])) {
@@ -907,7 +1247,7 @@ class OrientationController
         } catch (\Throwable $e) {
             error_log('[Orientation] Média B2 échoué (édition) : ' . $e->getMessage());
             Session::flash('form_errors', ['logo' => 'Échec média : ' . $e->getMessage()]);
-            Session::flash('form_old', $_POST);
+            Session::flash('form_old', self::oldSansMotDePasse($_POST));
             Response::redirect('/admin/orientation/' . $id . '/modifier');
             return;
         }
@@ -915,6 +1255,8 @@ class OrientationController
         // ── [4] Préparation JSON ──────────────────────────────────────────
         $badges = array_values(array_filter(array_map('trim', (array)($_POST['badges'] ?? []))));
         $atouts = array_values(array_filter(array_map('trim', (array)($_POST['atouts'] ?? []))));
+        // Cf. store() : même normalisation, même convention NULL.
+        $compositionDossier = \Services\Orientation\CompositionDossier::encoder($_POST);
         $stats  = [];
         foreach ((array)($_POST['stat_label'] ?? []) as $i => $label) {
             $label = trim($label);
@@ -961,19 +1303,38 @@ class OrientationController
                 'prix_preinscription'  => self::toInt($_POST['prix_preinscription'] ?? 0),
                 'prix_inscription'     => self::toInt($_POST['prix_inscription'] ?? 0),
                 'frais_dossier'        => self::toInt($_POST['frais_dossier'] ?? 0),
+                // Frais d'inscription par cycle et situation de bourse. 0 =
+                // non renseigné : la résolution retombe alors sur
+                // prix_inscription + frais_dossier (cf. TarifCycle).
+                'frais_inscription_licence'          => self::toInt($_POST['frais_inscription_licence'] ?? 0),
+                'frais_inscription_licence_boursier' => self::toInt($_POST['frais_inscription_licence_boursier'] ?? 0),
+                'frais_inscription_master'           => self::toInt($_POST['frais_inscription_master'] ?? 0),
+                'frais_inscription_master_boursier'  => self::toInt($_POST['frais_inscription_master_boursier'] ?? 0),
                 'frais_scolarite'      => self::toInt($_POST['frais_scolarite'] ?? 0),
                 'frais_scolarite_boursier' => self::toInt($_POST['frais_scolarite_boursier'] ?? 0),
                 'frais_scolarite_master' => self::toInt($_POST['frais_scolarite_master'] ?? 0),
                 'frais_scolarite_master_boursier' => self::toInt($_POST['frais_scolarite_master_boursier'] ?? 0),
                 'frais_uniforme'       => self::toInt($_POST['frais_uniforme'] ?? 0),
                 'taux_commission_scolarite' => $tauxCommission,
+                'base_commission_boursier'  => $baseBoursier,
                 'infos_paiement'       => !empty($infosPaiement) ? json_encode($infosPaiement) : null,
                 'preinscription_active'=> isset($_POST['preinscription_active']) ? 1 : 0,
+                // Ouverture des INSCRIPTIONS en ligne. Elle n'existait que dans
+                // les paramètres du gestionnaire et derrière une route de
+                // bascule sans interface : le super administrateur ne pouvait
+                // ouvrir les inscriptions d'aucun établissement.
+                'inscription_active'   => isset($_POST['inscription_active']) ? 1 : 0,
                 'genere_recepisse'     => isset($_POST['genere_recepisse']) ? 1 : 0,
                 'genere_attestation'   => isset($_POST['genere_attestation']) ? 1 : 0,
+                // Ouverture aux boursiers : case cochée = l'établissement les
+                // accepte. Certains partenaires les refusent (conventions ANBG
+                // absentes, quotas pourvus) ; le front-office masque alors tout
+                // ce qui concerne la bourse (PolitiqueBoursiers).
+                'accepte_boursiers'    => isset($_POST['accepte_boursiers']) ? 1 : 0,
                 'badges_confiance'     => !empty($badges) ? json_encode($badges) : null,
                 'atouts'               => !empty($atouts) ? json_encode($atouts) : null,
                 'statistiques'         => !empty($stats) ? json_encode($stats) : null,
+                'composition_dossier'  => $compositionDossier,
                 'images_cles'          => !empty($imgKeys) ? json_encode($imgKeys) : null,
             ]);
 
@@ -1007,13 +1368,19 @@ class OrientationController
             }
             $model->deleteFormationsExcept($id, $keepIds);
 
+            // Comptes ajoutés depuis cet écran : même chemin qu'à la création
+            // (création, ou réutilisation d'un compte gestionnaire orphelin),
+            // dans la MÊME transaction que la fiche — une fiche enregistrée
+            // sans ses nouveaux gestionnaires serait un demi-succès invisible.
+            self::creerEtLierGestionnaires($model, $id, $nouveauxGestionnaires);
+
             $pdo->commit();
 
         } catch (\Throwable $e) {
             $pdo->rollBack();
             error_log('[Orientation] Échec modification établissement : ' . $e->getMessage());
             Session::flash('form_errors', ['nom' => 'Erreur lors de l\'enregistrement : ' . $e->getMessage()]);
-            Session::flash('form_old', $_POST);
+            Session::flash('form_old', self::oldSansMotDePasse($_POST));
             Response::redirect('/admin/orientation/' . $id . '/modifier');
             return;
         }
@@ -1029,6 +1396,10 @@ class OrientationController
 
         Redis::getInstance()->del(
             "orientation:etab:{$slug}",
+            // La page publique met son bundle en cache sous une clé versionnée
+            // (PublicController) : l'oublier laissait l'ancienne fiche servie
+            // pendant tout le TTL, et une modification passait pour inopérante.
+            "orientation:etab:v2:{$slug}",
             "orientation:marketplace:universite",
             "orientation:marketplace:institut",
             "orientation:marketplace:grande_ecole",
@@ -1038,7 +1409,21 @@ class OrientationController
         // Sitemap : le slug ou le statut a pu changer → réécriture du fichier.
         (new \Services\SitemapGenerator())->writeToDisk();
 
-        Session::flash('success', "Établissement « {$nom} » mis à jour.");
+        // Emails d'identifiants HORS transaction : un timeout SMTP ne doit pas
+        // faire tomber une fiche déjà enregistrée.
+        $msg = "Établissement « {$nom} » mis à jour.";
+
+        if ($nouveauxGestionnaires !== []) {
+            $nbG  = count($nouveauxGestionnaires);
+            $msg .= ' ' . $nbG . ' compte' . ($nbG > 1 ? 's' : '')
+                  . ' gestionnaire' . ($nbG > 1 ? 's' : '')
+                  . ' ajouté' . ($nbG > 1 ? 's' : '') . '.';
+            $msg .= self::messageEnvoisRates(
+                $this->envoyerIdentifiants($nouveauxGestionnaires, $nom)
+            );
+        }
+
+        Session::flash('success', $msg);
         Response::redirect('/admin/orientation/' . $id . '/voir');
     }
 
@@ -1142,6 +1527,7 @@ class OrientationController
         if ($slug) {
             Redis::getInstance()->del(
                 "orientation:etab:{$slug}",
+                "orientation:etab:v2:{$slug}",
                 "orientation:marketplace:universite",
             "orientation:marketplace:institut",
                 "orientation:marketplace:grande_ecole"
@@ -1150,6 +1536,88 @@ class OrientationController
 
         Session::flash('success', 'Compte de reversement mis à jour.');
         Response::redirect('/admin/orientation');
+    }
+
+    // ── Formations & grille tarifaire ─────────────────────────────────────
+    //
+    // Le super administrateur pilote les tarifs, mais les formations vivent
+    // dans `filieres_etablissement`, table que le gestionnaire alimente aussi
+    // depuis son espace. Les deux portes écrivent au même endroit : dupliquer
+    // la table pour donner au super administrateur « ses » formations aurait
+    // produit deux catalogues divergents, et un candidat ne verrait jamais que
+    // l'un des deux.
+
+    /** Ajoute une formation à l'établissement (nom seul — la grille suit). */
+    public function storeFiliere(int $id): void
+    {
+        if (!(new Etablissement())->findById($id)) {
+            Session::flash('error', 'Établissement introuvable.');
+            Response::redirect('/admin/orientation');
+            return;
+        }
+
+        $nom = trim((string)($_POST['nom'] ?? ''));
+        if ($nom === '') {
+            Session::flash('error', 'Le nom de la formation est obligatoire.');
+            Response::redirect('/admin/orientation/' . $id . '/modifier#sec-tarifs-formation');
+            return;
+        }
+
+        try {
+            (new Filiere())->create($id, ['nom' => $nom, 'ordre' => (int)($_POST['ordre'] ?? 0), 'actif' => true]);
+            AuditService::log('filiere.creation', 'etablissement', $id,
+                Session::get('admin_id') ?? null, ['nom' => $nom]);
+            Session::flash('success', 'Formation « ' . $nom . ' » ajoutée. Renseignez sa grille tarifaire ci-dessous.');
+        } catch (\PDOException $e) {
+            Session::flash('error', 'Cette formation existe déjà pour cet établissement.');
+        }
+
+        Response::redirect('/admin/orientation/' . $id . '/modifier#sec-tarifs-formation');
+    }
+
+    /**
+     * Enregistre la grille tarifaire d'une formation.
+     *
+     * Le cloisonnement est fait par le modèle (`remplacerGrille` vérifie que la
+     * formation appartient bien à l'établissement) : un `fid` forgé pointant
+     * vers un autre partenaire ne produit aucune écriture.
+     */
+    public function tarifsFiliere(int $id, int $fid): void
+    {
+        if (!(new Etablissement())->findById($id)) {
+            Session::flash('error', 'Établissement introuvable.');
+            Response::redirect('/admin/orientation');
+            return;
+        }
+
+        $grille = is_array($_POST['tarifs'] ?? null) ? $_POST['tarifs'] : [];
+
+        if ((new TarifFormation())->remplacerGrille($fid, $id, $grille)) {
+            AuditService::log('filiere.tarifs', 'etablissement', $id,
+                Session::get('admin_id') ?? null, ['filiere_id' => $fid]);
+            Session::flash('success', 'Grille tarifaire enregistrée.');
+        } else {
+            Session::flash('error', 'La grille tarifaire n’a pas pu être enregistrée.');
+        }
+
+        Response::redirect('/admin/orientation/' . $id . '/modifier#sec-tarifs-formation');
+    }
+
+    /** Supprime une formation et sa grille (FK ON DELETE CASCADE). */
+    public function destroyFiliere(int $id, int $fid): void
+    {
+        $model = new Filiere();
+        if (!$model->findById($fid, $id)) {
+            Session::flash('error', 'Formation introuvable.');
+            Response::redirect('/admin/orientation/' . $id . '/modifier#sec-tarifs-formation');
+            return;
+        }
+
+        $model->delete($fid, $id);
+        AuditService::log('filiere.suppression', 'etablissement', $id,
+            Session::get('admin_id') ?? null, ['filiere_id' => $fid]);
+        Session::flash('success', 'Formation supprimée (avec ses spécialités et ses tarifs).');
+        Response::redirect('/admin/orientation/' . $id . '/modifier#sec-tarifs-formation');
     }
 
     // ── Activation / désactivation inscriptions ───────────────────────────
@@ -1165,14 +1633,42 @@ class OrientationController
             return;
         }
 
-        // Exige compte actif
-        if ($etab['paiement_statut'] !== 'actif') {
-            Session::flash('error', 'Configurez d\'abord le compte Mobile Money (statut : actif).');
-            Response::redirect('/admin/orientation');
-            return;
+        $actuel = (bool)$etab['inscription_active'];
+
+        // ── Conditions d'OUVERTURE (la fermeture n'en a aucune) ─────────────
+        //
+        // L'ancienne condition exigeait un compte Mobile Money « actif ». Elle
+        // n'a jamais pu être satisfaite depuis la refonte : la scolarité se
+        // règle en présentiel (cf. CandidatureController::paiementEnLigneActif),
+        // aucun établissement n'a de ligne `etablissement_paiement` au statut
+        // actif, et cette route refusait donc TOUTES les demandes — le super
+        // administrateur n'avait aucun moyen d'ouvrir les inscriptions.
+        //
+        // Les deux conditions qui restent sont celles qui protègent vraiment le
+        // candidat d'un formulaire qui ne mène nulle part :
+        //
+        //  1. l'établissement doit être publié — sa page publique renvoie 404
+        //     sinon, et le bouton « S'inscrire » n'existerait sur aucun écran ;
+        //  2. si — et seulement si — cet établissement encaisse EN LIGNE, son
+        //     compte d'encaissement doit être opérationnel : ouvrir sans cela
+        //     mène le candidat à une étape 3 qui échoue.
+        if (!$actuel) {
+            if (($etab['statut'] ?? '') !== 'actif') {
+                Session::flash('error', 'Publiez d’abord l’établissement (statut « actif ») : sa page publique est introuvable tant qu’il ne l’est pas.');
+                Response::redirect('/admin/orientation');
+                return;
+            }
+
+            $encaisseEnLigne = in_array((string)($etab['mode_paiement_inscription'] ?? 'presentiel'), ['en_ligne', 'mixte'], true)
+                && ((int)($etab['prix_inscription'] ?? 0) + (int)($etab['frais_dossier'] ?? 0)) > 0;
+
+            if ($encaisseEnLigne && ($etab['paiement_statut'] ?? '') !== 'actif') {
+                Session::flash('error', 'Cet établissement encaisse en ligne : configurez d’abord son compte Mobile Money (statut « actif »), sinon l’étape de paiement échouera.');
+                Response::redirect('/admin/orientation');
+                return;
+            }
         }
 
-        $actuel = (bool)$etab['inscription_active'];
         $etabModel->toggleInscriptionActive($id, !$actuel);
 
         AuditService::log(
@@ -1186,7 +1682,7 @@ class OrientationController
         // Invalidation cache Redis
         $slug = $etab['slug'] ?? '';
         if ($slug) {
-            Redis::getInstance()->del("orientation:etab:{$slug}");
+            Redis::getInstance()->del("orientation:etab:{$slug}", "orientation:etab:v2:{$slug}");
         }
 
         $label = !$actuel ? 'activées' : 'désactivées';

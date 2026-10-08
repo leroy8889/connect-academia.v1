@@ -9,6 +9,14 @@ $filters    = $filters ?? [];
 $series     = $series ?? [];
 $isReadOnly = ($_SESSION['admin_role'] ?? '') === 'moderateur_1';
 
+// Accès à l'espace traçabilité (spec §11) — mêmes rôles que le contrôleur
+// Admin\TracabiliteController, sinon le lien mènerait à une redirection.
+$canTracabilite = in_array($_SESSION['admin_role'] ?? '', ['super_admin', 'admin'], true);
+
+// Libellés du parcours candidat, tels que la fiche §11.1 les affiche. À 100 %
+// la personne est un ÉTUDIANT de l'établissement, plus un élève ni un candidat.
+$parcoursLibelles = ['visiteur' => 'Visiteur', 'candidat' => 'Candidat', 'inscrit' => 'Étudiant'];
+
 // Active tab: si un filtre status=* est présent → onglet "suspended"
 if (!empty($filters['status'])) {
     $activeTab = 'suspended';
@@ -170,6 +178,14 @@ $nbCols = count($roleCols);
       $abPlan   = $u['ab_plan']   ?? null;
       $telFmt   = \Core\Phone::formatGabon($u['telephone'] ?? null);
       $etabsInscrit = trim((string)($u['etabs_inscrit'] ?? ''));
+
+      // Suivi du parcours (spec §11.1) : combien de préinscriptions, combien de
+      // dossiers d'inscription, et où en est le dernier dossier déposé.
+      $nbPreins    = (int)($u['nb_preinscriptions'] ?? 0);
+      $nbDossiers  = (int)($u['nb_dossiers'] ?? 0);
+      $parcours    = (string)($u['statut_parcours'] ?? 'visiteur');
+      $dernierStat = $u['dernier_dossier_statut'] ?? null;
+      $ficheUrl    = url('/admin/utilisateurs/' . (int)$u['id']);
     ?>
       <article class="kb-card uk-glass<?= $u['is_active'] ? '' : ' is-suspended' ?>"
                style="--kb-accent:<?= $accent ?>;"
@@ -210,10 +226,38 @@ $nbCols = count($roleCols);
           <?php endif; ?>
           <?php if ($etabsInscrit !== ''): ?>
             <span class="kb-chip kb-chip-etab" title="Inscription validée par l'établissement">
-              🎓 Élève · <?= e($etabsInscrit) ?>
+              🎓 Étudiant · <?= e($etabsInscrit) ?>
             </span>
           <?php endif; ?>
         </div>
+
+        <?php if ($nbPreins > 0 || $nbDossiers > 0 || $parcours !== 'visiteur'): ?>
+        <!-- Suivi orientation (spec §11.1) — visible sans ouvrir la fiche. -->
+        <div class="kb-badges kb-suivi">
+          <span class="kb-chip kb-chip-parcours kb-chip-parcours-<?= e($parcours) ?>">
+            <?= e($parcoursLibelles[$parcours] ?? ucfirst($parcours)) ?>
+          </span>
+          <?php if ($nbPreins > 0): ?>
+            <span class="kb-chip kb-chip-mute" title="Préinscriptions déposées">
+              <?= $nbPreins ?> préinscription<?= $nbPreins > 1 ? 's' : '' ?>
+            </span>
+          <?php endif; ?>
+          <?php if ($nbDossiers > 0): ?>
+            <span class="kb-chip kb-chip-mute" title="Dossiers d'inscription">
+              <?= $nbDossiers ?> dossier<?= $nbDossiers > 1 ? 's' : '' ?> d'inscription
+            </span>
+          <?php endif; ?>
+          <?php if ($dernierStat !== null): ?>
+            <span class="kb-chip kb-chip-statut" title="Statut du dernier dossier déposé">
+              <?= e(\Models\Orientation\DossierStatut::libelle((string)$dernierStat)) ?>
+              · <?= (int)\Models\Orientation\DossierStatut::progression((string)$dernierStat) ?> %
+            </span>
+          <?php endif; ?>
+          <?php if ($canTracabilite): ?>
+            <a href="<?= e($ficheUrl) ?>" class="kb-chip kb-chip-lien">Traçabilité →</a>
+          <?php endif; ?>
+        </div>
+        <?php endif; ?>
 
         <div class="kb-meta">
           <span title="Téléphone">
@@ -253,6 +297,11 @@ $nbCols = count($roleCols);
                     data-name="<?= e($u['prenom'] . ' ' . $u['nom']) ?>">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
             </button>
+            <?php endif; ?>
+            <?php if ($canTracabilite): ?>
+            <a class="kb-act" href="<?= e($ficheUrl) ?>" title="Traçabilité — parcours complet">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+            </a>
             <?php endif; ?>
             <button class="kb-act btn-message-user" title="Envoyer un message"
                     data-user-id="<?= $u['id'] ?>"
@@ -423,6 +472,15 @@ $nbCols = count($roleCols);
 .kb-chip-ab   { background: rgba(16,185,129,.12); color: #059669; }
 .kb-chip-mute { background: rgba(26,26,26,.05); color: var(--txt-m); }
 .kb-chip-etab { background: rgba(139,82,250,.12); color: #7440D9; }
+
+/* ── Suivi orientation (spec §11.1) ───────────────────────────────── */
+.kb-suivi { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(26,26,26,.06); }
+.kb-chip-parcours-visiteur { background: rgba(26,26,26,.05);   color: var(--txt-m); }
+.kb-chip-parcours-candidat { background: rgba(245,158,11,.15); color: #B45309; }
+.kb-chip-parcours-inscrit  { background: rgba(34,197,94,.14);  color: #15803D; }
+.kb-chip-statut { background: rgba(37,99,235,.10); color: #1D4ED8; }
+.kb-chip-lien   { background: rgba(139,82,250,.12); color: #7440D9; text-decoration: none; }
+.kb-chip-lien:hover { background: rgba(139,82,250,.20); }
 
 /* ── Modal commission scolarité ───────────────────────────────────── */
 .cm-block {
@@ -823,11 +881,13 @@ $nbCols = count($roleCols);
         Élève : <strong id="commission-user-name" style="color:var(--txt);"></strong>
       </p>
       <p style="font-size:11.5px;color:var(--txt-m);margin:0 0 14px;line-height:1.55;">
-        La plateforme perçoit un <strong>pourcentage de la scolarité</strong> de chaque élève apporté à un
-        établissement (rien sur l'inscription) — taux défini par établissement dans son formulaire de
-        création/modification — recouvré en présentiel en <strong>3 tranches</strong> :
-        40 % puis 30 % puis 30 % de la commission. Cochez chaque tranche encaissée —
-        l'établissement voit l'état des paiements sur son dashboard.
+        La plateforme perçoit un <strong>pourcentage de la base retenue</strong> pour chaque élève apporté à
+        un établissement — la scolarité annuelle dans le cas général, l'assiette convenue avec
+        l'établissement pour un élève boursier. Le taux et l'assiette sont définis par établissement,
+        dans son formulaire de création/modification. Le recouvrement se fait en présentiel, en
+        <strong><?= e(\Services\Orientation\CommissionDossier::libelleRepartition()) ?></strong>.
+        Cochez chaque tranche encaissée — l'établissement voit l'état des paiements sur son dashboard.
+        Les échéanciers créés avant la révision du recouvrement conservent leurs trois tranches.
       </p>
       <div id="commission-body">
         <div class="cm-empty">Chargement…</div>
@@ -845,6 +905,11 @@ $nbCols = count($roleCols);
   const base = () => window.CA_ADMIN?.baseUrl ?? '';
   const fmt  = (n) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(Number(n)) + ' XAF';
   const esc  = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // Répartition du recouvrement, injectée depuis PHP plutôt que réécrite ici :
+  // ce texte a déjà menti une fois, quand le passage de 40/30/30 à 60/40 a
+  // laissé « 3 tranches » dans le JS. La source est CommissionDossier.
+  const REPARTITION_TRANCHES = <?= json_encode(\Services\Orientation\CommissionDossier::libelleRepartition(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 
   const body = document.getElementById('commission-body');
   let currentUserId = null;
@@ -881,7 +946,13 @@ $nbCols = count($roleCols);
     let html = '';
 
     commissions.forEach(c => {
-      const solde = c.statut === 'solde';
+      // Vocabulaire aligné sur Services\Orientation\CommissionDossier : la
+      // valeur écrite est « reglee », « solde » ne subsiste que sur les lignes
+      // antérieures à la refonte. Une commission close par un abandon d'année
+      // n'est pas soldée — elle ne sera jamais encaissée en entier.
+      const solde   = c.statut === 'reglee' || c.statut === 'solde';
+      const abandon = c.statut === 'abandonnee';
+      const etat    = abandon ? 'Abandon d’année' : (solde ? 'Soldée ✓' : 'En cours');
       html += `
         <div class="cm-block">
           <div class="cm-block-head">
@@ -889,7 +960,7 @@ $nbCols = count($roleCols);
               <div class="cm-etab">${esc(c.etablissement_nom)}</div>
               <div class="cm-sub">${esc(c.filiere_visee || '')} — dossier #${c.dossier_id}</div>
             </div>
-            <span class="${solde ? 'cm-solde-badge' : 'cm-encours-badge'}">${solde ? 'Soldée ✓' : 'En cours'}</span>
+            <span class="${solde ? 'cm-solde-badge' : 'cm-encours-badge'}">${esc(etat)}</span>
           </div>
           <div class="cm-amounts">
             <span>Scolarité : <strong>${fmt(c.montant_scolarite)}</strong></span>
@@ -897,11 +968,16 @@ $nbCols = count($roleCols);
           </div>
           ${(c.tranches || []).map(t => {
             const paid = Number(t.est_payee) === 1;
+            // Une tranche close par un abandon d'année n'est plus encaissable :
+            // la case doit être inerte, sinon le clic part au serveur pour se
+            // faire refuser.
+            const close = Number(t.est_abandonnee) === 1;
             return `
             <div class="cm-tranche ${paid ? 'is-paid' : ''}">
               <input type="checkbox" class="cm-toggle" data-tranche-id="${t.id}"
-                     ${paid ? 'checked' : ''} ${readOnly ? 'disabled' : ''}>
+                     ${paid ? 'checked' : ''} ${readOnly || close ? 'disabled' : ''}>
               <span class="cm-tranche-label">Tranche ${t.numero} — ${Number(t.pourcentage)} % de la commission</span>
+              ${close ? '<span class="cm-tranche-date">Close — abandon d’année</span>' : ''}
               ${paid && t.date_paiement ? `<span class="cm-tranche-date">Encaissée le ${new Date(t.date_paiement.replace(' ', 'T')).toLocaleDateString('fr-FR')}</span>` : ''}
               <span class="cm-tranche-montant">${fmt(t.montant)}</span>
             </div>`;
@@ -926,7 +1002,7 @@ $nbCols = count($roleCols);
                    min="1" step="1" placeholder="Montant de la scolarité (XAF)">
             <button type="button" class="btn-primary cm-create" data-dossier-id="${d.dossier_id}">Créer la commission</button>
           </div>
-          <div class="cm-sub" style="margin-top:6px;">La commission de ${taux} % (taux configuré sur l'établissement) et ses 3 tranches (40 / 30 / 30) seront calculées automatiquement.</div>`}
+          <div class="cm-sub" style="margin-top:6px;">La commission de ${taux} % (taux configuré sur l'établissement) et ses ${REPARTITION_TRANCHES} seront calculées automatiquement.</div>`}
         </div>`;
     });
 

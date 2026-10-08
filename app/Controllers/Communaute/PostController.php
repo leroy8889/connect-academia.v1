@@ -33,22 +33,34 @@ class PostController
         Response::json(['success' => true, 'data' => ['posts' => $result['posts'], 'has_more' => $result['has_more']]]);
     }
 
+    /** Longueur de la colonne `posts.hashtags`, au-delà de laquelle on coupe. */
+    private const HASHTAGS_MAX = 500;
+
     public function store(): void
     {
         $userId = Session::userId();
 
-        // Détecter dépassement post_max_size
-        $contentLength = (int) ($_SERVER['CONTENT_LENGTH'] ?? 0);
-        if ($contentLength > 0 && empty($_POST) && empty($_FILES)) {
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+        $estJson     = str_contains($contentType, 'application/json');
+
+        // Détecter un dépassement de `post_max_size` : PHP vide alors $_POST et
+        // $_FILES sans lever la moindre erreur, et le symptôme est ce silence.
+        //
+        // Le test ne vaut QUE pour un corps que PHP analyse lui-même —
+        // form-urlencoded ou multipart. Un corps JSON n'alimente jamais $_POST,
+        // quelle que soit sa taille : appliqué sans distinction, ce garde
+        // répondait « Requête trop volumineuse » à TOUTE requête JSON et rendait
+        // la branche de lecture JSON ci-dessous inatteignable.
+        if (!$estJson
+            && (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0
+            && empty($_POST) && empty($_FILES)
+        ) {
             Response::json(['success' => false, 'error' => ['code' => 'UPLOAD_ERROR', 'message' => 'Requête trop volumineuse.']], 422);
         }
 
-        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
-        if (str_contains($contentType, 'application/json')) {
-            $input = json_decode(file_get_contents('php://input'), true) ?? [];
-        } else {
-            $input = $_POST;
-        }
+        $input = $estJson
+            ? (array) (json_decode(file_get_contents('php://input'), true) ?? [])
+            : $_POST;
 
         $data = [
             'user_id'     => $userId,
@@ -58,10 +70,16 @@ class PostController
             'hashtags'    => $input['hashtags'] ?? null,
         ];
 
+        // Bornes calées sur les colonnes de `posts` : `contenu` est un TEXT
+        // (65 535 OCTETS — d'où la marge en caractères, un caractère utf8mb4
+        // pouvant en peser quatre) et `matiere_tag` un VARCHAR(50). MySQL
+        // tourne en `STRICT_TRANS_TABLES` : sans ces bornes, une valeur trop
+        // longue lève « Data too long » et le rédacteur perd son message.
         $validator = new Validator();
         if (!$validator->validate($data, [
-            'contenu' => 'required|min:1',
-            'type'    => 'in:question,ressource,partage,annonce',
+            'contenu'     => 'required|min:1|max:16000',
+            'type'        => 'in:question,ressource,partage,annonce',
+            'matiere_tag' => 'max:50',
         ])) {
             Response::json(['success' => false, 'error' => ['code' => 'VALIDATION_ERROR', 'message' => 'Données invalides', 'fields' => $validator->getErrors()]], 422);
         }
@@ -90,6 +108,18 @@ class PostController
         if (preg_match_all('/#(\w+)/u', $data['contenu'], $matches)) {
             $existing = $data['hashtags'] ? explode(',', $data['hashtags']) : [];
             $data['hashtags'] = implode(',', array_unique(array_merge($existing, $matches[1])));
+        }
+
+        // `hashtags` est DÉRIVÉ du contenu : le borner par une règle de
+        // validation reviendrait à refuser un message à cause d'un champ que
+        // l'auteur n'a jamais saisi. On coupe donc à la colonne — VARCHAR(500) —
+        // sur une virgule, pour ne jamais stocker un tag tronqué en plein
+        // milieu. Cent hashtags dans un message suffisaient sinon à faire
+        // échouer la publication.
+        if (!empty($data['hashtags']) && mb_strlen($data['hashtags']) > self::HASHTAGS_MAX) {
+            $coupe = mb_substr($data['hashtags'], 0, self::HASHTAGS_MAX);
+            $virgule = mb_strrpos($coupe, ',');
+            $data['hashtags'] = $virgule !== false ? mb_substr($coupe, 0, $virgule) : $coupe;
         }
 
         $postModel = new Post();

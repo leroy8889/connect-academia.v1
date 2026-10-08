@@ -3,9 +3,10 @@ declare(strict_types=1);
 
 namespace Controllers\Admin;
 
-use Core\{Response, Cache};
+use Core\{Response, Cache, Session};
 use Models\Admin;
 use Models\Bilan;
+use Services\Orientation\Tracabilite;
 
 class DashboardController
 {
@@ -48,6 +49,20 @@ class DashboardController
         // Bilans PDF : liste des établissements pour le sélecteur — cache 10 min
         $bilanEtabs = Cache::remember('admin:dashboard:bilan-etabs', 600, fn() => (new Bilan())->etablissementsSelect());
 
+        // ── Suivi des candidatures (spec §11) ──────────────────────────────
+        // Le super administrateur doit voir, depuis sa page d'accueil, où en
+        // est chaque parcours — sans avoir à ouvrir un autre écran. Réservé aux
+        // mêmes rôles que Admin\TracabiliteController, qui seul peut ouvrir les
+        // fiches vers lesquelles ce bloc pointe.
+        $suivi = null;
+        if (in_array(Session::adminRole(), ['super_admin', 'admin'], true)) {
+            $suivi = Cache::remember('admin:dashboard:suivi', 120, static fn(): array => [
+                'entonnoir' => Tracabilite::entonnoir(),
+                'derniers'  => Tracabilite::dossiersTransversaux([], 6),
+                'attente'   => count(Tracabilite::attenteProlongee()),
+            ]);
+        }
+
         Response::view('admin/dashboard/index', [
             'pageTitle'          => "Dashboard — Admin",
             'breadcrumbSection'  => 'Pilotage',
@@ -60,6 +75,7 @@ class DashboardController
             'activiteRecente'    => $activiteRecente,
             'activiteMatieres'   => $activiteMatieres,
             'bilanEtabs'         => $bilanEtabs,
+            'suivi'              => $suivi,
         ], 'admin');
     }
 

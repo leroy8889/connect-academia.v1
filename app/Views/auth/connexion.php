@@ -85,6 +85,15 @@
       </div>
       <?php endif; ?>
 
+      <?php if (!empty($info)): ?>
+      <div class="auth-alert auth-alert--warning">
+        <svg class="alert-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span class="alert-message"><?= e($info) ?></span>
+      </div>
+      <?php endif; ?>
+
       <?php if (!empty($errors['general'])): ?>
       <div class="auth-alert auth-alert--error">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

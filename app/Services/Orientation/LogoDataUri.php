@@ -23,27 +23,86 @@ class LogoDataUri
     private const CACHE_PREFIX  = 'orientation:logo_datauri:';
 
     /**
+     * TTL d'un ÉCHEC. Volontairement court.
+     *
+     * Un résultat vide signifie « fichier momentanément illisible » : stockage
+     * injoignable, plafond de transactions atteint, fichier pas encore
+     * répliqué. Le mémoriser six heures ferait survivre la panne longtemps
+     * après sa résolution — un plafond relevé à 9 h laisserait la plateforme
+     * sans images jusqu'à 15 h. Une minute suffit à éviter le martèlement du
+     * stockage, sans figer la panne.
+     */
+    private const CACHE_TTL_ECHEC = 60;
+
+    /**
      * Data URI compressé du logo, ou chaîne vide si indisponible
      * (les gabarits basculent alors sur l'initiale de l'établissement).
      */
+    /**
+     * Mémoire du process, devant le cache partagé.
+     *
+     * Une page de l'espace élève affiche dix dossiers du même établissement, et
+     * un document PDF réclame le même logo pour l'en-tête et le filigrane. Sans
+     * ce garde, chaque occurrence repassait par le cache — et, quand celui-ci
+     * était indisponible, par un téléchargement Backblaze. C'est ce qui a fini
+     * par épuiser le plafond de transactions du compte.
+     *
+     * @var array<string,string>
+     */
+    private static array $memoire = [];
+
     public static function pour(string $cle): string
     {
         if ($cle === '') {
             return '';
         }
 
-        return (string)Cache::remember(
-            self::CACHE_PREFIX . md5($cle),
-            self::CACHE_TTL,
-            static fn(): string => self::construire($cle)
-        );
+        // La mémoire du process porte la décision FINALE de cette requête,
+        // archive comprise : une fois tranché, on ne retranche pas.
+        if (isset(self::$memoire[$cle])) {
+            return self::$memoire[$cle];
+        }
+
+        $clefCache = self::CACHE_PREFIX . md5($cle);
+        $absent    = new \stdClass();
+        $connu     = Cache::get($clefCache, $absent);
+
+        // Une valeur vide en cache n'est PAS une réponse : c'est la trace d'un
+        // stockage muet il y a moins d'une minute. Elle évite de le marteler,
+        // elle ne doit pas empêcher l'archive de répondre à sa place.
+        if ($connu !== $absent && $connu !== '') {
+            return self::$memoire[$cle] = (string)$connu;
+        }
+
+        if ($connu === $absent) {
+            $valeur = self::construire($cle);
+
+            if ($valeur !== '') {
+                // Archivage local : ce logo ne dépendra plus jamais du stockage
+                // distant, même cache vidé (cf. MiroirMedia).
+                MiroirMedia::ecrire($cle, $valeur);
+                Cache::set($clefCache, $valeur, self::CACHE_TTL);
+
+                return self::$memoire[$cle] = $valeur;
+            }
+
+            // Échec mémorisé brièvement, le temps d'éviter le martèlement.
+            Cache::set($clefCache, '', self::CACHE_TTL_ECHEC);
+        }
+
+        // Stockage muet — plafond atteint, réseau coupé, fichier absent. La
+        // copie archivée prend le relais : mieux vaut un logo d'hier qu'une page
+        // sans images.
+        return self::$memoire[$cle] = MiroirMedia::lire($cle) ?? '';
     }
 
     /** Invalide le cache après remplacement du logo. */
     public static function invalider(string $cle): void
     {
         if ($cle !== '') {
+            unset(self::$memoire[$cle]);
             Cache::forget(self::CACHE_PREFIX . md5($cle));
+            MiroirMedia::oublier($cle);
         }
     }
 

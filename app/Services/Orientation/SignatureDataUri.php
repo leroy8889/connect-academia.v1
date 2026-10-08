@@ -24,11 +24,33 @@ class SignatureDataUri
     private const CACHE_TTL     = 21600; // 6 h
     private const CACHE_PREFIX  = 'orientation:signature_datauri:';
 
+    /**
+     * TTL d'un ÉCHEC. Volontairement court.
+     *
+     * Un résultat vide signifie « fichier momentanément illisible » : stockage
+     * injoignable, plafond de transactions atteint, fichier pas encore
+     * répliqué. Le mémoriser six heures ferait survivre la panne longtemps
+     * après sa résolution — un plafond relevé à 9 h laisserait la plateforme
+     * sans images jusqu'à 15 h. Une minute suffit à éviter le martèlement du
+     * stockage, sans figer la panne.
+     */
+    private const CACHE_TTL_ECHEC = 60;
+
     /** Encre par défaut : bleu-violet stylo administratif. */
     private const INK = [0x18, 0x2F, 0x74];
 
     /** Au-dessus de ce seuil de luminance → papier → transparent. */
     private const WHITE_THRESHOLD = 232;
+
+    /**
+     * Mémoire du process, devant le cache partagé : même raison que
+     * LogoDataUri — un document réclame plusieurs fois le même cachet, et
+     * chaque occurrence retournait chercher le fichier sur Backblaze quand le
+     * cache partagé était indisponible.
+     *
+     * @var array<string,string>
+     */
+    private static array $memoire = [];
 
     public static function pour(string $cle): string
     {
@@ -36,18 +58,52 @@ class SignatureDataUri
             return '';
         }
 
-        return (string)Cache::remember(
-            self::CACHE_PREFIX . md5($cle),
-            self::CACHE_TTL,
-            static fn(): string => self::construire($cle)
-        );
+        // La mémoire du process porte la décision FINALE de cette requête,
+        // archive comprise : une fois tranché, on ne retranche pas.
+        if (isset(self::$memoire[$cle])) {
+            return self::$memoire[$cle];
+        }
+
+        $clefCache = self::CACHE_PREFIX . md5($cle);
+        $absent    = new \stdClass();
+        $connu     = Cache::get($clefCache, $absent);
+
+        // Une valeur vide en cache n'est PAS une réponse : c'est la trace d'un
+        // stockage muet il y a moins d'une minute. Elle évite de le marteler,
+        // elle ne doit pas empêcher l'archive de répondre à sa place.
+        if ($connu !== $absent && $connu !== '') {
+            return self::$memoire[$cle] = (string)$connu;
+        }
+
+        if ($connu === $absent) {
+            $valeur = self::construire($cle);
+
+            if ($valeur !== '') {
+                // Archivage local : ce cachet ne dépendra plus jamais du stockage
+                // distant, même cache vidé (cf. MiroirMedia).
+                MiroirMedia::ecrire($cle, $valeur);
+                Cache::set($clefCache, $valeur, self::CACHE_TTL);
+
+                return self::$memoire[$cle] = $valeur;
+            }
+
+            // Échec mémorisé brièvement, le temps d'éviter le martèlement.
+            Cache::set($clefCache, '', self::CACHE_TTL_ECHEC);
+        }
+
+        // Stockage muet — plafond atteint, réseau coupé, fichier absent. La
+        // copie archivée prend le relais : mieux vaut un cachet d'hier qu'une page
+        // sans images.
+        return self::$memoire[$cle] = MiroirMedia::lire($cle) ?? '';
     }
 
     /** Invalide le cache après remplacement/retrait de la signature. */
     public static function invalider(string $cle): void
     {
         if ($cle !== '') {
+            unset(self::$memoire[$cle]);
             Cache::forget(self::CACHE_PREFIX . md5($cle));
+            MiroirMedia::oublier($cle);
         }
     }
 

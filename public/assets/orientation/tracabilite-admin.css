@@ -1,0 +1,314 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Traçabilité super administrateur (spec §11)
+   Canvas crème Claude de la console admin, Purple Neon unique accent.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.tr-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+}
+.tr-head h1 { font-size: 26px; font-weight: 700; line-height: 1.2; color: #1F1E1D; }
+.tr-head p  { margin-top: 5px; font-size: 13.5px; color: #605D57; max-width: 70ch; }
+
+.tr-back {
+    display: inline-block;
+    margin-bottom: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #7440D9;
+    text-decoration: none;
+}
+
+.tr-parcours {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+.tr-parcours-visiteur { background: rgba(31,30,29,.07);   color: #605D57; }
+.tr-parcours-candidat { background: rgba(245,158,11,.15); color: #B45309; }
+.tr-parcours-inscrit  { background: rgba(34,197,94,.14);  color: #15803d; }
+
+.tr-flash { padding: 12px 16px; border-radius: 14px; font-size: 13.5px; margin-bottom: 16px; }
+.tr-flash.ok  { background: rgba(34,197,94,.12); color: #15803d; }
+.tr-flash.err { background: rgba(239,68,68,.10); color: #b91c1c; }
+
+/* ── Blocs ───────────────────────────────────────────────────────────────── */
+.tr-bloc {
+    padding: 20px;
+    margin-bottom: 18px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, .58);
+    border: 1px solid rgba(31, 30, 29, .08);
+}
+.tr-bloc h2 {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: #97938B;
+    margin-bottom: 14px;
+}
+
+.tr-duo { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+
+/* ── Indicateurs ─────────────────────────────────────────────────────────── */
+.tr-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
+.tr-kpis dt {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: #97938B;
+}
+.tr-kpis dd { font-size: 16px; font-weight: 700; margin-top: 3px; color: #1F1E1D; }
+.tr-kpis dd span { display: block; font-size: 11.5px; font-weight: 400; color: #97938B; margin-top: 2px; }
+
+/* ── Filtres ─────────────────────────────────────────────────────────────── */
+.tr-filtres {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .5);
+    border: 1px solid rgba(31, 30, 29, .08);
+}
+.tr-filtres-inline { margin-bottom: 0; padding: 8px 10px; }
+.tr-filtres input,
+.tr-filtres select {
+    padding: 8px 12px;
+    border: 1.5px solid rgba(31, 30, 29, .10);
+    border-radius: 12px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    color: #1F1E1D;
+}
+.tr-filtres input[type="text"] { flex: 1 1 220px; min-width: 0; }
+.tr-filtres input:focus, .tr-filtres select:focus { outline: none; border-color: #8B52FA; }
+
+/* ── Boutons ─────────────────────────────────────────────────────────────── */
+.tr-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border: 1px solid rgba(31, 30, 29, .14);
+    border-radius: 999px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1F1E1D;
+    text-decoration: none;
+    cursor: pointer;
+}
+.tr-btn:hover { border-color: #8B52FA; color: #7440D9; }
+.tr-btn-p { background: #8B52FA; border-color: #8B52FA; color: #fff; }
+.tr-btn-p:hover { filter: brightness(1.07); color: #fff; }
+.tr-btn-danger { color: #b91c1c; border-color: rgba(239, 68, 68, .28); }
+.tr-btn-danger:hover { background: rgba(239, 68, 68, .08); border-color: #EF4444; color: #b91c1c; }
+.tr-mini { padding: 5px 11px; font-size: 11.5px; }
+
+.tr-lien { color: #7440D9; font-weight: 600; text-decoration: none; font-size: 13px; }
+.tr-lien:hover { text-decoration: underline; }
+
+/* ── Tableaux ────────────────────────────────────────────────────────────── */
+.tr-scroll { overflow-x: auto; }
+.tr-table { width: 100%; border-collapse: collapse; }
+.tr-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: #97938B;
+    border-bottom: 1px solid rgba(31, 30, 29, .08);
+    white-space: nowrap;
+}
+.tr-table td {
+    padding: 11px 12px;
+    font-size: 13px;
+    color: #1F1E1D;
+    border-bottom: 1px solid rgba(31, 30, 29, .05);
+    vertical-align: middle;
+}
+.tr-table tbody tr:last-child td { border-bottom: none; }
+.tr-table-compacte td, .tr-table-compacte th { padding: 8px 10px; font-size: 12.5px; }
+.tr-table-journal { min-width: 1100px; }
+
+.tr-table th.num, .tr-table td.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.tr-sec    { color: #605D57; font-size: 12px; }
+.tr-nowrap { white-space: nowrap; }
+.tr-mono   { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px; }
+.tr-ref {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #7440D9;
+    white-space: nowrap;
+}
+.tr-oui { color: #15803d; font-weight: 600; }
+.tr-non { color: #97938B; }
+
+.tr-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.tr-succes  { background: rgba(34,197,94,.13);  color: #15803d; }
+.tr-attente { background: rgba(245,158,11,.16); color: #B45309; }
+.tr-danger  { background: rgba(239,68,68,.11);  color: #b91c1c; }
+.tr-info    { background: rgba(139,82,250,.13); color: #7440D9; }
+.tr-neutre  { background: rgba(31,30,29,.06);   color: #605D57; }
+
+.tr-evt { font-weight: 600; font-size: 12.5px; }
+.tr-ctx { max-width: 380px; }
+.tr-ctx span {
+    display: inline-block;
+    margin: 1px 4px 1px 0;
+    padding: 2px 7px;
+    border-radius: 8px;
+    background: rgba(31, 30, 29, .05);
+    font-size: 11px;
+    color: #605D57;
+}
+.tr-ctx b { color: #97938B; font-weight: 600; }
+
+.tr-alerte { color: #b91c1c; font-weight: 700; }
+.tr-ligne-alerte td:first-child { box-shadow: inset 3px 0 0 #EF4444; }
+
+.tr-vide {
+    padding: 26px 16px;
+    text-align: center;
+    font-size: 13px;
+    color: #97938B;
+}
+.tr-note { margin-top: 12px; font-size: 12px; line-height: 1.55; color: #97938B; max-width: 80ch; }
+
+/* ── Frise chronologique ─────────────────────────────────────────────────── */
+.tr-frise { list-style: none; margin: 0; padding: 0; }
+.tr-frise li {
+    position: relative;
+    padding: 0 0 18px 20px;
+    border-left: 2px solid rgba(31, 30, 29, .08);
+}
+.tr-frise li:last-child { border-left-color: transparent; padding-bottom: 0; }
+.tr-frise li::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: 5px;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #8B52FA;
+}
+.tr-frise-t { font-size: 13.5px; font-weight: 600; color: #1F1E1D; }
+.tr-frise-m { font-size: 11.5px; color: #97938B; margin-top: 2px; }
+.tr-frise-m time { font-variant-numeric: tabular-nums; }
+.tr-frise-d { margin-top: 5px; }
+.tr-frise-d span {
+    display: inline-block;
+    margin: 2px 4px 0 0;
+    padding: 2px 8px;
+    border-radius: 8px;
+    background: rgba(31, 30, 29, .05);
+    font-size: 11px;
+    color: #605D57;
+}
+.tr-frise-d b { color: #97938B; font-weight: 600; }
+
+/* ── Entonnoir ───────────────────────────────────────────────────────────── */
+.tr-entonnoir { display: grid; gap: 8px; }
+.tr-etape { position: relative; }
+.tr-etape-barre {
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, rgba(139,82,250,.22), rgba(139,82,250,.10));
+    border-left: 3px solid #8B52FA;
+}
+.tr-etape-txt {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 14px;
+}
+.tr-etape-l { flex: 1; font-size: 13px; font-weight: 600; color: #1F1E1D; }
+.tr-etape-v { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; color: #1F1E1D; }
+.tr-etape-t {
+    min-width: 62px;
+    text-align: right;
+    font-size: 12px;
+    font-weight: 600;
+    color: #15803d;
+    font-variant-numeric: tabular-nums;
+}
+.tr-etape-t.faible { color: #b91c1c; }
+
+/* ── Barres de répartition ───────────────────────────────────────────────── */
+.tr-barre {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 100px 56px;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+}
+.tr-barre-l { font-size: 12.5px; color: #605D57; }
+.tr-barre-l b { color: #1F1E1D; margin-left: 6px; }
+.tr-barre-p { height: 6px; border-radius: 999px; background: rgba(31, 30, 29, .08); overflow: hidden; }
+.tr-barre-p span { display: block; height: 100%; border-radius: 999px; background: #8B52FA; }
+.tr-barre-v { text-align: right; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; color: #1F1E1D; }
+
+/* ── Pagination ──────────────────────────────────────────────────────────── */
+.tr-pagination { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+.tr-pagination a {
+    min-width: 32px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #605D57;
+    text-decoration: none;
+    background: rgba(255, 255, 255, .6);
+}
+.tr-pagination a.actif { background: #8B52FA; color: #fff; }
+
+@media (max-width: 560px) {
+    .tr-barre { grid-template-columns: minmax(0, 1fr) 70px 48px; }
+    .tr-bloc  { padding: 16px; }
+}
+
+/* Seuil rappelé dans le titre du bloc : sans lui, « délai dépassé » ne dit pas
+   dépassé de combien, et le chiffre affiché à côté n'est pas interprétable. */
+.tr-seuil {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(180, 83, 9, .10);
+    color: #92400E;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    vertical-align: middle;
+}

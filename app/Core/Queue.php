@@ -5,6 +5,7 @@ namespace Core;
 
 use Models\Orientation\Dossier;
 use Models\Orientation\Etablissement;
+use Services\Orientation\RecepisseDossierService;
 use Services\Orientation\RecuService;
 
 /**
@@ -164,6 +165,28 @@ final class Queue
                 $cle = RecuService::generer($dossierId, $paiementId, $dossier, $etab, $montant);
                 if ($cle === null) {
                     throw new \RuntimeException('RecuService::generer a échoué');
+                }
+                return;
+
+            case 'generate_recepisse_dossier':
+                // Récépissé de dépôt de dossier (spec §5.4 / §6).
+                // Sorti de la requête HTTP : le rendu dompdf plus l'aller-retour
+                // vers B2 prennent près d'une seconde, que le candidat n'a pas à
+                // attendre sur l'écran de confirmation.
+                // RecepisseDossierService::generer() est idempotent : un rejeu
+                // (worker relancé, tâche de rattrapage) ne régénère rien si le
+                // document existe déjà.
+                $dossierId = (int)($payload['dossierId'] ?? 0);
+
+                if ($dossierId <= 0) {
+                    throw new \RuntimeException('generate_recepisse_dossier : identifiant invalide');
+                }
+
+                $cle = RecepisseDossierService::generer($dossierId);
+                if ($cle === null) {
+                    // Exception volontaire : elle déclenche la reprise côté
+                    // worker. Un candidat sans récépissé est un incident.
+                    throw new \RuntimeException('RecepisseDossierService::generer a échoué pour #' . $dossierId);
                 }
                 return;
 

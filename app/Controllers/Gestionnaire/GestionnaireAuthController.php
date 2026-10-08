@@ -209,6 +209,18 @@ class GestionnaireAuthController
         JournalGestionnaire::log('session.connexion', 'user', (int) $gest['id'],
             'Connexion à l\'espace gestionnaire (2FA validé)');
 
+        // Un agent qui scanne un QR code sans session ouverte est renvoyé ici ;
+        // il doit repartir sur le dossier scanné, pas sur le tableau de bord.
+        // Seule la forme exacte d'une URL de vérification est acceptée : une
+        // destination libre en session ferait une redirection ouverte.
+        $apres = (string) (Session::get('redirect_apres_login') ?? '');
+        Session::remove('redirect_apres_login');
+
+        if (preg_match('#^/v/[A-Za-z0-9%._-]{1,120}$#', $apres) === 1) {
+            Response::redirect($apres);
+            return;
+        }
+
         Response::redirect('/gestionnaire');
     }
 

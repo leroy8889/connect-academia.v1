@@ -153,7 +153,11 @@ $errors = $errors ?? [];
   height: 100vh;
 }
 .auth-image-panel--reset {
-  background-image: url('<?= css_safe(asset('images/Images en 409x610 - Page de Connexion 2.png')) ?>');
+  <?php /* Même visuel que la page de connexion (auth.css:39) : le fichier a été
+           renommé « auth-bg-connexion.png » dans public/assets/images/, seule
+           racine que résout asset(). L'ancien nom n'y a jamais existé — le fond
+           renvoyait donc 404 ici. */ ?>
+  background-image: url('<?= css_safe(asset('images/auth-bg-connexion.png')) ?>');
   background-color: #16161E;
 }
 

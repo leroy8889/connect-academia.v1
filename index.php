@@ -75,8 +75,13 @@ if (($_ENV['APP_DEBUG'] ?? 'true') === 'true') {
     ini_set('display_errors', '1');
     ini_set('display_startup_errors', '1');
 } else {
-    error_reporting(0);
+    // `error_reporting(0)` coupait l'affichage ET la journalisation : une erreur
+    // fatale en production ne laissait AUCUNE trace dans app.log, et la seule
+    // chose visible était une page blanche impossible à diagnostiquer.
+    // On rapporte tout au journal, on n'affiche rien à l'utilisateur.
+    error_reporting(E_ALL);
     ini_set('display_errors', '0');
+    ini_set('display_startup_errors', '0');
 }
 ini_set('log_errors', '1');
 ini_set('error_log', BASE_PATH . '/storage/logs/app.log');
@@ -141,6 +146,34 @@ $sessionLifetime = (int)($_ENV['SESSION_LIFETIME'] ?? 7200);
 $isHttps = (isset($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off' && (string)$_SERVER['HTTPS'] !== '')
     || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower((string)$_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
     || ((int)($_SERVER['SERVER_PORT'] ?? 0) === 443);
+
+// ── Chiffrement du transport : redirection HTTP → HTTPS ────────────────────
+//
+// Le chiffrement des pièces au repos (Core\Crypto) ne protège rien si le
+// formulaire d'inscription, lui, part en clair : mot de passe, date de
+// naissance, numéro de téléphone et pièces jointes traversent alors le réseau
+// lisibles par n'importe quel intermédiaire — le Wi-Fi du cybercafé compris.
+// HSTS (plus bas) protège les visiteurs DÉJÀ venus en HTTPS ; il ne fait rien
+// pour la toute première requête, qui est justement celle qu'on intercepte.
+//
+// Pilotée par FORCE_HTTPS et non activée d'office, parce que la conclusion
+// « la requête est en clair » dépend d'en-têtes que le serveur doit fournir :
+// derrière un reverse-proxy qui termine TLS sans poser X-Forwarded-Proto, PHP
+// croit voir du HTTP et la redirection boucle sur elle-même. On active donc
+// après avoir vérifié que $isHttps vaut bien true en production.
+if (!$isHttps
+    && PHP_SAPI !== 'cli'
+    && filter_var($_ENV['FORCE_HTTPS'] ?? 'false', FILTER_VALIDATE_BOOLEAN)
+) {
+    // L'hôte vient du client : il ne part dans un en-tête Location qu'après
+    // avoir été vérifié caractère par caractère (sinon, redirection ouverte).
+    $hote = (string)($_SERVER['HTTP_HOST'] ?? '');
+
+    if ($hote !== '' && preg_match('/^[A-Za-z0-9.\-]+(:\d{1,5})?$/', $hote) === 1) {
+        header('Location: https://' . $hote . ($_SERVER['REQUEST_URI'] ?? '/'), true, 301);
+        exit;
+    }
+}
 
 ini_set('session.cookie_httponly', '1');
 ini_set('session.use_strict_mode', '1');
@@ -222,6 +255,20 @@ if (session_status() === PHP_SESSION_NONE) {
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
+
+// ── Expiration de la session utilisateur (front-office) ────────────────────
+//
+// Le cookie PHP vit 30 jours : c'est le confort voulu pour les postes de
+// guichet et la console d'administration. Appliqué au candidat, il signifiait
+// « connecté à vie » — sur un téléphone prêté ou l'ordinateur d'un cybercafé,
+// n'importe qui rouvrant le navigateur des semaines plus tard retrouvait le
+// dossier, les pièces d'identité et les paiements.
+//
+// La borne est posée ICI, avant le routage, pour que TOUTE page voie la même
+// vérité : celles protégées par AuthMiddleware comme celles qui se contentent
+// de lire `Session::isLoggedIn()` pour afficher un en-tête connecté.
+// Seules les clés utilisateur tombent — sessions gestionnaire et admin intactes.
+\Core\Session::expirerUtilisateurSiBesoin();
 
 // ── Headers de sécurité HTTP ───────────────────────────────────────────────
 if (!headers_sent()) {
@@ -311,6 +358,73 @@ set_exception_handler(function (\Throwable $e): void {
         }
     }
     exit;
+});
+
+// ── Filet anti « page blanche » ────────────────────────────────────────────
+//
+// `set_exception_handler` ne voit que les exceptions. Il ne voit PAS les
+// erreurs fatales du moteur : dépassement de `max_execution_time` (un appel
+// réseau qui pend — Backblaze, SMTP…), mémoire épuisée, erreur d'analyse d'un
+// fichier inclus. Sur ces cas-là, PHP interrompt la requête et renvoie un corps
+// VIDE : l'utilisateur voit une page entièrement blanche, sur téléphone comme
+// sur ordinateur, et rien ne le distingue d'un bug d'affichage.
+//
+// Ce handler de fin de requête rattrape exactement ces cas : il journalise
+// l'erreur réelle (fichier, ligne, message) et rend la page de service
+// indisponible à la place du vide. Il ne s'active QUE sur une erreur fatale —
+// une requête normale, un `exit` de redirection ou un PDF déjà envoyé passent
+// sans être touchés.
+register_shutdown_function(function (): void {
+    $err = error_get_last();
+
+    if ($err === null || !in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR], true)) {
+        return;
+    }
+
+    error_log(sprintf(
+        '[Fatal] %s in %s:%d — URI %s',
+        $err['message'],
+        $err['file'],
+        $err['line'],
+        $_SERVER['REQUEST_URI'] ?? '?'
+    ));
+
+    // Des octets ont déjà été envoyés (téléchargement, flux PDF) : on ne peut
+    // plus rien réécrire proprement, et un HTML injecté corromprait le fichier.
+    if (headers_sent()) {
+        return;
+    }
+
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+
+    http_response_code(503);
+
+    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
+        && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
+    if ($isAjax) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'error'   => ['code' => 'SERVICE_UNAVAILABLE', 'message' => 'Service temporairement indisponible.'],
+        ]);
+        return;
+    }
+
+    if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
+        echo '<pre style="background:#1a1a2e;color:#e2e8f0;padding:2rem;font-size:13px;line-height:1.6;">';
+        echo '<strong style="color:#f87171">Erreur fatale : </strong>'
+           . htmlspecialchars($err['message'] . "\n" . $err['file'] . ':' . $err['line']);
+        echo '</pre>';
+        return;
+    }
+
+    $page = BASE_PATH . '/app/Views/errors/503.php';
+    if (is_file($page)) {
+        require $page;
+    }
 });
 
 // ── Mode maintenance global ────────────────────────────────────────────────

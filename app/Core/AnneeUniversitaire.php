@@ -41,4 +41,33 @@ final class AnneeUniversitaire
 
         return sprintf('%d — %d', $debut, $fin);
     }
+
+    /**
+     * Année d'entrée de l'année académique, sur 4 chiffres (spec §5.5).
+     * Juillet 2026 → 2026 ; février 2027 → 2026.
+     */
+    public static function debut(?\DateTimeInterface $date = null): int
+    {
+        // Respecte ANNEE_UNIVERSITAIRE si elle est forcée : on lit le premier
+        // groupe de 4 chiffres du libellé.
+        if (preg_match('/(\d{4})/', self::courante($date), $m) === 1) {
+            return (int)$m[1];
+        }
+
+        $date = $date ?? new \DateTime();
+        $an   = (int)$date->format('Y');
+
+        return (int)$date->format('n') >= self::MOIS_BASCULE ? $an : $an - 1;
+    }
+
+    /**
+     * Forme canonique stockée en base : « 2026-2027 » (VARCHAR(9)).
+     * Distincte de courante() qui est une forme d'AFFICHAGE (tiret cadratin).
+     */
+    public static function code(?\DateTimeInterface $date = null): string
+    {
+        $debut = self::debut($date);
+
+        return sprintf('%d-%d', $debut, $debut + 1);
+    }
 }

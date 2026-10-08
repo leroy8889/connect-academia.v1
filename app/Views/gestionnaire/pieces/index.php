@@ -3,13 +3,50 @@
 $grouped = $grouped ?? [];
 $pieces  = $pieces  ?? [];
 
-$niveauLabels = [
-    '__tous'        => 'Tous niveaux',
-    'Socle L1-L2'   => 'Socle L1-L2',
-    'Licence L3'    => 'Licence L3',
-    'Master M1-M2'  => 'Master M1-M2',
-    'Certification' => 'Certification',
-];
+use Services\Orientation\PorteePiece;
+
+/**
+ * Titre d'un groupe de pièces.
+ *
+ * Les référentiels existants portent des intitulés hérités du premier
+ * back-office (« Socle L1-L2 »). On les traduit en niveaux réels au lieu de
+ * les afficher tels quels : l'établissement voit ainsi exactement à qui la
+ * pièce sera demandée, ce qui est la question qu'il se pose.
+ */
+$porteeTitre = static function (string $niveau): string {
+    if ($niveau === '__tous' || $niveau === '') {
+        return 'Tous niveaux';
+    }
+
+    $libelle = PorteePiece::libelle($niveau);
+
+    return $libelle === $niveau ? $niveau : $niveau . ' — ' . $libelle;
+};
+
+/**
+ * Options d'un <select name="niveau">, groupées par cycle et vocabulaire
+ * aligné sur celui du formulaire d'inscription (L1…M2). Tant que les deux
+ * écrans écrivaient dans deux langues différentes, aucun filtrage par niveau
+ * ne pouvait fonctionner.
+ */
+$porteeOptions = static function (?string $valeur): string {
+    $html = '';
+    foreach (PorteePiece::optionsAvec($valeur) as $groupe => $entrees) {
+        $groupe = (string)$groupe;
+        if ($groupe !== '') {
+            $html .= '<optgroup label="' . e($groupe) . '">';
+        }
+        foreach ($entrees as $val => $lbl) {
+            $selected = ((string)$valeur === (string)$val) ? ' selected' : '';
+            $html .= '<option value="' . e((string)$val) . '"' . $selected . '>' . e($lbl) . '</option>';
+        }
+        if ($groupe !== '') {
+            $html .= '</optgroup>';
+        }
+    }
+
+    return $html;
+};
 ?>
 
 <div class="g-page-header">
@@ -36,7 +73,7 @@ $niveauLabels = [
   <?php foreach ($grouped as $niveau => $nPieces): ?>
     <div class="g-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <h3 style="font-size:13px;font-weight:700;color:var(--ap);"><?= e($niveauLabels[$niveau] ?? ($niveau === '__tous' ? 'Tous niveaux' : $niveau)) ?></h3>
+        <h3 style="font-size:13px;font-weight:700;color:var(--ap);"><?= e($porteeTitre((string)$niveau)) ?></h3>
         <span style="font-size:12px;color:var(--ink-3);"><?= count($nPieces) ?> pièce<?= count($nPieces) > 1 ? 's' : '' ?></span>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;">
@@ -75,7 +112,7 @@ $niveauLabels = [
     </div>
     <form action="<?= url('/gestionnaire/pieces') ?>" method="post">
       <input type="hidden" name="csrf_token" value="<?= \Core\Session::getCsrfToken() ?>">
-      <?= _pieceFields([]) ?>
+      <?= _pieceFields([], $porteeOptions) ?>
       <div style="display:flex;gap:10px;margin-top:18px;">
         <button type="submit" class="g-btn g-btn-primary">Ajouter</button>
         <button type="button" class="g-btn g-btn-ghost" onclick="closeModal('modal-add-piece')">Annuler</button>
@@ -103,14 +140,11 @@ $niveauLabels = [
 </div>
 
 <?php
-function _pieceFields(array $p): string {
+function _pieceFields(array $p, callable $porteeOptions): string {
     $e = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
-    $niveaux = ['' => 'Tous niveaux','Socle L1-L2'=>'Socle L1-L2','Licence L3'=>'Licence L3','Master M1-M2'=>'Master M1-M2','Certification'=>'Certification'];
-    $sel = '';
-    foreach ($niveaux as $val => $lbl) {
-        $s = ($p['niveau'] ?? '') === $val ? ' selected' : '';
-        $sel .= "<option value=\"{$e($val)}\"{$s}>{$e($lbl)}</option>";
-    }
+    // Le menu des portées vient de PorteePiece : même vocabulaire que le
+    // formulaire d'inscription, valeur héritée conservée si elle existe.
+    $sel = $porteeOptions($p['niveau'] ?? null);
     $obligatoire = !empty($p['obligatoire']) ? 'checked' : '';
     return "
       <div class=\"g-form-group\"><label>Libellé *</label><input type=\"text\" name=\"libelle\" value=\"{$e($p['libelle']??'')}\" required style=\"width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--r-md);font-family:var(--font);font-size:13px;\"></div>
@@ -127,8 +161,26 @@ function openEditPiece(p) {
   const base = window.CA_GEST.baseUrl;
   document.getElementById('form-edit-piece').action = base + '/gestionnaire/pieces/' + p.id;
   const e = v => (v ?? '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
-  const niveaux = [['','Tous niveaux'],['Socle L1-L2','Socle L1-L2'],['Licence L3','Licence L3'],['Master M1-M2','Master M1-M2'],['Certification','Certification']];
-  const selOpts = niveaux.map(([v,l]) => `<option value="${e(v)}"${p.niveau===v?' selected':''}>${e(l)}</option>`).join('');
+
+  // Les portées viennent du serveur (Services\Orientation\PorteePiece) : le
+  // menu ne peut plus diverger de ce que le formulaire d'inscription sait
+  // relire. Une valeur héritée absente de la liste est réinjectée telle
+  // quelle, sinon l'enregistrement la remplacerait en douce par « tous
+  // niveaux » sans que personne ne l'ait demandé.
+  const portees = <?= json_encode(\Services\Orientation\PorteePiece::options(), JSON_UNESCAPED_UNICODE) ?>;
+  let valeurs = [];
+  let selOpts = '';
+  for (const [groupe, entrees] of Object.entries(portees)) {
+    const opts = Object.entries(entrees)
+      .map(([v, l]) => { valeurs.push(v); return `<option value="${e(v)}">${e(l)}</option>`; })
+      .join('');
+    selOpts += groupe ? `<optgroup label="${e(groupe)}">${opts}</optgroup>` : opts;
+  }
+  const niveauActuel = (p.niveau ?? '') + '';
+  if (niveauActuel !== '' && valeurs.indexOf(niveauActuel) === -1) {
+    selOpts += `<optgroup label="Portée enregistrée"><option value="${e(niveauActuel)}">${e(niveauActuel)}</option></optgroup>`;
+  }
+
   document.getElementById('edit-piece-fields').innerHTML = `
     <div class="g-form-group"><label>Libellé *</label><input type="text" name="libelle" value="${e(p.libelle)}" required style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--r-md);font-family:var(--font);font-size:13px;"></div>
     <div class="g-form-row">
@@ -136,6 +188,12 @@ function openEditPiece(p) {
       <div class="g-form-group"><label>Ordre</label><input type="number" name="ordre" value="${e(p.ordre||0)}" min="0" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--r-md);font-family:var(--font);font-size:13px;"></div>
     </div>
     <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-top:6px;"><input type="checkbox" name="obligatoire" value="1" ${p.obligatoire==1?'checked':''}> Pièce obligatoire</label>`;
+
+  // Sélection posée APRÈS l'injection : `selected` dans une chaîne de gabarit
+  // se perd dès qu'un <optgroup> s'intercale.
+  const champNiveau = document.querySelector('#edit-piece-fields select[name="niveau"]');
+  if (champNiveau) { champNiveau.value = niveauActuel; }
+
   openModal('modal-edit-piece');
 }
 </script>

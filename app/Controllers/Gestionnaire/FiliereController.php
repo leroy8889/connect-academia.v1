@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Controllers\Gestionnaire;
 
 use Core\{Response, Session, TenantGuard};
-use Models\Orientation\{Etablissement, Filiere};
+use Models\Orientation\{Etablissement, Filiere, TarifFormation};
 use Services\Orientation\JournalGestionnaire;
 
 /**
@@ -31,9 +31,43 @@ class FiliereController
             'pageTitle'  => 'Filières & spécialités — ' . ($etab['nom'] ?? ''),
             'etab'       => $etab,
             'filieres'   => $filieres,
+            // Grilles chargées en une requête pour toute la page : une par
+            // filière ferait autant d'allers-retours qu'il y a de formations.
+            'grilles'    => (new TarifFormation())->grillesPour(array_column($filieres, 'id')),
             'flash'      => Session::getFlash('success'),
             'flashError' => Session::getFlash('error'),
         ], 'gestionnaire');
+    }
+
+    /**
+     * Enregistre la grille tarifaire d'une formation (scolarité par cycle,
+     * niveau et situation de bourse).
+     *
+     * Le formulaire poste la grille ENTIÈRE, y compris ses cases vides : c'est
+     * ce qui permet d'effacer un tarif en vidant simplement son champ. Le
+     * modèle supprime alors la ligne au lieu de la laisser traîner à 0.
+     */
+    public function tarifs(int $id): void
+    {
+        $model = new Filiere();
+        if (!$model->findById($id, $this->etabId)) {
+            TenantGuard::denyEtab($model->findByIdAny($id), $this->etabId, 'gestionnaire.filiere', $id);
+            Session::flash('error', 'Filière introuvable.');
+            Response::redirect('/gestionnaire/filieres');
+            return;
+        }
+
+        $grille = is_array($_POST['tarifs'] ?? null) ? $_POST['tarifs'] : [];
+
+        if ((new TarifFormation())->remplacerGrille($id, $this->etabId, $grille)) {
+            JournalGestionnaire::log('filiere.tarifs', 'filiere', $id,
+                'Grille tarifaire mise à jour : #' . $id);
+            Session::flash('success', 'Grille tarifaire enregistrée.');
+        } else {
+            Session::flash('error', 'La grille tarifaire n’a pas pu être enregistrée.');
+        }
+
+        Response::redirect('/gestionnaire/filieres');
     }
 
     // ── Filières ──────────────────────────────────────────────────────────────

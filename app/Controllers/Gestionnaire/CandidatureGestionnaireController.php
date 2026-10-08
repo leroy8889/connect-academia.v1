@@ -7,7 +7,7 @@ use Core\{Database, Response, Session, TenantGuard};
 use Models\Orientation\{Etablissement, Dossier, Filiere, Formation, PieceRequise, NotificationOrientation};
 use Models\Notification;
 use Models\User;
-use Services\Orientation\{DocumentStorage, JournalGestionnaire, PdfStream, RecepisseService, SmsService, WhatsAppService};
+use Services\Orientation\{DocumentStorage, JournalGestionnaire, PdfStream, PieceDossier, PolitiqueBoursiers, RecepisseService, SituationBourse, SmsService, UniciteInscription, WhatsAppService};
 
 class CandidatureGestionnaireController
 {
@@ -68,26 +68,88 @@ class CandidatureGestionnaireController
         return [$errors, $specialite];
     }
 
+    /**
+     * Liste des dossiers — vue unique filtrable (spec §8.1).
+     *
+     * Les filtres sont persistés en session : un agent qui ouvre une fiche
+     * puis revient retrouve exactement la même liste, sans refaire ses
+     * réglages vingt fois par jour.
+     */
     public function index(): void
     {
-        $etab    = (new Etablissement())->findById($this->etabId);
-        $filters = [
-            'statut'  => $_GET['statut'] ?? '',
-            'origine' => $_GET['origine'] ?? '',
-            'q'       => trim($_GET['q'] ?? ''),
-        ];
-        $dossiers = (new Dossier())->findByEtab($this->etabId, $filters);
+        $etab  = (new Etablissement())->findById($this->etabId);
+        $model = new Dossier();
+
+        $filtres = $this->filtresPersistants();
+        $page    = max(1, (int)($_GET['page'] ?? 1));
+        $parPage = 50;
+
+        $total = $model->countByEtabFiltre($this->etabId, $filtres);
+        $pages = max(1, (int)ceil($total / $parPage));
+        $page  = min($page, $pages);
 
         Response::view('gestionnaire/candidatures/index', [
-            'pageTitle' => 'Candidatures — ' . ($etab['nom'] ?? ''),
-            'etab'      => $etab,
-            'dossiers'  => $dossiers,
-            'filters'   => $filters,
-            'flash'     => Session::getFlash('success'),
-            'flashError'=> Session::getFlash('error'),
+            'pageTitle'  => 'Dossiers — ' . ($etab['nom'] ?? ''),
+            'etab'       => $etab,
+            'dossiers'   => $model->findByEtabFiltre($this->etabId, $filtres, $parPage, ($page - 1) * $parPage),
+            'compteurs'  => $model->compteursParStatut($this->etabId, $filtres),
+            // Onglets préinscriptions / inscriptions : deux parcours distincts,
+            // deux listes. Mélangés, l'agent applique à une préinscription les
+            // gestes de l'inscription.
+            'compteursType' => $model->compteursParType($this->etabId, $filtres),
+            'filieres'   => $model->filieresPresentes($this->etabId),
+            'filtres'    => $filtres,
+            'total'      => $total,
+            'page'       => $page,
+            'pages'      => $pages,
+            'flash'      => Session::getFlash('success'),
+            'flashError' => Session::getFlash('error'),
         ], 'gestionnaire');
     }
 
+    /**
+     * Filtres de la liste, mémorisés en session (spec §8.1 : « filtres
+     * persistants »). `?reset=1` les efface.
+     *
+     * @return array<string,string>
+     */
+    private function filtresPersistants(): array
+    {
+        $cle = 'gest_filtres_dossiers_' . $this->etabId;
+
+        if (isset($_GET['reset'])) {
+            Session::remove($cle);
+
+            return ['type' => '', 'statut' => '', 'filiere' => '', 'statut_bourse' => '', 'du' => '', 'au' => '', 'q' => '', 'tri' => ''];
+        }
+
+        $champs   = ['type', 'statut', 'filiere', 'statut_bourse', 'du', 'au', 'q', 'tri'];
+        $memorise = Session::get($cle, []);
+        $memorise = is_array($memorise) ? $memorise : [];
+
+        // Une requête sans aucun paramètre de filtre est une simple navigation :
+        // on restitue alors ce qui était mémorisé plutôt que de tout effacer.
+        $recus = array_intersect_key($_GET, array_flip($champs));
+
+        $filtres = [];
+        foreach ($champs as $champ) {
+            $valeur = $recus !== []
+                ? trim((string)($_GET[$champ] ?? ''))
+                : trim((string)($memorise[$champ] ?? ''));
+
+            // Bornage : ces valeurs partent dans des requêtes préparées, mais
+            // aussi dans les liens de pagination et le HTML de la page.
+            $filtres[$champ] = mb_substr($valeur, 0, 120);
+        }
+
+        Session::set($cle, $filtres);
+
+        return $filtres;
+    }
+
+    /**
+     * Fiche dossier — trois zones : identité, pièces, décision (spec §8.2).
+     */
     public function show(int $id): void
     {
         $dossierModel = new Dossier();
@@ -100,36 +162,178 @@ class CandidatureGestionnaireController
             return;
         }
 
-        $documents = $dossierModel->getDocumentsByDossier($id);
-        $storage   = new DocumentStorage();
-        $signedUrls= [];
+        // Consultation des pièces : lien INTERNE, plus d'URL signée Backblaze.
+        //
+        // Les pièces sont chiffrées au repos (AES-256-GCM) : un lien pointant
+        // directement sur le bucket rendrait une enveloppe binaire illisible.
+        // Mais ce n'est pas la seule raison du changement — une URL signée
+        // restait valable hors session pendant toute sa durée de vie, copiable
+        // et transmissible. Le lien interne, lui, refait le contrôle
+        // d'appartenance à CHAQUE ouverture (cf. self::document()).
+        $documents  = $dossierModel->getDocumentsByDossier($id);
+        $signedUrls = [];
         foreach ($documents as $doc) {
-            try {
-                $signedUrls[$doc['id']] = $storage->signedUrl($doc['cle_b2'], 15);
-            } catch (\Throwable) {
-                $signedUrls[$doc['id']] = null;
-            }
+            $signedUrls[$doc['id']] = !empty($doc['cle_b2'])
+                ? url('/gestionnaire/candidatures/' . $id . '/document/' . (int)$doc['id'])
+                : null;
         }
 
-        $etab = (new Etablissement())->findById($this->etabId);
-        $sms  = new SmsService();
+        $etab   = (new Etablissement())->findById($this->etabId);
+        $sms    = new SmsService();
+        $statut = \Models\Orientation\DossierStatut::normaliser((string)$dossier['statut']);
+
+        // Commission et son échéancier : l'établissement doit voir où en est le
+        // recouvrement sur CE dossier, sans quitter la fiche.
+        $commission = \Services\Orientation\CommissionDossier::pourDossier($id);
+        $tranches   = $commission !== null
+            ? \Services\Orientation\CommissionDossier::tranches((int)$commission['id'])
+            : [];
 
         Response::view('gestionnaire/candidatures/show', [
-            'pageTitle'    => 'Dossier #' . $id,
-            'etab'         => $etab,
-            'dossier'      => $dossier,
-            'documents'    => $documents,
-            'signedUrls'   => $signedUrls,
-            'recepisse'    => $dossierModel->getRecepisse($id),
-            'attestation'  => $dossierModel->getAttestation($id),
-            'estInscription'=> $dossierModel->hasInscription($id),
-            'filieres'     => self::FILIERES,
-            'smsHistorique'=> $sms->historique($id, 5),
-            'smsSimulation'=> $sms->estSimulation(),
-            'flash'        => Session::getFlash('success'),
-            'flashError'   => Session::getFlash('error'),
-            'waUrl'        => Session::getFlash('wa_url'),
+            'pageTitle'      => 'Dossier ' . ($dossier['reference'] ?? '#' . $id),
+            'etab'           => $etab,
+            'dossier'        => $dossier,
+            'statut'         => $statut,
+            'documents'      => $documents,
+            'signedUrls'     => $signedUrls,
+            'recepisse'      => $dossierModel->getRecepisse($id),
+            'attestation'    => $dossierModel->getAttestation($id),
+            // Nature du dossier — règle unique du modèle. hasInscription() ne
+            // regardait que la table `inscriptions`, remplie à la validation à
+            // 100 % : un dossier d'inscription en cours passait donc pour une
+            // préinscription, et une préinscription héritait de tout le
+            // parcours d'inscription (paliers 50 %, tarifs, commission).
+            'estInscription' => \Models\Orientation\Dossier::estInscription($dossier),
+            'filieres'       => self::FILIERES,
+            'smsHistorique'  => $sms->historique($id, 5),
+            'smsSimulation'  => $sms->estSimulation(),
+
+            // ── Zone décision (spec §8.2) ──
+            // Les actions proposées viennent de la machine à états : l'écran ne
+            // décide de rien, il montre ce qui est réellement permis.
+            'actions'        => self::actionsSelonNature($dossierModel->transitionsPossibles($dossier, 'etablissement'), $dossier),
+            'modesPaiement'  => \Services\Orientation\DecisionEtablissement::modesPaiement(),
+            'scolarite'      => \Services\Orientation\DecisionEtablissement::scolaritePreremplie($dossier),
+            'fraisProposes'  => \Services\Orientation\DecisionEtablissement::fraisInscriptionPreremplis($etab, $dossier),
+            // Tarif APPLIQUÉ (cycle, montant, provenance) : l'agent constate,
+            // il ne saisit plus. Le montant vient de la fiche établissement
+            // remplie par le super administrateur.
+            'tarif'          => \Services\Orientation\DecisionEtablissement::tarifApplicable($dossier, $etab),
+            'commission'     => $commission,
+            'tranches'       => $tranches,
+            'tauxCourant'    => $dossierModel->tauxCommissionApplicable($this->etabId),
+
+            // ── Traçabilité ──
+            'historique'     => $this->historiqueStatuts($id),
+            'histBourse'     => \Services\Orientation\SituationBourse::historique($id),
+            'scans'          => \Services\Orientation\ScanQr::pourDossier($id, 10),
+            'jeton'          => \Services\Orientation\JetonDossier::actif($id),
+
+            'erreurs100'     => Session::getFlash('erreurs_100', []),
+            'old100'         => Session::getFlash('old_100', []),
+            'flash'          => Session::getFlash('success'),
+            'flashError'     => Session::getFlash('error'),
+            'waUrl'          => Session::getFlash('wa_url'),
         ], 'gestionnaire');
+    }
+
+    /**
+     * Historique des changements de statut, du plus récent au plus ancien.
+     *
+     * @return list<array<string,mixed>>
+     */
+    private function historiqueStatuts(int $dossierId): array
+    {
+        try {
+            $st = \Core\Database::getInstance()->getConnection()->prepare(
+                'SELECT h.*, u.nom AS acteur_nom, u.prenom AS acteur_prenom
+                 FROM historique_statut_dossier h
+                 LEFT JOIN users u ON u.id = h.acteur_id
+                 WHERE h.dossier_id = ?
+                 ORDER BY h.cree_le DESC, h.id DESC
+                 LIMIT 50'
+            );
+            $st->execute([$dossierId]);
+
+            return $st->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Throwable $e) {
+            error_log('[Gestionnaire] Historique illisible #' . $dossierId . ' : ' . $e->getMessage());
+
+            return [];
+        }
+    }
+
+    // ── Consultation d'une pièce justificative ───────────────────────────────
+
+    /**
+     * Sert une pièce du dossier à l'agent, en clair, après contrôle des droits.
+     *
+     * Remplace le lien Backblaze signé qui figurait sur la fiche. Deux gains,
+     * dans cet ordre d'importance :
+     *
+     *  1. la pièce est chiffrée dans le bucket (AES-256-GCM, scellée sur sa clé
+     *     de stockage) : sans passer par ici, personne ne la lit — pas même
+     *     avec la clé d'API Backblaze ;
+     *  2. l'appartenance du dossier à l'établissement est revérifiée à chaque
+     *     ouverture, et le document est vérifié comme appartenant à CE dossier.
+     *     Une URL signée, elle, survivait à la fin de la session et se
+     *     transmettait par copier-coller.
+     *
+     * Le type MIME servi vient de la base, pas du bucket : le contenu stocké
+     * étant une enveloppe binaire, B2 n'a plus d'opinion utile sur sa nature.
+     * `Core\FichierBinaire` restreint ensuite ce qui peut s'afficher en ligne
+     * (tout le reste part en téléchargement, jamais interprété par le
+     * navigateur) et neutralise la CSP qui rendait les PDF en page blanche.
+     */
+    public function document(int $id, int $documentId): void
+    {
+        $dossierModel = new Dossier();
+        $dossier      = $dossierModel->findById($id);
+
+        if (!$dossier || (int)$dossier['etablissement_id'] !== $this->etabId) {
+            TenantGuard::denyEtab($dossier, $this->etabId, 'gestionnaire.document', $id);
+            http_response_code(404);
+            Session::flash('error', 'Document introuvable.');
+            Response::redirect('/gestionnaire/candidatures');
+            return;
+        }
+
+        $doc = $dossierModel->findDocumentById($documentId);
+
+        // Le document doit appartenir au dossier demandé : sans ce contrôle,
+        // un agent pourrait lire n'importe quelle pièce de la plateforme en
+        // gardant l'un de SES dossiers dans l'URL.
+        if (!$doc || (int)($doc['dossier_id'] ?? 0) !== $id || empty($doc['cle_b2'])) {
+            http_response_code(404);
+            Session::flash('error', 'Document introuvable.');
+            Response::redirect('/gestionnaire/candidatures/' . $id);
+            return;
+        }
+
+        try {
+            $contenu = (new DocumentStorage())->getContentClair((string)$doc['cle_b2']);
+        } catch (\Throwable $e) {
+            error_log('[Gestionnaire] Lecture document #' . $documentId . ' échouée : ' . $e->getMessage());
+            http_response_code(404);
+            Session::flash('error', 'Ce document est momentanément indisponible.');
+            Response::redirect('/gestionnaire/candidatures/' . $id);
+            return;
+        }
+
+        JournalGestionnaire::log(
+            'candidature.piece.consultation',
+            'dossier',
+            $id,
+            'Consultation de la pièce « ' . (string)($doc['libelle'] ?? 'document') . ' »',
+            ['document_id' => $documentId]
+        );
+
+        \Core\FichierBinaire::emettre(
+            $contenu,
+            (string)($doc['mime_type'] ?? ''),
+            (string)($doc['libelle'] ?? 'document'),
+            true
+        );
     }
 
     // ── Édition des informations du candidat ─────────────────────────────────
@@ -146,13 +350,19 @@ class CandidatureGestionnaireController
         }
 
         $filieresCfg = $this->filieresEtab();
+        $etab        = (new Etablissement())->findById($this->etabId);
 
         Response::view('gestionnaire/candidatures/edit', [
             'pageTitle'   => 'Modifier le dossier #' . $id,
-            'etab'        => (new Etablissement())->findById($this->etabId),
+            'etab'        => $etab,
             'dossier'     => $dossier,
             'filieres'    => $filieresCfg['options'],
             'specialites' => $filieresCfg['specialites'],
+            // Situation de bourse : corrigeable au guichet, tracée au nom de
+            // l'agent (SituationBourse::PAR_ETABLISSEMENT).
+            'bourseActive'  => PolitiqueBoursiers::accepte($etab),
+            'bourseOptions' => PolitiqueBoursiers::options($etab),
+            'bourseNote'    => SituationBourse::NOTE_EXPLICATIVE,
             'errors'      => Session::getFlash('form_errors') ?? [],
             'old'         => Session::getFlash('form_old') ?? [],
         ], 'gestionnaire');
@@ -204,6 +414,18 @@ class CandidatureGestionnaireController
         );
         $errors = array_merge($errors, $errFiliere);
 
+        // Mêmes exigences qu'à la création : la modification ne doit pas être
+        // une porte de sortie pour vider les champs qu'on vient de rendre
+        // obligatoires.
+        $scolarite = $this->validerScolarite($_POST);
+        $errors    = array_merge($errors, $scolarite['erreurs']);
+
+        // Situation de bourse — correction possible au guichet, tracée.
+        $etab   = (new Etablissement())->findById($this->etabId);
+        $post   = PolitiqueBoursiers::normaliserPost($etab, $_POST);
+        $bourse = SituationBourse::valider($post);
+        $errors = $errors + $bourse['erreurs'];
+
         if (!empty($errors)) {
             Session::flash('form_errors', $errors);
             Session::flash('form_old', $_POST);
@@ -226,8 +448,28 @@ class CandidatureGestionnaireController
             'dernier_etablissement'=> trim($_POST['dernier_etablissement'] ?? '') ?: null,
             'filiere_visee'        => $filiere ?: null,
             'specialite_visee'     => $specialite ?: null,
-            'niveau_entree'        => trim($_POST['niveau_entree']    ?? '') ?: null,
+            // Le niveau est une liste fermée : on n'enregistre QUE le libellé
+            // d'un code connu (L1 → M2). Une valeur forgée devient null plutôt
+            // que d'entrer telle quelle — le niveau détermine un tarif, il ne
+            // peut pas être saisi librement, même par un agent de guichet.
+            'niveau_entree'        => \Services\Orientation\Niveau::libellePourCode((string)($_POST['niveau_entree'] ?? '')),
+            'serie_bac'            => $scolarite['serie_bac'],
+            'annee_bac'            => $scolarite['annee_bac'],
         ]);
+
+        // La situation de bourse ne passe PAS par updateInfosByEtab : elle a sa
+        // propre chaîne (historique, réévaluation de la base de commission), et
+        // elle est idempotente — redéclarer la même chose n'écrit rien.
+        if ($bourse['valeurs']['statut_bourse'] !== null) {
+            SituationBourse::enregistrer(
+                $id,
+                $bourse['valeurs'],
+                SituationBourse::PAR_ETABLISSEMENT,
+                Session::gestionnaireId() ?: null,
+                null,
+                'Correction saisie au guichet.'
+            );
+        }
 
         if ($ok) {
             JournalGestionnaire::log('candidature.modification', 'dossier', $id,
@@ -455,17 +697,75 @@ class CandidatureGestionnaireController
         $token = $dossierModel->tokenVerificationRecepisse($id);
         $svc   = new RecepisseService();
 
+        // Même document qu'en ligne : attestation + facture proforma. La
+        // proforma porte la composition du dossier d'inscription — l'imprimer
+        // au guichet sans elle renverrait le candidat sans savoir quoi réunir.
+        $numeroFacture = 'FAC-' . substr($numero, 4);
+
         PdfStream::emettre(
-            $svc->renderPdf($dossier, $etab, $numero, $dateEmission, $token),
+            $svc->renderPdfComplet($dossier, $etab, $numero, $numeroFacture, $dateEmission, $token),
             fn() => $svc->render($dossier, $etab, $numero, $dateEmission, $token),
             $numero
         );
     }
 
+    /**
+     * Décisions réellement proposables, une fois la nature du dossier prise en
+     * compte.
+     *
+     * La machine à états ignore volontairement la différence préinscription /
+     * inscription : elle ne connaît que des états, et depuis « soumis » elle
+     * ouvre les mêmes portes aux deux. Or une PRÉINSCRIPTION ne se décide pas :
+     * elle n'engage rien, ne demande rien, et son attestation est délivrée dès
+     * le dépôt. Il n'y a donc AUCUNE décision à prendre dessus — ni validation,
+     * ni refus, ni demande de pièce.
+     *
+     * Le service refuse ces mêmes gestes côté serveur (DecisionEtablissement) :
+     * cette liste ne fait que ne pas les proposer.
+     *
+     * @param list<string> $actions
+     * @return list<string>
+     */
+    private static function actionsSelonNature(array $actions, array $dossier): array
+    {
+        return \Models\Orientation\Dossier::estInscription($dossier) ? $actions : [];
+    }
+
+    /**
+     * Changement de statut hérité — conservé pour les préinscriptions saisies
+     * avant la machine à états.
+     *
+     * Une INSCRIPTION ne passe plus par ici : ses états s'écrivent par
+     * Dossier::transition(), qui seule gèle le taux de commission, date les
+     * jalons et journalise. Y forcer « inscrit » depuis cette route créerait un
+     * inscrit sans commission ni attestation.
+     */
     public function updateStatut(int $id): void
     {
         $statut = $_POST['statut'] ?? '';
         $model  = new Dossier();
+
+        $dossier = $model->findById($id);
+        if (!$dossier || (int)$dossier['etablissement_id'] !== $this->etabId) {
+            TenantGuard::denyEtab($dossier, $this->etabId, 'gestionnaire.dossier', $id);
+            Session::flash('error', 'Dossier introuvable.');
+            Response::redirect('/gestionnaire/candidatures');
+            return;
+        }
+
+        if (\Models\Orientation\Dossier::estInscription($dossier)) {
+            Session::flash('error', 'Ce dossier est une inscription : utilisez la zone de décision de sa fiche.');
+            Response::redirect('/gestionnaire/candidatures/' . $id);
+            return;
+        }
+
+        // Une préinscription n'a que trois états : reçue, acceptée, refusée.
+        // « payé » et « inscrit » appartiennent au parcours d'inscription.
+        if (!in_array($statut, ['soumis', 'accepte', 'refuse'], true)) {
+            Session::flash('error', 'Statut invalide pour une préinscription.');
+            Response::redirect('/gestionnaire/candidatures/' . $id);
+            return;
+        }
 
         if (!$model->updateStatutByEtab($id, $this->etabId, $statut)) {
             Session::flash('error', 'Statut invalide.');
@@ -494,7 +794,7 @@ class CandidatureGestionnaireController
         }
 
         $etabNom        = $dossier['etab_nom'] ?? '';
-        $estInscription = $model->hasInscription($dossierId);
+        $estInscription = Dossier::estInscription($dossier);
 
         [$type, $titre, $message] = match ($statut) {
             'inscrit' => ['inscription_validee', 'Inscription validée',
@@ -554,8 +854,16 @@ class CandidatureGestionnaireController
                 $dateEmission = new \DateTime();
             }
         } else {
+            // Une préinscription ne donne JAMAIS lieu à une attestation
+            // d'inscription : elle n'inscrit personne. Le lien n'apparaît pas
+            // sur sa fiche, mais l'URL reste devinable.
+            if (!Dossier::estInscription($dossier)) {
+                Session::flash('error', 'Ce dossier est une préinscription : seule l\'attestation de préinscription est délivrée.');
+                Response::redirect('/gestionnaire/candidatures/' . $id);
+                return;
+            }
             // Première émission : dossier validé requis + option activée.
-            if (!in_array($dossier['statut'], ['inscrit','accepte'], true)) {
+            if (!in_array($dossier['statut'], ['inscrit','accepte','valide_100'], true)) {
                 Session::flash('error', 'L\'attestation n\'est délivrée qu\'après validation de l\'inscription (statut « Inscrit »).');
                 Response::redirect('/gestionnaire/candidatures/' . $id);
                 return;
@@ -575,6 +883,53 @@ class CandidatureGestionnaireController
         PdfStream::emettre(
             $svc->renderPdf($dossier, $etab, $numero, $dateEmission, $token),
             fn() => $svc->render($dossier, $etab, $numero, $dateEmission, $token),
+            $numero
+        );
+    }
+
+    /**
+     * GET /gestionnaire/candidatures/{id}/recu
+     *
+     * Réimpression du reçu de règlement de scolarité au guichet. C'est là que
+     * l'argent change de main : un reçu que seul le candidat peut sortir depuis
+     * son espace ne sert à rien face à quelqu'un qui vient de payer en espèces.
+     *
+     * Le document est rendu à la demande depuis les colonnes du dossier : deux
+     * impressions donnent le même reçu, au même numéro.
+     */
+    public function recu(int $id): void
+    {
+        $dossierModel = new Dossier();
+        $dossier      = $dossierModel->findById($id);
+
+        if (!$dossier || (int)$dossier['etablissement_id'] !== $this->etabId) {
+            TenantGuard::denyEtab($dossier, $this->etabId, 'gestionnaire.dossier', $id);
+            Session::flash('error', 'Dossier introuvable.');
+            Response::redirect('/gestionnaire/candidatures');
+            return;
+        }
+
+        if (!\Services\Orientation\RecuInscriptionService::disponible($dossier)) {
+            Session::flash('error', 'Le reçu n\'existe qu\'après la validation à 100 %, '
+                . 'avec le montant encaissé renseigné.');
+            Response::redirect('/gestionnaire/candidatures/' . $id);
+            return;
+        }
+
+        $numero = \Services\Orientation\RecuInscriptionService::numero($dossier);
+
+        \Services\Orientation\Journal::dossier(
+            \Services\Orientation\Journal::RECU_TELECHARGE,
+            $dossier,
+            ['numero' => $numero],
+            ['acteur_id' => Session::gestionnaireId(), 'acteur_role' => 'etablissement']
+        );
+
+        PdfStream::emettre(
+            \Services\Orientation\RecuInscriptionService::rendre($id),
+            static fn(): string => '<!doctype html><meta charset="utf-8">'
+                . '<p style="font-family:sans-serif;padding:40px">Le reçu est en cours de '
+                . 'génération. Réessayez dans quelques instants.</p>',
             $numero
         );
     }
@@ -674,6 +1029,64 @@ class CandidatureGestionnaireController
         }
     }
 
+    /**
+     * Champs de scolarité que le formulaire public rend obligatoires et que le
+     * guichet laissait passer vides : provenance, adresse, dernier
+     * établissement, niveau, série et année du bac.
+     *
+     * Le niveau reste une liste fermée (L1 → M2) : il détermine un tarif, il
+     * ne se saisit pas librement, même par un agent.
+     *
+     * @param array<string,mixed> $post
+     * @return array{erreurs:array<string,string>, serie_bac:?string, annee_bac:?int}
+     */
+    private function validerScolarite(array $post): array
+    {
+        $erreurs = [];
+
+        foreach ([
+            'pays_provenance'       => 'Pays de provenance obligatoire.',
+            'ville'                 => 'Ville obligatoire.',
+            'adresse'               => 'Adresse obligatoire.',
+            'dernier_etablissement' => 'Dernier établissement obligatoire.',
+        ] as $champ => $message) {
+            if (trim((string)($post[$champ] ?? '')) === '') {
+                $erreurs[$champ] = $message;
+            }
+        }
+
+        if (\Services\Orientation\Niveau::libellePourCode((string)($post['niveau_entree'] ?? '')) === null) {
+            $erreurs['niveau_entree'] = 'Niveau d’entrée obligatoire.';
+        }
+
+        $serie = trim((string)($post['serie_bac'] ?? ''));
+        if ($serie === '') {
+            $erreurs['serie_bac'] = 'Série du Bac obligatoire.';
+        } elseif (mb_strlen($serie) > 20) {
+            $erreurs['serie_bac'] = 'Série du Bac trop longue (20 caractères maximum).';
+        }
+
+        // Bornes identiques au champ public : une année hors plage est une
+        // faute de frappe, pas une donnée à conserver.
+        $anneeBrute = trim((string)($post['annee_bac'] ?? ''));
+        $annee      = null;
+        if ($anneeBrute === '') {
+            $erreurs['annee_bac'] = 'Année d’obtention du Bac obligatoire.';
+        } elseif (!ctype_digit($anneeBrute)
+                  || (int)$anneeBrute < 1970
+                  || (int)$anneeBrute > (int)date('Y')) {
+            $erreurs['annee_bac'] = 'Année invalide (entre 1970 et ' . date('Y') . ').';
+        } else {
+            $annee = (int)$anneeBrute;
+        }
+
+        return [
+            'erreurs'   => $erreurs,
+            'serie_bac' => $serie !== '' ? $serie : null,
+            'annee_bac' => $annee,
+        ];
+    }
+
     public function create(): void
     {
         $type        = ($_GET['type'] ?? '') === 'inscription' ? 'inscription' : 'preinscription';
@@ -692,6 +1105,11 @@ class CandidatureGestionnaireController
             'pieces'      => $pieces,
             'filieres'    => $filieresCfg['options'],
             'specialites' => $filieresCfg['specialites'],
+            // Situation de bourse : mêmes options qu'à l'étape 1 du parcours
+            // public, filtrées par la politique de l'établissement.
+            'bourseActive'  => PolitiqueBoursiers::accepte($etab),
+            'bourseOptions' => PolitiqueBoursiers::options($etab),
+            'bourseNote'    => SituationBourse::NOTE_EXPLICATIVE,
             'errors'      => Session::getFlash('form_errors') ?? [],
             'old'         => Session::getFlash('form_old') ?? [],
         ], 'gestionnaire');
@@ -700,6 +1118,10 @@ class CandidatureGestionnaireController
     public function store(): void
     {
         $type   = ($_POST['type_dossier'] ?? '') === 'inscription' ? 'inscription' : 'preinscription';
+        $etab   = (new Etablissement())->findById($this->etabId);
+        // Établissement fermé aux boursiers : toute déclaration est ramenée à
+        // « non boursier » AVANT validation, exactement comme côté public.
+        $post   = PolitiqueBoursiers::normaliserPost($etab, $_POST);
         $errors = [];
         $nom    = trim($_POST['nom_complet']    ?? '');
         // E-mail normalisé (minuscules) : sert de clé d'identité du candidat —
@@ -719,6 +1141,33 @@ class CandidatureGestionnaireController
         if ($lieu   === '') $errors['lieu_naissance']= 'Obligatoire.';
         if ($nation === '') $errors['nationalite']   = 'Obligatoire.';
 
+        // ── Une seule inscription par candidat et par année académique ─────
+        // Contrôle posé AVANT le verrou d'e-mail générique : les deux
+        // refuseraient ce dossier, mais celui-ci sait dire lequel et pourquoi,
+        // et l'agent peut ouvrir le dossier existant au lieu de chercher.
+        // Ne concerne QUE les inscriptions : une préinscription reste libre.
+        if (!isset($errors['email']) && $type === 'inscription') {
+            $existante = UniciteInscription::existante($this->etabId, null, $email);
+
+            if ($existante !== null) {
+                $errors['email'] = UniciteInscription::messageGuichet($existante);
+            }
+        }
+
+        // ── Une seule inscription ABOUTIE par année, tous établissements ────
+        // Le guichet est soumis à la même règle que le parcours en ligne, sinon
+        // elle ne vaut rien : un candidat refusé sur le site se présenterait au
+        // comptoir et obtiendrait le second dossier qu'on venait de lui
+        // interdire. L'agent voit le nom de l'établissement d'accueil — il peut
+        // vérifier et orienter, au lieu de conclure à une panne.
+        if (!isset($errors['email']) && $type === 'inscription') {
+            $ailleurs = UniciteInscription::inscriptionFinaliseeAilleurs($this->etabId, null, $email);
+
+            if ($ailleurs !== null) {
+                $errors['email'] = UniciteInscription::messageGuichetAutreEtablissement($ailleurs);
+            }
+        }
+
         // Unicité de l'e-mail DANS l'établissement : un même candidat ne peut
         // pas avoir deux dossiers (donc deux identités) au guichet. Requête
         // bornée à $this->etabId — aucune fuite sur les autres établissements.
@@ -727,6 +1176,19 @@ class CandidatureGestionnaireController
                 $errors['email'] = 'Cette adresse e-mail est déjà utilisée.';
             }
         }
+
+        // ── Champs que le formulaire public exige déjà ──────────────────────
+        // Le guichet les acceptait vides : un même candidat produisait donc un
+        // dossier complet en ligne et un dossier troué au guichet — dont le
+        // récépissé imprimait « — » sur la série et l'année du bac.
+        $scolarite = $this->validerScolarite($_POST);
+        $errors    = array_merge($errors, $scolarite['erreurs']);
+
+        // ── Situation de bourse (spec §5.2) ─────────────────────────────────
+        // Validée par le même service que le parcours public : une valeur
+        // forgée ou une date ANBG aberrante est rejetée ici aussi.
+        $bourse = SituationBourse::valider($post);
+        $errors = $errors + $bourse['erreurs'];
 
         // Filière / spécialité (filière obligatoire pour une inscription)
         [$errFiliere, $specialite] = $this->validerFiliereSpecialite(
@@ -791,8 +1253,25 @@ class CandidatureGestionnaireController
             'dernier_etablissement'=> trim($_POST['dernier_etablissement'] ?? '') ?: null,
             'filiere_visee'        => $_POST['filiere_visee']         ?? null,
             'specialite_visee'     => $specialite ?: null,
-            'niveau_entree'        => trim($_POST['niveau_entree']    ?? '') ?: null,
+            'niveau_entree'        => \Services\Orientation\Niveau::libellePourCode((string)($_POST['niveau_entree'] ?? '')),
+            'serie_bac'            => $scolarite['serie_bac'],
+            'annee_bac'            => $scolarite['annee_bac'],
         ], $this->etabId, (int)$agentId);
+
+        // Situation de bourse : écrite APRÈS la création du dossier, par le
+        // service qui trace l'historique. Rôle « établissement » et identité de
+        // l'agent : la déclaration est celle du candidat, la saisie est la
+        // nôtre, et les deux doivent rester distinguables (spec §18).
+        if ($bourse['erreurs'] === [] && $bourse['valeurs']['statut_bourse'] !== null) {
+            SituationBourse::enregistrer(
+                $dossierId,
+                $bourse['valeurs'],
+                SituationBourse::PAR_ETABLISSEMENT,
+                (int)$agentId ?: null,
+                null,
+                'Déclaration recueillie au guichet.'
+            );
+        }
 
         // Compte espace candidat : créé seulement si un mot de passe a été défini
         $noteCompte = '';
@@ -802,7 +1281,6 @@ class CandidatureGestionnaireController
 
         // ── Préinscription au guichet : récépissé officiel, aucun paiement ──
         if ($type === 'preinscription') {
-            $etab = (new Etablissement())->findById($this->etabId);
             if ($etab && (int)($etab['genere_recepisse'] ?? 0) === 1) {
                 $this->genererRecepisseGuichet($dossierId, $etab, $_POST);
             }
@@ -898,12 +1376,9 @@ class CandidatureGestionnaireController
             return;
         }
 
-        $allowed = [
-            'application/pdf' => 'pdf',
-            'image/jpeg'      => 'jpg',
-            'image/png'       => 'png',
-            'image/webp'      => 'webp',
-        ];
+        // Formats et plafond de taille : la règle est celle de PieceDossier, la
+        // même qu'en ligne. Recopier la liste ici l'avait déjà fait diverger
+        // (le guichet acceptait 10 Mo quand le candidat était borné à moins).
         $dossierModel = new Dossier();
         $pieceModel   = new PieceRequise();
         $storage      = null;
@@ -915,11 +1390,12 @@ class CandidatureGestionnaireController
             }
             $tmp  = $_FILES['pieces']['tmp_name'][$pieceId];
             $size = (int)($_FILES['pieces']['size'][$pieceId] ?? 0);
-            if ($size <= 0 || $size > 10 * 1024 * 1024) {
+            if ($size <= 0 || $size > PieceDossier::TAILLE_MAX_OCTETS) {
                 continue;
             }
-            $mime = $finfo->file($tmp) ?: '';
-            if (!isset($allowed[$mime])) {
+            $mime      = $finfo->file($tmp) ?: '';
+            $extension = PieceDossier::extensionPour($mime);
+            if ($extension === null) {
                 continue;
             }
 
@@ -927,12 +1403,14 @@ class CandidatureGestionnaireController
             $libelle = $piece['libelle'] ?? ('Pièce #' . (int)$pieceId);
             $cle     = sprintf(
                 'dossiers/%d/pieces/%d-%s.%s',
-                $dossierId, (int)$pieceId, bin2hex(random_bytes(4)), $allowed[$mime]
+                $dossierId, (int)$pieceId, bin2hex(random_bytes(4)), $extension
             );
 
             try {
                 $storage ??= new DocumentStorage();
-                $storage->upload($tmp, $cle, $mime);
+                // Pièce déposée au guichet : même protection qu'en ligne —
+                // chiffrée au repos, consultable uniquement via l'application.
+                $storage->uploadChiffre($tmp, $cle, $mime);
                 $dossierModel->addDocument([
                     'dossier_id'       => $dossierId,
                     'eleve_id'         => 0,
@@ -959,7 +1437,11 @@ class CandidatureGestionnaireController
             $numero = $dossierModel->reserveRecepisse($dossierId);
             $svc    = new RecepisseService();
             $token  = $dossierModel->tokenVerificationRecepisse($dossierId);
-            $pdf    = $svc->renderPdf($p, $etab, $numero, null, $token);
+
+            // Archive identique au document remis : attestation + proforma
+            // (celle-ci porte la composition du dossier d'inscription).
+            $numeroFacture = 'FAC-' . substr($numero, 4);
+            $pdf           = $svc->renderPdfComplet($p, $etab, $numero, $numeroFacture, null, $token);
 
             // Archive PDF (document identique à celui téléchargé) ; repli HTML
             // si dompdf échoue, pour ne jamais perdre l'archive.

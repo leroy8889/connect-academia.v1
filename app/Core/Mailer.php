@@ -28,8 +28,29 @@ class Mailer
         return $mail;
     }
 
+    /**
+     * Coupe-circuit local : avec `MAIL_DISABLED=true` dans le .env, rien ne
+     * part sur le réseau, l'envoi est seulement journalisé et compté comme
+     * réussi. Défaut : désactivé, la production n'est pas concernée.
+     *
+     * Raison d'être : la suite de tests fait tourner les tâches planifiées sur
+     * la base de développement, dont la table `admins` contient de VRAIES
+     * adresses. Une exécution locale a suffi à envoyer une alerte réelle aux
+     * super administrateurs. Le garde-fou appartient au code d'envoi, pas à
+     * chaque appelant : il n'y a qu'un seul endroit à ne pas oublier.
+     */
+    private static function coupe(): bool
+    {
+        return in_array(strtolower(trim((string)($_ENV['MAIL_DISABLED'] ?? ''))), ['1', 'true', 'yes'], true);
+    }
+
     public static function send(string $to, string $toName, string $subject, string $html, string $text = ''): bool
     {
+        if (self::coupe()) {
+            error_log("[Mailer] DÉSACTIVÉ (MAIL_DISABLED) → {$to} — {$subject}");
+            return true;
+        }
+
         try {
             $mail = self::make();
             $mail->addAddress($to, $toName);

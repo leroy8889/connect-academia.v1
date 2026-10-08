@@ -151,7 +151,7 @@ class ParametresController
         try {
             $redis = Redis::getInstance();
             if (!empty($etab['slug'])) {
-                $redis->del('orientation:etab:' . $etab['slug']);
+                $redis->del('orientation:etab:' . $etab['slug'], 'orientation:etab:v2:' . $etab['slug']);
             }
             if (!empty($etab['type'])) {
                 $redis->del('orientation:marketplace:' . $etab['type']);

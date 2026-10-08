@@ -1,0 +1,286 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Écran de scan du guichet (spec §8.5)
+
+   Un agent debout, un candidat en face, une matinée de rentrée. L'écran doit
+   se lire d'un coup d'œil et se manœuvrer d'une main.
+
+   ── Ce qui a changé, et pourquoi ──────────────────────────────────────────
+   L'écran présentait deux cartes jumelles côte à côte, en aplat gris, avec un
+   gros bouton pilule à halo violet. Trois problèmes : rien ne disait quel
+   chemin prendre, le halo attirait l'œil sur l'action la MOINS fiable (la
+   caméra n'existe pas partout), et l'ensemble ressemblait à n'importe quel
+   écran généré.
+
+   Désormais : un seul panneau, deux rangs, une hiérarchie explicite. Le champ
+   de code est le sujet — c'est le seul chemin qui marche toujours. La caméra
+   est un raccourci, au-dessus, en secondaire.
+
+   ── Règles visuelles ──────────────────────────────────────────────────────
+   Aplats et filets, jamais d'ombre portée ni de halo. Un seul accent : le
+   violet, réservé au bouton de validation et au cadre de visée. Rayons 10 px
+   (champs, boutons) et 16 px (blocs) — même échelle que candidature.css.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@import url('./tokens.css');
+
+.scan-page {
+    --scan-encre:   #1A1A1A;
+    --scan-gris:    #55534E;
+    --scan-clair:   #8D8A83;
+    --scan-filet:   #E7E4DC;
+    --scan-creme:   #FAF9F5;
+    --scan-violet:  var(--purple-neon, #8B52FA);
+
+    max-width: 660px;
+    margin: 0 auto;
+    padding: 4px 0 40px;
+}
+
+/* ── Titre ───────────────────────────────────────────────────────────────── */
+.scan-head { margin-bottom: 20px; }
+.scan-head h1 {
+    font-size: clamp(1.5rem, 4.4vw, 1.85rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -.025em;
+    color: var(--scan-encre);
+}
+.scan-head p {
+    margin-top: 8px;
+    max-width: 54ch;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--scan-gris);
+}
+
+/* ── Alerte ──────────────────────────────────────────────────────────────── */
+.scan-alerte {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 15px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(178, 37, 37, .28);
+    border-left: 3px solid #B32525;
+    border-radius: 10px;
+    background: rgba(178, 37, 37, .06);
+    color: #8E1F1F;
+    font-size: 13.5px;
+    line-height: 1.5;
+    font-weight: 600;
+}
+.scan-alerte svg { flex: 0 0 auto; margin-top: 1px; }
+
+/* ── Panneau unique ──────────────────────────────────────────────────────── */
+.scan-panneau {
+    background: #FFFFFF;
+    border: 1px solid var(--scan-filet);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+/* ── Rang caméra (raccourci, affiché seulement si le navigateur décode) ──── */
+.scan-camera {
+    padding: 16px 18px;
+    background: var(--scan-creme);
+    border-bottom: 1px solid var(--scan-filet);
+}
+.scan-camera[hidden] { display: none; }
+
+.scan-camera-barre {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Viseur : masqué tant que la caméra n'est pas ouverte. Le noir profond est
+   ici légitime — c'est une image vidéo, pas une surface d'interface. */
+.scan-viseur {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #151412;
+    margin-bottom: 14px;
+    display: none;
+}
+.scan-actif .scan-viseur { display: block; }
+
+.scan-viseur video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Cadre de visée : l'agent sait où présenter le document sans y penser. */
+.scan-cadre {
+    position: absolute;
+    inset: 16%;
+    border: 2px solid var(--scan-violet);
+    border-radius: 10px;
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, .38);
+    pointer-events: none;
+}
+
+.scan-etat {
+    flex: 1 1 160px;
+    min-width: 0;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--scan-gris);
+}
+
+/* ── Rang saisie (le chemin qui marche toujours) ─────────────────────────── */
+.scan-saisie { padding: 20px 18px; }
+
+.scan-saisie label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--scan-gris);
+    margin-bottom: 8px;
+}
+
+.scan-champ { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.scan-champ input {
+    flex: 1 1 190px;
+    min-width: 0;
+    padding: 14px 16px;
+    border: 1.5px solid var(--scan-filet);
+    border-radius: 10px;
+    background: #FFFFFF;
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--scan-encre);
+}
+.scan-champ input:focus {
+    outline: none;
+    border-color: var(--scan-violet);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--scan-violet) 14%, transparent);
+}
+.scan-champ input::placeholder {
+    color: var(--scan-clair);
+    font-weight: 400;
+    letter-spacing: .12em;
+}
+
+.scan-aide {
+    margin-top: 10px;
+    max-width: 48ch;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--scan-clair);
+}
+
+/* ── Boutons ─────────────────────────────────────────────────────────────── */
+.scan-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 22px;
+    border: 1.5px solid transparent;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter .15s, border-color .15s, background .15s;
+}
+.scan-btn:active:not(:disabled) { transform: translateY(1px); }
+.scan-btn:disabled { opacity: .5; cursor: default; }
+
+/* Aucun halo : l'ombre colorée d'origine faisait flotter le bouton au-dessus
+   d'une page par ailleurs entièrement plate. */
+.scan-btn-primaire {
+    flex: 0 0 auto;
+    background: var(--scan-violet);
+    color: #FFFFFF;
+}
+.scan-btn-primaire:hover:not(:disabled) { filter: brightness(1.06); }
+
+.scan-btn-second {
+    flex: 0 0 auto;
+    background: #FFFFFF;
+    border-color: var(--scan-filet);
+    color: var(--scan-encre);
+    font-size: 14px;
+    padding: 11px 18px;
+}
+.scan-btn-second:hover:not(:disabled) { border-color: var(--scan-clair); }
+.scan-btn-second svg { color: var(--scan-gris); }
+
+/* ── Repli : navigateur sans décodage ────────────────────────────────────── */
+.scan-repli {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    margin: -8px 0 24px;
+    border: 1px solid var(--scan-filet);
+    border-radius: 12px;
+    background: var(--scan-creme);
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--scan-gris);
+}
+.scan-repli[hidden] { display: none; }
+.scan-repli svg { flex: 0 0 auto; margin-top: 2px; color: var(--scan-clair); }
+.scan-repli b { color: var(--scan-encre); font-weight: 700; }
+
+/* ── Historique ──────────────────────────────────────────────────────────── */
+.scan-recents h2 {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--scan-gris);
+    margin-bottom: 4px;
+}
+.scan-recents ul { list-style: none; }
+.scan-recents li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--scan-filet);
+}
+.scan-recents li:last-child { border-bottom: none; }
+.scan-recents a {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    text-decoration: none;
+}
+.scan-ref {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    color: var(--scan-violet);
+}
+.scan-nom {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--scan-encre);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.scan-recents a:hover .scan-nom { text-decoration: underline; }
+.scan-quand { flex: 0 0 auto; font-size: 12px; color: var(--scan-clair); }
+
+@media (max-width: 520px) {
+    .scan-camera  { padding: 14px; }
+    .scan-saisie  { padding: 16px 14px; }
+    .scan-champ input { font-size: 18px; letter-spacing: .14em; }
+    .scan-champ .scan-btn-primaire { width: 100%; }
+    .scan-btn-second { width: 100%; }
+}

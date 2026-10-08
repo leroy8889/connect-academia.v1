@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace Controllers\Orientation;
 
 use Core\{Redis, Response, Session};
-use Models\Orientation\{Avis, Etablissement, Filiere, Formation};
-use Services\Orientation\DocumentStorage;
+use Models\Orientation\{Avis, Etablissement, Filiere, Formation, TarifFormation};
+use Services\Orientation\{DocumentStorage, Niveau, PolitiqueBoursiers, SituationBourse, TarifCycle};
 
 class PublicController
 {
@@ -15,14 +15,21 @@ class PublicController
         $redis  = Redis::getInstance();
 
         // ── Redis cache (DB seulement — signed URLs exclues, TTL B2 trop court) ──
-        $cacheKey = "orientation:etab:{$slug}";
+        // La clé porte un numéro de FORME : le contenu mis en cache a gagné les
+        // grilles tarifaires. Sans ce numéro, les entrées écrites par la version
+        // précédente auraient continué de servir des filières sans prix pendant
+        // tout le TTL, et la correction serait passée pour inopérante.
+        $cacheKey = "orientation:etab:v2:{$slug}";
         $cached   = $redis->get($cacheKey);
 
-        // isset($cached['filieres']) : les entrées de cache antérieures à l'ajout
-        // des filières publiques n'ont pas la clé → on refait un fetch frais et on
-        // ré-écrit le cache au nouveau format (pas de destructuration cassée).
-        if ($cached !== false && is_array($cached) && isset($cached['filieres'])) {
-            ['etab' => $etab, 'formations' => $formations, 'actualites' => $actualites, 'filieres' => $filieres] = $cached;
+        if ($cached !== false && is_array($cached) && isset($cached['filieres'], $cached['tarifsFilieres'])) {
+            [
+                'etab'           => $etab,
+                'formations'     => $formations,
+                'actualites'     => $actualites,
+                'filieres'       => $filieres,
+                'tarifsFilieres' => $tarifsFilieres,
+            ] = $cached;
         } else {
             $etab = $model->findBySlug($slug);
 
@@ -36,7 +43,16 @@ class PublicController
             $actualites = $model->getActualites((int)$etab['id'], 7);
             $filieres   = (new Filiere())->findActiveByEtab((int)$etab['id']);
 
-            $redis->set($cacheKey, compact('etab', 'formations', 'actualites', 'filieres'), 600);
+            // Grilles tarifaires de TOUTES les filières en UNE requête : la page
+            // en affiche autant qu'il y a de formations, une requête par ligne
+            // aurait fait N+1 sur la page la plus visitée du module.
+            $tarifsFilieres = self::tarifsPublics($filieres, $etab);
+
+            $redis->set(
+                $cacheKey,
+                compact('etab', 'formations', 'actualites', 'filieres', 'tarifsFilieres'),
+                600
+            );
         }
 
         // 404 si statut changé depuis le cache
@@ -107,6 +123,7 @@ class PublicController
             'videoFileUrl'  => $videoFileUrl,
             'formations'    => $formations,
             'filieres'      => $filieres,
+            'tarifsFilieres'=> $tarifsFilieres,
             'actualites'    => $actualites,
             'badges'        => json_decode($etab['badges_confiance'] ?? 'null', true) ?? [],
             'atouts'        => json_decode($etab['atouts']          ?? 'null', true) ?? [],
@@ -117,6 +134,117 @@ class PublicController
             'avisList'      => $avisList,
             'monAvis'       => $monAvis,
         ], '');
+    }
+
+    /**
+     * Tarifs publics de chaque formation d'un établissement.
+     *
+     * ── Pourquoi cette méthode existe ────────────────────────────────────────
+     *
+     * L'établissement remplit une grille tarifaire par formation (niveau ×
+     * situation de bourse) depuis son back-office. Cette grille servait au
+     * guichet et à la facture proforma… mais la page publique n'en affichait
+     * rien : le bloc « Filières & spécialités » ne montrait que des noms. Un
+     * établissement qui avait consciencieusement saisi ses prix ne les voyait
+     * apparaître nulle part.
+     *
+     * ── Ce qui est calculé ───────────────────────────────────────────────────
+     *
+     * Pour chaque formation, le prix RÉELLEMENT applicable à chaque niveau,
+     * résolu par TarifCycle — donc avec la même cascade de replis que le
+     * guichet (ligne de niveau → ligne de cycle → fiche établissement). Un
+     * niveau sans aucun tarif nulle part n'est pas affiché : mieux vaut ne rien
+     * annoncer qu'annoncer « 0 FCFA ».
+     *
+     * Une seule requête pour toutes les grilles, une seule pour la fiche
+     * établissement : c'est la page la plus visitée du module, elle ne peut pas
+     * se permettre un N+1.
+     *
+     * @param list<array<string,mixed>> $filieres Sortie de Filiere::findActiveByEtab().
+     * @param array<string,mixed>       $etab
+     * @return array<int,array{min:int, cycles:list<array{libelle:string, lignes:list<array{niveau:string, non_boursier:int, boursier:int}>}>}>
+     */
+    private static function tarifsPublics(array $filieres, array $etab): array
+    {
+        $ids = [];
+        foreach ($filieres as $f) {
+            if (!empty($f['id'])) {
+                $ids[] = (int)$f['id'];
+            }
+        }
+
+        if ($ids === []) {
+            return [];
+        }
+
+        try {
+            $grilles = (new TarifFormation())->grillesPour($ids);
+        } catch (\Throwable $e) {
+            error_log('[Orientation/Public] Grilles tarifaires illisibles : ' . $e->getMessage());
+
+            return [];
+        }
+
+        // Établissement fermé aux boursiers : la colonne « Boursier » n'a plus
+        // de sens sur la page publique — personne ne peut candidater à ce
+        // tarif. Elle est neutralisée ICI plutôt que dans le gabarit, pour que
+        // les deux vues qui consomment cette structure disparaissent ensemble.
+        $afficheBoursier = PolitiqueBoursiers::accepte($etab);
+
+        $sortie = [];
+
+        foreach ($ids as $filiereId) {
+            $grille = $grilles[$filiereId] ?? [];
+            $cycles = [];
+            $min    = null;
+
+            foreach ([TarifCycle::LICENCE, TarifCycle::MASTER] as $cycle) {
+                $lignes = [];
+
+                foreach (Niveau::codes() as $code) {
+                    if (Niveau::cycle($code) !== $cycle) {
+                        continue;
+                    }
+
+                    $plein = TarifCycle::scolaritePourFormation($grille, $cycle, $code, null, $etab)['montant'];
+                    if ($plein === null || $plein <= 0) {
+                        continue; // Rien de configuré pour ce niveau : on n'invente pas.
+                    }
+
+                    $boursier = $afficheBoursier
+                        ? TarifCycle::scolaritePourFormation(
+                            $grille,
+                            $cycle,
+                            $code,
+                            SituationBourse::BOURSIER,
+                            $etab
+                        )['montant']
+                        : null;
+
+                    $lignes[] = [
+                        'niveau'       => Niveau::libelle($code),
+                        'non_boursier' => (int)$plein,
+                        // Un tarif boursier identique au plein n'apporte rien :
+                        // on ne l'affiche que s'il diffère réellement.
+                        'boursier'     => ($boursier !== null && (int)$boursier !== (int)$plein)
+                            ? (int)$boursier
+                            : 0,
+                    ];
+
+                    $min = $min === null ? (int)$plein : min($min, (int)$plein);
+                }
+
+                if ($lignes !== []) {
+                    $cycles[] = ['libelle' => TarifCycle::libelle($cycle), 'lignes' => $lignes];
+                }
+            }
+
+            if ($cycles !== []) {
+                $sortie[$filiereId] = ['min' => (int)$min, 'cycles' => $cycles];
+            }
+        }
+
+        return $sortie;
     }
 
     /**

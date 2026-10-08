@@ -108,9 +108,11 @@ class RessourceController
             $nom .= '.pdf';
         }
 
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
+        // Même correctif que pour les pièces de dossier : la CSP du
+        // front-controller (`object-src 'none'`) bloque la visionneuse PDF
+        // interne des navigateurs Chromium et rend une page blanche à la place
+        // du document. Cf. Core\FichierBinaire.
+        \Core\FichierBinaire::preparerReponse();
 
         header('Content-Type: application/pdf');
         header('Content-Length: ' . (string) filesize($abs));

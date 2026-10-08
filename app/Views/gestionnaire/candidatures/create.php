@@ -8,6 +8,12 @@ $old         = $old         ?? [];
 $typeDossier = ($typeDossier ?? 'preinscription') === 'inscription' ? 'inscription' : 'preinscription';
 $isInscription = $typeDossier === 'inscription';
 
+// Situation de bourse — mêmes options et même note que le formulaire public.
+// `$bourseActive` traduit la politique de l'établissement (accepte_boursiers).
+$bourseActive  = $bourseActive  ?? true;
+$bourseOptions = $bourseOptions ?? \Services\Orientation\SituationBourse::options();
+$bourseNote    = $bourseNote    ?? \Services\Orientation\SituationBourse::NOTE_EXPLICATIVE;
+
 function gOld(array $old, string $key, string $default = ''): string {
     return htmlspecialchars((string)($old[$key] ?? $default), ENT_QUOTES, 'UTF-8');
 }
@@ -107,23 +113,30 @@ function gErr(array $errors, string $key): string {
         <?= gErr($errors, 'telephone') ?>
       </div>
     </div>
+    <?php /* Ces quatre champs sont OBLIGATOIRES dans le formulaire public : un
+             dossier saisi au guichet sans eux n'est pas le même dossier, et
+             c'est le guichet qui produit ensuite le document officiel. */ ?>
     <div class="g-form-row">
       <div class="g-form-group">
-        <label>Pays de provenance</label>
-        <input type="text" name="pays_provenance" value="<?= gOld($old, 'pays_provenance', 'Gabon') ?>">
+        <label>Pays de provenance *</label>
+        <input type="text" name="pays_provenance" value="<?= gOld($old, 'pays_provenance', 'Gabon') ?>" required>
+        <?= gErr($errors, 'pays_provenance') ?>
       </div>
       <div class="g-form-group">
-        <label>Ville</label>
-        <input type="text" name="ville" value="<?= gOld($old, 'ville') ?>" placeholder="Libreville">
+        <label>Ville *</label>
+        <input type="text" name="ville" value="<?= gOld($old, 'ville') ?>" placeholder="Libreville" required>
+        <?= gErr($errors, 'ville') ?>
       </div>
     </div>
     <div class="g-form-group">
-      <label>Adresse</label>
-      <input type="text" name="adresse" value="<?= gOld($old, 'adresse') ?>" placeholder="Quartier, rue…">
+      <label>Adresse *</label>
+      <input type="text" name="adresse" value="<?= gOld($old, 'adresse') ?>" placeholder="Quartier, rue…" required>
+      <?= gErr($errors, 'adresse') ?>
     </div>
     <div class="g-form-group">
-      <label>Dernier établissement fréquenté</label>
-      <input type="text" name="dernier_etablissement" value="<?= gOld($old, 'dernier_etablissement') ?>" placeholder="Ex. Lycée Léon Mba">
+      <label>Dernier établissement fréquenté *</label>
+      <input type="text" name="dernier_etablissement" value="<?= gOld($old, 'dernier_etablissement') ?>" placeholder="Ex. Lycée Léon Mba" required>
+      <?= gErr($errors, 'dernier_etablissement') ?>
     </div>
   </div>
 
@@ -150,9 +163,125 @@ function gErr(array $errors, string $key): string {
       </div>
       <div class="g-form-group">
         <label>Niveau d'entrée</label>
-        <input type="text" name="niveau_entree" value="<?= gOld($old, 'niveau_entree') ?>" placeholder="Ex. Licence 2">
+        <?php
+          // Liste fermée, comme dans les formulaires publics : le niveau
+          // détermine le tarif appliqué au dossier (la grille de la formation
+          // peut distinguer L1, L2 et L3). Un champ libre au guichet aurait
+          // rouvert par la porte de service ce qu'on vient de fermer côté
+          // candidat. Un dossier ancien en texte libre est retrouvé par
+          // Niveau::code() et reste présélectionné.
+          $niveauCourant = \Services\Orientation\Niveau::code((string)($old['niveau_entree'] ?? ''));
+        ?>
+        <select name="niveau_entree" required style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--r-md);font-family:var(--font);font-size:13px;">
+          <option value="">— Choisir —</option>
+          <?php foreach (\Services\Orientation\Niveau::optionsParCycle() as $cycleLbl => $niveaux): ?>
+            <optgroup label="<?= e($cycleLbl) ?>">
+              <?php foreach ($niveaux as $code => $libelle): ?>
+                <option value="<?= e($code) ?>" <?= $niveauCourant === $code ? 'selected' : '' ?>><?= e($libelle) ?></option>
+              <?php endforeach; ?>
+            </optgroup>
+          <?php endforeach; ?>
+        </select>
+        <?= gErr($errors, 'niveau_entree') ?>
       </div>
     </div>
+
+    <?php /* ══ Baccalauréat ══
+             Ces deux champs manquaient au guichet alors que le formulaire
+             public les exige, et que RecepisseService les imprime sur le
+             récépissé comme sur l'attestation : tout dossier saisi ici
+             ressortait avec « Série du Bac : — ». */ ?>
+    <div class="g-form-row">
+      <div class="g-form-group">
+        <label>Série du Bac *</label>
+        <input type="text" name="serie_bac" value="<?= gOld($old, 'serie_bac') ?>" placeholder="Ex. D, C, A4…" maxlength="20" required>
+        <?= gErr($errors, 'serie_bac') ?>
+      </div>
+      <div class="g-form-group">
+        <label>Année d'obtention du Bac *</label>
+        <input type="number" name="annee_bac" value="<?= gOld($old, 'annee_bac') ?>"
+               placeholder="Ex. <?= date('Y') ?>" min="1970" max="<?= date('Y') ?>" required>
+        <?= gErr($errors, 'annee_bac') ?>
+      </div>
+    </div>
+  </div>
+
+  <?php /* ══ Situation de bourse (spec §5.2) ══
+           Le formulaire public la demande à l'étape 1 ; le guichet ne la
+           demandait nulle part, et tous les dossiers saisis ici restaient
+           « Non renseignée » — alors qu'elle détermine les pièces attendues
+           ET la base de commission (TarifCycle::baseCommission).
+
+           La déclaration reste celle du CANDIDAT : elle est saisie sous sa
+           dictée, mais enregistrée avec le rôle « établissement » et l'identité
+           de l'agent, comme l'exige SituationBourse. */ ?>
+  <div class="g-card" style="margin-bottom:20px;">
+    <h3 class="g-section-title">Situation de bourse<?= $bourseActive ? ' *' : '' ?></h3>
+    <?php if (!$bourseActive): ?>
+      <input type="hidden" name="statut_bourse" value="non_boursier">
+      <p style="font-size:12px;color:var(--ink-3);margin:0;">
+        Cet établissement n'accepte pas les candidatures de boursiers : le dossier est enregistré
+        comme « non boursier ». Cette porte se rouvre depuis <em>Paramètres</em>.
+      </p>
+    <?php else: ?>
+      <p style="font-size:12px;color:var(--ink-3);margin-bottom:14px;">
+        Réponse du candidat. Elle détermine les pièces attendues et n'a aucune incidence sur l'acceptation du dossier.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <?php foreach ($bourseOptions as $opt):
+              $val = (string)$opt['valeur'];
+        ?>
+          <label style="display:flex;gap:11px;align-items:flex-start;padding:11px 14px;border:1.5px solid var(--bdr-s);border-radius:var(--r-md);cursor:pointer;">
+            <input type="radio" name="statut_bourse" value="<?= e($val) ?>"
+                   data-gbourse-choix="<?= e($val) ?>"
+                   style="width:auto;margin-top:3px;flex-shrink:0;"
+                   <?= gOld($old, 'statut_bourse') === $val ? 'checked' : '' ?> required>
+            <span>
+              <span style="display:block;font-size:13px;font-weight:600;"><?= e($opt['libelle']) ?></span>
+              <span style="display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px;"><?= e($opt['aide']) ?></span>
+            </span>
+          </label>
+        <?php endforeach; ?>
+      </div>
+      <?= gErr($errors, 'statut_bourse') ?>
+
+      <div data-gbourse-pour="boursier" style="margin-top:14px;" <?= gOld($old,'statut_bourse') === 'boursier' ? '' : 'hidden' ?>>
+        <div class="g-form-group">
+          <label>Numéro d'attestation ANBG <span style="font-weight:500;color:var(--ink-3);">(facultatif)</span></label>
+          <input type="text" name="numero_attestation_anbg" maxlength="50"
+                 value="<?= gOld($old, 'numero_attestation_anbg') ?>" placeholder="Tel qu'il figure sur l'attestation">
+          <?= gErr($errors, 'numero_attestation_anbg') ?>
+        </div>
+      </div>
+
+      <p style="font-size:11.5px;color:var(--ink-3);margin:14px 0 0;line-height:1.5;"><?= e($bourseNote) ?></p>
+
+      <script>
+      /* Champs conditionnels — confort de saisie uniquement : SituationBourse
+         revalide intégralement côté serveur. Les champs masqués sont désactivés
+         pour qu'un numéro saisi puis abandonné ne parte pas avec le formulaire. */
+      (function () {
+          var choix = document.querySelectorAll('[data-gbourse-choix]');
+          var blocs = document.querySelectorAll('[data-gbourse-pour]');
+          if (!choix.length) { return; }
+
+          function appliquer(valeur) {
+              blocs.forEach(function (bloc) {
+                  var concerne = bloc.getAttribute('data-gbourse-pour') === valeur;
+                  bloc.hidden = !concerne;
+                  bloc.querySelectorAll('input').forEach(function (champ) {
+                      champ.disabled = !concerne;
+                  });
+              });
+          }
+          choix.forEach(function (radio) {
+              radio.addEventListener('change', function () { appliquer(this.value); });
+          });
+          var coche = document.querySelector('[data-gbourse-choix]:checked');
+          appliquer(coche ? coche.value : null);
+      }());
+      </script>
+    <?php endif; ?>
   </div>
 
   <script>
@@ -228,7 +357,7 @@ function gErr(array $errors, string $key): string {
   <div class="g-card" style="margin-bottom:20px;">
     <h3 class="g-section-title">Pièces justificatives</h3>
     <p style="font-size:12px;color:var(--ink-3);margin-bottom:16px;">
-      Dépose les documents remis par le candidat au guichet (PDF ou image, 10 Mo max par pièce). Facultatif — le dossier peut être complété plus tard.
+      Dépose les documents remis par le candidat au guichet (<?= e(\Services\Orientation\PieceDossier::consigneDepot()) ?> par pièce). Facultatif — le dossier peut être complété plus tard.
     </p>
     <div style="display:flex;flex-direction:column;gap:12px;">
       <?php foreach ($pieces as $pc): ?>
@@ -243,7 +372,8 @@ function gErr(array $errors, string $key): string {
               <div style="font-size:11px;color:var(--ink-3);">Niveau : <?= e($pc['niveau']) ?></div>
             <?php endif; ?>
           </div>
-          <input type="file" name="pieces[<?= (int)$pc['id'] ?>]" accept=".pdf,.jpg,.jpeg,.png,.webp"
+          <input type="file" name="pieces[<?= (int)$pc['id'] ?>]" accept="<?= e(\Services\Orientation\PieceDossier::acceptHtml()) ?>"
+                 title="<?= e(\Services\Orientation\PieceDossier::consigneDepot()) ?>"
                  style="width:auto;font-size:12px;padding:6px;background:transparent;border:none;box-shadow:none;">
         </div>
       <?php endforeach; ?>

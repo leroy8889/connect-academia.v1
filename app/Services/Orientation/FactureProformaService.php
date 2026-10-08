@@ -4,9 +4,33 @@ declare(strict_types=1);
 namespace Services\Orientation;
 
 /**
- * Facture proforma indicative jointe à l'attestation de préinscription —
- * reprend les frais d'inscription et de scolarité standard configurés sur
- * l'établissement (Etablissement::prix_inscription / frais_scolarite).
+ * Facture proforma jointe à l'attestation de préinscription.
+ *
+ * ── À qui elle s'adresse, et ce que ça change ────────────────────────────────
+ *
+ * Cette proforma n'est pas un devis commercial générique : c'est la pièce que
+ * le candidat dépose à l'ANBG pour demander une bourse. Son lecteur est donc
+ * l'agence, pas l'établissement, et ce qu'elle doit y lire est le coût d'un
+ * étudiant BOURSIER — c'est-à-dire ce que l'ANBG aura à financer si elle
+ * accorde la bourse.
+ *
+ * Elle affiche donc systématiquement le TARIF BOURSIER de la formation et du
+ * niveau choisis. Y faire figurer le tarif non boursier reviendrait à faire
+ * demander à l'ANBG un montant qu'elle ne réglera jamais — un écart qui se
+ * paie en dossier rejeté, des mois plus tard, sans que personne ne comprenne
+ * pourquoi.
+ *
+ * Quand l'établissement n'a pas de tarif boursier distinct (tarif unique),
+ * TarifCycle retombe de lui-même sur le tarif non boursier : la proforma reste
+ * juste, et l'établissement n'a rien de plus à saisir.
+ *
+ * ── Ce que la préinscription connaît ─────────────────────────────────────────
+ *
+ * À ce stade le candidat a choisi sa formation et son niveau, mais il n'a pas
+ * encore déclaré sa situation de bourse — ce champ appartient au parcours
+ * d'inscription. On force donc `boursier` dans la résolution : ce n'est pas une
+ * supposition sur le candidat, c'est l'hypothèse de travail du document.
+ *
  * Rendu en fragment (pas de <html>/<body>) : assemblé par
  * RecepisseService::renderPdfComplet() dans le document final.
  */
@@ -34,39 +58,59 @@ class FactureProformaService
             $filiereLibelle .= ' — ' . $specialite;
         }
 
-        $filiere          = self::resoudreFiliere($etab, $d);
-        $fraisInscription = (int)($filiere['frais_inscription'] ?? 0) > 0
-            ? (int)$filiere['frais_inscription']
-            : (int)($etab['prix_inscription'] ?? 0);
-        $fraisScolarite   = (int)($filiere['frais_scolarite'] ?? 0) > 0
-            ? (int)$filiere['frais_scolarite']
-            : (int)($etab['frais_scolarite'] ?? 0);
+        $tarif = self::tarifBoursier($d, $etab);
+
+        $fraisInscription = (int)round($tarif['frais_inscription'] ?? 0);
+        $fraisScolarite   = (int)round($tarif['montant'] ?? 0);
         $total            = $fraisInscription + $fraisScolarite;
 
+        // Le niveau figure sur la facture : sans lui, l'ANBG ne peut pas
+        // vérifier que le montant correspond bien à l'année demandée, alors
+        // que deux années d'un même cycle peuvent avoir deux tarifs.
+        $niveauLibelle = trim((string)($d['niveau_entree'] ?? ''));
+        $cycleLibelle  = (string)($tarif['cycle_libelle'] ?? '');
+
         $dateStr = $date->format('d/m/Y');
+
+        // Pièces du dossier d'inscription applicables à CE cycle. L'ANBG lit
+        // cette proforma pour instruire une demande de bourse : lui dire ce que
+        // l'établissement exigera évite l'aller-retour qui coûte une rentrée.
+        $piecesDossier = CompositionDossier::pourDossier($etab, $d);
+
+        // Titre du bloc : le cycle, seul déterminant de la liste.
+        $cycleDossierLibelle = TarifCycle::libelle(TarifCycle::detecter($d));
 
         ob_start();
         include BASE_PATH . '/app/Views/orientation/_facture-proforma-pdf.php';
         return (string)ob_get_clean();
     }
 
-    /** Vrai si un tarif exploitable existe (filière spécifique, ou repli établissement). */
+    /**
+     * Vrai si un tarif exploitable existe — sinon la proforma est omise du PDF
+     * plutôt que d'être imprimée à zéro franc, ce qu'aucune agence n'accepte.
+     */
     public static function etabAConfigureTarifs(array $etab, array $d): bool
     {
-        $filiere = self::resoudreFiliere($etab, $d);
-        if ((int)($filiere['frais_inscription'] ?? 0) > 0 || (int)($filiere['frais_scolarite'] ?? 0) > 0) {
-            return true;
-        }
-        return (int)($etab['prix_inscription'] ?? 0) > 0 || (int)($etab['frais_scolarite'] ?? 0) > 0;
+        $tarif = self::tarifBoursier($d, $etab);
+
+        return ($tarif['montant'] ?? null) !== null
+            || ($tarif['frais_inscription'] ?? null) !== null;
     }
 
-    /** Filière du dossier, si elle existe et appartient bien à cet établissement — sinon null (repli établissement). */
-    private static function resoudreFiliere(array $etab, array $d): ?array
+    /**
+     * Tarif applicable en faisant l'hypothèse d'un candidat boursier.
+     *
+     * L'établissement du dossier est forcé à celui de la fiche : une
+     * préinscription porte parfois un `etablissement_id` absent du tableau
+     * transmis, et la résolution par filière a besoin des deux pour ne pas
+     * aller chercher une formation homonyme chez un autre partenaire.
+     *
+     * @return array<string,mixed> Cf. TarifCycle::detail()
+     */
+    private static function tarifBoursier(array $d, array $etab): array
     {
-        $nom = trim((string)($d['filiere_visee'] ?? ''));
-        if ($nom === '' || empty($etab['id'])) {
-            return null;
-        }
-        return (new \Models\Orientation\Filiere())->findByNom($nom, (int)$etab['id']);
+        $d['etablissement_id'] = (int)($d['etablissement_id'] ?? ($etab['id'] ?? 0));
+
+        return TarifCycle::detail($d, $etab, SituationBourse::BOURSIER);
     }
 }

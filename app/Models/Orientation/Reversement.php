@@ -88,6 +88,45 @@ class Reversement
             ->execute([$id]);
     }
 
+    /**
+     * Réserve un reversement pour un rejeu, de façon ATOMIQUE.
+     *
+     * ── Pourquoi ce n'est pas une simple vérification ────────────────────────
+     * Relancer un payout envoie de l'argent RÉEL. La séquence « je lis le
+     * statut, je vérifie qu'il n'est pas déjà réussi, puis j'appelle l'API »
+     * laisse une fenêtre entre la lecture et l'appel : deux clics de l'agent
+     * sur « rejouer » — un double-clic suffit — et les deux requêtes lisaient un
+     * statut rejouable, franchissaient le contrôle, et appelaient TOUTES DEUX
+     * l'API de paiement. L'établissement était payé deux fois, sans trace de
+     * l'anomalie : les deux passages semblaient légitimes.
+     *
+     * Ici, la même instruction lit et écrit : elle ne réussit que si le
+     * reversement est encore dans un état rejouable, et le fait passer aussitôt
+     * en `en_cours`. Des appels concurrents ne peuvent pas la réussir tous les
+     * deux — un seul reçoit `true`, les autres s'arrêtent avant l'API.
+     *
+     * `reussi` et `en_cours` sont exclus : le premier est soldé, le second a
+     * déjà été accepté par l'agrégateur et attend son webhook. C'est aussi ce
+     * que `getARejouer()` donne à voir à l'écran de réconciliation, qui ne
+     * propose que `echoue` et `a_rejouer`.
+     *
+     * @return bool true si CET appel a obtenu la réservation.
+     */
+    public function reserverPourRejeu(int $id, int $maxTentatives): bool
+    {
+        $st = $this->db->prepare(
+            "UPDATE reversements
+                SET tentatives = tentatives + 1,
+                    statut     = 'en_cours'
+              WHERE id = ?
+                AND statut IN ('echoue', 'a_rejouer', 'initie')
+                AND tentatives < ?"
+        );
+        $st->execute([$id, $maxTentatives]);
+
+        return $st->rowCount() === 1;
+    }
+
     public function getARejouer(): array
     {
         return $this->db->query("

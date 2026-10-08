@@ -83,15 +83,28 @@ if (!function_exists('acct_statut_label')) {
     /** Libellé contextuel : une inscription "soumis" attend la validation. */
     function acct_statut_label(array $d): string
     {
-        $estInscription = !empty($d['inscription_id']);
+        // Un dossier de la refonte porte une référence : son libellé vient de
+        // la machine à états, en langage clair (spec §9.2 : jamais le nom
+        // technique). Les préinscriptions gardent leur vocabulaire d'origine.
+        if (!empty($d['reference'])) {
+            return \Models\Orientation\DossierStatut::libelle((string)($d['statut'] ?? ''));
+        }
+
+        $estInscription = \Models\Orientation\Dossier::estInscription($d);
         return match ($d['statut'] ?? 'brouillon') {
-            'brouillon' => 'Brouillon',
-            'soumis'    => $estInscription ? 'En attente de validation' : 'Préinscrit',
-            'paye'      => 'Paiement confirmé',
-            'inscrit'   => 'Inscrit',
-            'accepte'   => $estInscription ? 'Inscription validée' : 'Acceptée',
-            'refuse'    => 'Refusé',
-            default     => (string)($d['statut'] ?? '—'),
+            'brouillon'       => 'Brouillon',
+            'soumis'          => $estInscription ? 'En attente de validation' : 'Préinscrit',
+            'paye'            => 'Paiement confirmé',
+            'inscrit',
+            'valide_100'      => 'Inscrit',
+            'accepte',
+            'valide_50'       => $estInscription ? 'Validé à 50 %' : 'Acceptée',
+            'piece_manquante' => 'Pièce complémentaire attendue',
+            'refuse',
+            'rejete'          => 'Refusé',
+            'expire'          => 'Délai dépassé',
+            'annule'          => 'Annulé',
+            default           => (string)($d['statut'] ?? '—'),
         };
     }
 }
@@ -101,13 +114,19 @@ if (!function_exists('acct_statut_badge')) {
     function acct_statut_badge(array $d): string
     {
         $class = match ($d['statut'] ?? 'brouillon') {
-            'brouillon' => 'draft',
-            'soumis'    => !empty($d['inscription_id']) ? 'info' : 'ok',
-            'paye'      => 'ok',
-            'inscrit'   => 'ok',
-            'accepte'   => 'ok',
-            'refuse'    => 'err',
-            default     => 'draft',
+            'brouillon'       => 'draft',
+            'soumis'          => \Models\Orientation\Dossier::estInscription($d) ? 'info' : 'ok',
+            'piece_manquante' => 'info',
+            'paye'            => 'ok',
+            'inscrit',
+            'valide_100'      => 'ok',
+            'accepte',
+            'valide_50'       => 'ok',
+            'refuse',
+            'rejete',
+            'expire'          => 'err',
+            'annule'          => 'draft',
+            default           => 'draft',
         };
         $label = htmlspecialchars(acct_statut_label($d), ENT_QUOTES, 'UTF-8');
         return "<span class=\"badge2 {$class}\"><span class=\"d\"></span>{$label}</span>";
@@ -158,11 +177,19 @@ if (!function_exists('acct_etab_logo')) {
 if (!function_exists('acct_mode_paiement')) {
     function acct_mode_paiement(?string $mode): string
     {
+        // Deux vocabulaires cohabitent : celui de `paiements_orientation.mode`
+        // (parcours en ligne) et celui de `dossiers_inscription.mode_paiement`
+        // (règlement au guichet, cf. DecisionEtablissement::modesPaiement).
+        // Les deux sont traduits ici, sinon l'écran affiche la valeur brute
+        // de l'ENUM au candidat.
         return match ($mode) {
             'en_ligne'     => 'MoneyFusion · En ligne',
             'mobile_money' => 'Mobile Money',
-            'espece'       => 'Espèces · Guichet',
+            'espece',
+            'especes'      => 'Espèces',
             'virement'     => 'Virement bancaire',
+            'cheque'       => 'Chèque',
+            'autre'        => 'Autre moyen',
             default        => $mode ?: '—',
         };
     }

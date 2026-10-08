@@ -65,9 +65,14 @@ body{font-family:var(--font-sans);background:#fff;color:var(--text-primary);font
 .print-btn:active{background:var(--purple-press);transform:scale(.98)}
 @media print{
   .no-print,.print-btn{display:none}
-  .page{padding:0;max-width:none}
+  /* La marge d'impression est portée ici, pas par @page (cf. ci-dessous) */
+  .page{padding:14mm;max-width:none}
 }
-@page{margin:14mm}
+/* @page margin 0 : sans gouttière, le navigateur n'imprime plus son en-tête ni
+   son pied de page (date, titre de l'onglet, URL complète, « 1/1 »). Même parti
+   pris que le récépissé, l'attestation et le reçu. La marge physique des pages
+   de continuation est assurée par les lignes .marge-page du tableau. */
+@page{margin:0}
 
 /* ── En-tête plateforme ── */
 .entete{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-bottom:18px;border-bottom:2px solid var(--purple-neon);margin-bottom:26px}
@@ -96,23 +101,47 @@ body{font-family:var(--font-sans);background:#fff;color:var(--text-primary);font
 /* ── Tableau des candidats ── */
 .tableau-carte{border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--border-subtle)}
 table{width:100%;border-collapse:collapse;table-layout:fixed}
-col.c-num{width:4.5%}
-col.c-nom{width:18%}
-col.c-email{width:23%}
-col.c-tel{width:16%}
-col.c-filiere{width:12.5%}
-col.c-niveau{width:13%}
-col.c-date{width:13%}
+/* Largeurs calibrées pour l'impression A4 portrait (padding .page 14mm → ~688px utiles) :
+   le téléphone gabonais formaté (« +241 06 12 34 56 ») réclame ~100px de texte,
+   la date ~72px. En dessous, le contenu débordait de sa cellule et venait se
+   coller à la colonne voisine (table-layout:fixed ne rogne pas le dépassement). */
+col.c-num{width:6.5%}
+col.c-nom{width:16.5%}
+col.c-email{width:20%}
+col.c-tel{width:17%}
+col.c-filiere{width:13%}
+col.c-niveau{width:12%}
+col.c-date{width:15%}
 thead{display:table-header-group}
 th{background:var(--purple-neon);color:#fff;text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:11px 12px;vertical-align:bottom}
-td{padding:10px 12px;font-size:12.5px;color:var(--text-secondary);border-top:1px solid var(--border-subtle);vertical-align:top}
+td{padding:10px 12px;font-size:12.5px;color:var(--text-secondary);border-top:1px solid var(--border-subtle);vertical-align:top;overflow-wrap:anywhere;word-break:normal}
 tbody tr:nth-child(even) td{background:var(--bg-surface)}
 tr{page-break-inside:avoid}
-.td-num{color:var(--text-muted);font-size:11.5px;font-variant-numeric:tabular-nums}
+.td-num{color:var(--text-muted);font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .td-nom{font-weight:600;color:var(--text-primary)}
 .td-date{font-variant-numeric:tabular-nums;font-size:12px;white-space:nowrap}
-.td-tel{white-space:nowrap;font-size:12px;font-variant-numeric:tabular-nums}
+.td-tel{font-size:12px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;word-break:normal;hyphens:none}
 .td-email{overflow-wrap:anywhere}
+/* Lignes de marge : répétées par le moteur d'impression en tête et en pied de
+   chaque page, elles évitent que le tableau touche le bord du papier (zone non
+   imprimable des imprimantes) sur les bilans qui débordent sur plusieurs pages. */
+.marge-page td{height:10mm;padding:0;border:0;background:#fff}
+@media screen{.marge-page{display:none}}
+tfoot{display:table-footer-group}
+@media print{
+  /* Le cadre de la carte disparaît à l'impression : les lignes de marge se
+     lisent alors comme du blanc de page et non comme un vide dans un encadré.
+     L'overflow visible évite aussi tout rognage à la coupure de page. */
+  .tableau-carte{border:0;border-radius:0;overflow:visible}
+}
+/* Padding resserré sur les colonnes étroites : +8px de texte utile chacune */
+th:nth-child(1),td:nth-child(1),
+th:nth-child(4),td:nth-child(4),
+th:nth-child(6),td:nth-child(6),
+th:nth-child(7),td:nth-child(7){padding-left:8px;padding-right:8px}
+/* Filet vertical : la séparation des colonnes reste lisible à l'impression */
+td+td{border-left:1px solid var(--border-subtle)}
+th+th{border-left:1px solid rgba(255,255,255,.22)}
 
 /* ── État vide ── */
 .vide{background:var(--purple-tint);border-radius:var(--radius-xl);padding:40px 24px;text-align:center;color:#5B32B8;font-size:14px;font-weight:500}
@@ -192,6 +221,7 @@ tr{page-break-inside:avoid}
         <col class="c-tel"><col class="c-filiere"><col class="c-niveau"><col class="c-date">
       </colgroup>
       <thead>
+        <tr class="marge-page"><td colspan="7"></td></tr>
         <tr>
           <th>#</th>
           <th>Nom &amp; prénom</th>
@@ -202,6 +232,9 @@ tr{page-break-inside:avoid}
           <th>Date</th>
         </tr>
       </thead>
+      <tfoot>
+        <tr class="marge-page"><td colspan="7"></td></tr>
+      </tfoot>
       <tbody>
       <?php foreach ($lignes as $i => $l): ?>
         <tr>

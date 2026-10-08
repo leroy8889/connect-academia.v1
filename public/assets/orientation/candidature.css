@@ -1,227 +1,363 @@
-/* ── candidature.css — Connect'Academia · Formulaires candidature ── */
+/* ══════════════════════════════════════════════════════════════════════════
+   candidature.css — Connect'Academia · parcours de candidature
+   Préinscription, inscription (3 étapes), confirmation, succès.
+
+   ── Langage visuel ────────────────────────────────────────────────────────
+   Système « toile crème » : la page est posée sur un crème chaud, jamais sur
+   du blanc pur ni sur du gris froid. La hiérarchie vient du contraste des
+   surfaces et du filet d'un pixel, jamais de l'élévation : aucune ombre
+   portée, aucun dégradé, aucun verre.
+
+   Une seule famille, Montserrat, du titre à la mention légale. La hiérarchie
+   se joue sur la taille, la graisse et l'approche négative des gros titres —
+   pas sur un second caractère. Un essai en serif éditorial a été retiré : il
+   détachait le parcours du reste de la plateforme, qui est en Montserrat
+   partout (hub, espace élève, console admin).
+
+   Un seul accent chromatique : la couleur de l'établissement (--brand).
+   Elle sert aux actions, aux repères de progression et à rien d'autre. Le
+   rouge est réservé aux erreurs, l'ambre à l'unique avertissement juridique
+   de l'écran de confirmation. Il n'y a pas de quatrième registre.
+
+   ── Règle de rayons, appliquée partout ────────────────────────────────────
+      8 px  champs, boutons, pastilles carrées
+     12 px  cartes et blocs
+    999 px  puces et badges uniquement
+   Un rayon hors de cette échelle est un oubli, pas une intention.
+
+   ── Verrou de thème ───────────────────────────────────────────────────────
+   Ce parcours est CLAIR, sur toutes les machines. Il l'était déjà dans
+   l'intention, mais le bloc « situation de bourse » lisait `--bg-main` et
+   `--bg-surface` de tokens.css, qui basculent sous
+   `@media (prefers-color-scheme: dark)` : sur un poste en thème sombre, la
+   carte passait en #1A1A1A pendant que le texte restait en encre foncée —
+   d'où des champs noirs illisibles. Aucune règle de cette feuille ne dépend
+   plus d'un token qui bascule : toutes les couleurs sont définies ci-dessous,
+   en clair, une fois pour toutes. Les gabarits posent en plus
+   `data-theme="light"` sur <html>, ceinture et bretelles.
+   ══════════════════════════════════════════════════════════════════════════ */
 @import url('./tokens.css');
+
+:root {
+    /* ── Surfaces ─────────────────────────────────────────────────────────
+       Crème chaud pour le sol, blanc pour le papier posé dessus, crème plus
+       dense pour les blocs en creux. Trois tons, pas quatre. */
+    --clr-bg:      #FAF9F5;   /* toile : le fond de page, jamais du blanc pur */
+    --clr-card:    #FFFFFF;   /* le papier : cartes de formulaire */
+    --clr-surface: #F5F0E8;   /* blocs en creux dans une carte */
+    --clr-inset:   #F0EBE1;   /* creux appuyé : total, référence */
+
+    /* ── Encres ───────────────────────────────────────────────────────────
+       Toutes vérifiées au contraste AA sur le crème et sur le blanc. */
+    --clr-txt:     #141413;   /* titres et valeurs */
+    --clr-txt-m:   #3D3D3A;   /* texte courant */
+    --clr-txt-s:   #605E58;   /* libellés, aides de saisie */
+    --clr-txt-l:   #6C6A64;   /* mentions fines — jamais plus clair que ça */
+
+    /* ── Filets ───────────────────────────────────────────────────────────*/
+    --clr-border:  #E6DFD8;   /* filet 1 px sur crème et sur blanc */
+    --clr-border-s:#EFE9E1;   /* séparateur intérieur, à peine visible */
+
+    /* ── Déclinaisons de la couleur d'établissement ───────────────────────
+       --brand est choisie par l'établissement : on ne peut donc pas garantir
+       son contraste. Ces trois dérivées la ramènent dans les clous sans lui
+       faire perdre son identité.
+         --brand-text   texte de petite taille posé sur crème ou sur blanc
+         --brand-solid  aplat portant du texte blanc (boutons, pastilles)
+         --brand-hover  survol du même aplat — il s'assombrit, jamais l'inverse
+         --brand-press  état :active du même aplat
+       Le violet par défaut (#8B52FA) plafonne à 4,1:1 sur le crème — sous le
+       seuil AA. Mélangé à 74 % d'encre il remonte à ~6:1. */
+    --brand-text:  color-mix(in srgb, var(--brand) 74%, #141413);
+    --brand-solid: color-mix(in srgb, var(--brand) 84%, #141413);
+    --brand-hover: color-mix(in srgb, var(--brand) 76%, #141413);
+    --brand-press: color-mix(in srgb, var(--brand) 66%, #141413);
+    --brand-wash:  color-mix(in srgb, var(--brand)  7%, #FAF9F5);
+    --brand-wash-2:color-mix(in srgb, var(--brand) 12%, #FFFFFF);
+    --brand-line:  color-mix(in srgb, var(--brand) 30%, #E6DFD8);
+    --brand-ring:  color-mix(in srgb, var(--brand) 18%, transparent);
+
+    /* ── Sémantique ───────────────────────────────────────────────────────*/
+    --clr-error:      #C43D3D;   /* filets et anneaux d'erreur */
+    --clr-error-text: #A8342C;   /* texte d'erreur — AA sur blanc */
+    --clr-warn:       #C98A16;   /* filet de l'avertissement juridique */
+    --clr-warn-text:  #8A5A08;
+    --clr-ok:         #4C8C5A;   /* écrans de succès hérités */
+
+    /* ── Typographie ──────────────────────────────────────────────────────*/
+    --f-sans:  'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --f-mono:  ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace;
+
+    /* ── Rayons ───────────────────────────────────────────────────────────*/
+    --r-champ: 8px;
+    --r-carte: 12px;
+
+    /* ── Rythme ───────────────────────────────────────────────────────────*/
+    --gouttiere: 28px;   /* marge intérieure des cartes, desktop */
+
+    color-scheme: light;
+}
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-    background: var(--clr-bg, #FAF9F5);
-    color: var(--clr-txt, #1A1523);
-    font-family: 'Montserrat', -apple-system, sans-serif;
+    background: var(--clr-bg);
+    color: var(--clr-txt-m);
+    font-family: var(--f-sans);
     font-size: 15px;
     line-height: 1.6;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
-/* ── Top bar ── */
+/* ══════════════════════════════════════════════════════════════════════════
+   BARRE SUPÉRIEURE
+   Chrome minimal : un retour, un repère de position. Rien d'autre — la barre
+   ne doit pas concurrencer le titre de la page qu'elle surplombe.
+   ══════════════════════════════════════════════════════════════════════════ */
 .cand-topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 24px;
-    background: #fff;
-    border-bottom: 1px solid var(--clr-border, #E8E4F0);
+    gap: 12px;
+    padding: 13px 24px;
+    background: color-mix(in srgb, var(--clr-bg) 88%, transparent);
+    backdrop-filter: saturate(180%) blur(12px);
+    -webkit-backdrop-filter: saturate(180%) blur(12px);
+    border-bottom: 1px solid var(--clr-border);
     position: sticky;
     top: 0;
     z-index: 10;
-    gap: 12px;
 }
 
 .cand-back {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    color: var(--clr-txt-m, #63596E);
+    gap: 7px;
+    color: var(--clr-txt-s);
     text-decoration: none;
     font-size: 13.5px;
-    font-weight: 600;
-    transition: color .2s;
+    font-weight: 500;
+    transition: color .13s ease;
     white-space: nowrap;
+    min-width: 0;
 }
-.cand-back:hover { color: var(--brand); }
+.cand-back:hover { color: var(--clr-txt); }
+.cand-back svg   { flex: 0 0 auto; }
 
 .cand-badge {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 5px 14px;
-    background: color-mix(in srgb, var(--brand) 9%, transparent);
-    border: 1.5px solid color-mix(in srgb, var(--brand) 28%, transparent);
-    border-radius: 100px;
-    font-size: 12.5px;
-    font-weight: 700;
-    color: var(--brand);
+    gap: 6px;
+    padding: 5px 13px;
+    background: var(--brand-wash-2);
+    border: 1px solid var(--brand-line);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--brand-text);
     white-space: nowrap;
 }
 
+/* Repère « Étape 2 / 3 » : c'est une donnée, pas un titre. Chiffres tabulaires
+   pour qu'elle ne tressaute pas d'une étape à l'autre. */
 .cand-step-label {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--clr-txt-m, #63596E);
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--clr-txt-l);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
-/* ── Page layout ── */
+/* ══════════════════════════════════════════════════════════════════════════
+   PAGE
+   ══════════════════════════════════════════════════════════════════════════ */
 .cand-page {
-    max-width: 680px;
+    max-width: 700px;
     margin: 0 auto;
-    padding: 40px 20px 80px;
+    padding: 48px 20px 96px;
 }
 
-/* ── Hero ── */
-.cand-hero {
-    text-align: center;
-    margin-bottom: 28px;
-}
+/* ── Chapeau de page ──────────────────────────────────────────────────────
+   Sur-titre discret, titre serif, une phrase. Le titre porte le poids par sa
+   taille et son dessin, jamais par sa graisse : le serif reste en 400. */
+.cand-lede { margin-bottom: 32px; }
 
-.cand-hero h1 {
-    font-size: clamp(1.55rem, 4vw, 2rem);
-    font-weight: 800;
-    line-height: 1.2;
+.cand-lede .kicker {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--brand-text);
     margin-bottom: 12px;
-    letter-spacing: -.02em;
 }
 
-.cand-hero h1 .accent { color: var(--brand); }
+.cand-lede h1 {
+    font-size: clamp(1.5rem, 4.6vw, 1.95rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -.025em;
+    color: var(--clr-txt);
+}
 
-.cand-hero p {
+.cand-lede p {
+    margin-top: 12px;
+    max-width: 56ch;
     font-size: 14.5px;
-    color: var(--clr-txt-m, #63596E);
-    max-width: 480px;
-    margin: 0 auto;
-    line-height: 1.75;
+    line-height: 1.65;
+    color: var(--clr-txt-m);
 }
 
-/* ── Stepper ── */
+/* ══════════════════════════════════════════════════════════════════════════
+   FIL D'ÉTAPES
+   Les pastilles empilées sur leur libellé formaient trois îlots flottants au
+   milieu de la page — la signature d'un stepper de bibliothèque. Le fil
+   devient un rail : numéro et libellé côte à côte, filets qui relient et qui
+   occupent toute la largeur du contenu. On lit une position dans un parcours,
+   pas trois badges.
+   Le balisage est inchangé (.step / .step-circle / .step-name /
+   .step-connector) : les quatre gabarits qui l'émettent restent valides.
+   ══════════════════════════════════════════════════════════════════════════ */
 .stepper {
     display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    margin-bottom: 32px;
+    align-items: center;
     gap: 0;
+    margin-bottom: 36px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--clr-border);
 }
 
 .step {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 6px;
+    gap: 9px;
+    flex: 0 0 auto;
+    min-width: 0;
 }
 
 .step-circle {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: 2.5px solid var(--clr-border, #E8E4F0);
-    background: #fff;
+    width: 23px;
+    height: 23px;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    border: 1px solid var(--clr-border);
+    background: var(--clr-card);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--clr-txt-l, #A49DB0);
-    transition: background .2s, border-color .2s, color .2s;
-    position: relative;
-    z-index: 1;
+    font-size: 11.5px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--clr-txt-l);
+    transition: background .13s ease, border-color .13s ease, color .13s ease;
 }
 
+/* Franchie et en cours partagent le même accent : « validé » n'est pas le
+   sujet ici, c'est un fil de progression, pas un résultat. La différence se
+   joue sur le remplissage, pas sur la teinte. */
 .step.done .step-circle {
-    background: #22c55e;
-    border-color: #22c55e;
-    color: #fff;
+    background: var(--brand-wash-2);
+    border-color: var(--brand-line);
+    color: var(--brand-text);
 }
 
 .step.active .step-circle {
-    background: var(--brand);
-    border-color: var(--brand);
+    background: var(--brand-solid);
+    border-color: var(--brand-solid);
     color: #fff;
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 18%, transparent);
 }
 
 .step-name {
-    font-size: 10.5px;
-    font-weight: 600;
-    color: var(--clr-txt-l, #A49DB0);
-    text-align: center;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--clr-txt-l);
     white-space: nowrap;
-    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.step.active .step-name { color: var(--brand); font-weight: 700; }
-.step.done .step-name   { color: var(--clr-txt-m, #63596E); }
+.step.active .step-name { color: var(--clr-txt); font-weight: 600; }
+.step.done   .step-name { color: var(--clr-txt-s); }
 
 .step-connector {
-    width: 64px;
-    height: 2.5px;
-    background: var(--clr-border, #E8E4F0);
-    margin-top: 15px;
-    transition: background .3s;
-    flex-shrink: 0;
+    flex: 1 1 auto;
+    min-width: 16px;
+    height: 1px;
+    background: var(--clr-border);
+    margin: 0 14px;
+    transition: background .2s ease;
 }
 
-.step-connector.done { background: #22c55e; }
+.step-connector.done { background: var(--brand-line); }
 
-/* ── Form card ── */
+/* ══════════════════════════════════════════════════════════════════════════
+   CARTES
+   La carte ne flotte pas : elle est posée sur le crème et délimitée par un
+   filet. C'est ce qui permet d'en empiler plusieurs sans que la page prenne
+   l'aspect matelassé des formulaires générés.
+   ══════════════════════════════════════════════════════════════════════════ */
 .cand-card {
-    background: #fff;
-    border-radius: 24px;
-    box-shadow: 0 4px 28px rgba(0,0,0,.06), 0 1px 4px rgba(0,0,0,.04);
+    background: var(--clr-card);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--r-carte);
     overflow: hidden;
     margin-bottom: 20px;
 }
 
 .cand-card-head {
-    padding: 24px 28px 0;
-    border-bottom: 1px solid var(--clr-border, #E8E4F0);
-    padding-bottom: 20px;
-    margin-bottom: 0;
+    padding: 24px var(--gouttiere) 20px;
+    border-bottom: 1px solid var(--clr-border-s);
 }
 
+/* Titre de carte. Il se distingue du libellé de section par la taille
+   (18,5 px contre 13 px) et par l'approche, pas par un second caractère. */
 .cand-card-head h2 {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-weight: 700;
-    margin-bottom: 4px;
+    line-height: 1.3;
+    letter-spacing: -.015em;
+    color: var(--clr-txt);
+    margin-bottom: 6px;
 }
 
 .cand-card-head p {
-    font-size: 13px;
-    color: var(--clr-txt-m, #63596E);
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--clr-txt-s);
+    max-width: 58ch;
 }
 
-/* ── Form sections ── */
+/* ── Sections de formulaire ───────────────────────────────────────────── */
 .form-section {
-    padding: 22px 28px;
-    border-bottom: 1px solid var(--clr-border, #E8E4F0);
+    padding: 24px var(--gouttiere);
+    border-bottom: 1px solid var(--clr-border-s);
 }
 
 .form-section:last-child { border-bottom: none; }
 
+/* Intertitre discret. Il annonce un groupe de champs, il ne crie pas. */
 .section-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 10.5px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: .1em;
-    color: var(--brand);
-    margin-bottom: 18px;
-}
-
-.section-label::before {
-    content: '';
     display: block;
-    width: 3px;
-    height: 13px;
-    background: var(--brand);
-    border-radius: 2px;
-    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -.005em;
+    color: var(--clr-txt);
+    margin-bottom: 16px;
 }
 
-/* ── Form grid ── */
+/* ══════════════════════════════════════════════════════════════════════════
+   CHAMPS
+   Libellé au-dessus, aide en dessous, erreur en dessous de l'aide. Jamais de
+   placeholder tenant lieu de libellé.
+   ══════════════════════════════════════════════════════════════════════════ */
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    margin-bottom: 14px;
+    gap: 16px;
+    margin-bottom: 16px;
 }
 
 .form-row:last-child { margin-bottom: 0; }
@@ -230,208 +366,342 @@ body {
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 7px;
+    min-width: 0;
 }
+
+/* Champs posés directement dans une section, hors grille (spécialité, niveau
+   d'entrée) : sans cette règle ils se touchaient. */
+.form-section > .form-group + .form-group,
+.form-section > .form-row + .form-group,
+.form-section > .form-group + .form-row { margin-top: 16px; }
 
 .form-group label {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .07em;
-    color: var(--clr-txt-m, #63596E);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--clr-txt-s);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
-.form-group label .req { color: var(--brand); }
+.form-group label .req {
+    color: var(--brand-text);
+    font-weight: 600;
+}
 
 .form-group input,
 .form-group select,
 .form-group textarea {
-    border: 1.5px solid var(--clr-border, #E8E4F0);
-    border-radius: 12px;
-    padding: 11px 14px;
-    font-size: 14px;
+    border: 1px solid var(--clr-border);
+    border-radius: var(--r-champ);
+    padding: 11px 13px;
+    font-size: 14.5px;
     font-family: inherit;
-    color: var(--clr-txt, #1A1523);
-    background: #fff;
-    transition: border-color .2s, box-shadow .2s;
+    color: var(--clr-txt);
+    background: var(--clr-card);
+    transition: border-color .13s ease, box-shadow .13s ease;
     outline: none;
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
 }
 
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--clr-txt-l);
+    opacity: 1;              /* Firefox baisse l'opacité par défaut */
+}
+
 .form-group select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236C6A64' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
-    padding-right: 36px;
+    padding-right: 38px;
     cursor: pointer;
 }
+
+/* Un champ date vide n'affiche rien sur Chrome tant qu'il n'a pas le focus :
+   la hauteur doit donc être posée par le padding, pas par le contenu. */
+.form-group input[type="date"] { min-height: 44px; }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
     border-color: var(--brand);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 12%, transparent);
+    box-shadow: 0 0 0 3px var(--brand-ring);
 }
 
 .form-group input.is-error,
-.form-group select.is-error {
-    border-color: #ef4444;
-    box-shadow: 0 0 0 3px rgba(239,68,68,.1);
+.form-group select.is-error,
+.form-group textarea.is-error { border-color: var(--clr-error); }
+
+.form-group input.is-error:focus,
+.form-group select.is-error:focus {
+    border-color: var(--clr-error);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--clr-error) 18%, transparent);
 }
 
 .field-error {
-    font-size: 11px;
-    color: #dc2626;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--clr-error-text);
     font-weight: 500;
 }
 
-/* ── Tel group ── */
+/* ── Indicatif + numéro ───────────────────────────────────────────────── */
 .tel-group {
     display: flex;
     gap: 8px;
 }
 
-/* Indicatif : largeur fixe. Sans width:auto le width:100% hérité de
-   `.form-group select` + flex-shrink:0 écrasait le champ numéro à 0 (invisible). */
+/* Largeur fixe. Sans width:auto le width:100% hérité de `.form-group select`
+   plus flex-shrink:0 écrasait le champ numéro à 0 (invisible).
+   Le libellé le plus long (« +225 Côte d'Ivoire ») déborde de cette largeur :
+   c'est assumé, l'indicatif — la seule donnée qui compte — reste lisible en
+   tête, et la liste déroulée affiche le nom entier. */
 .tel-group .tel-code {
-    flex: 0 0 132px;
-    width: 132px;
-    min-width: 132px;
+    flex: 0 0 134px;
+    width: 134px;
+    min-width: 134px;
+    font-size: 13.5px;
+    padding-right: 32px;
+    background-position: right 10px center;
 }
 
-/* Numéro : occupe le reste. min-width:0 pour pouvoir rétrécir en flex. */
 .tel-group .tel-num {
     flex: 1 1 auto;
     width: auto;
     min-width: 0;
 }
 
-/* ── Alert boxes ── */
+/* ══════════════════════════════════════════════════════════════════════════
+   CHAMP VERROUILLÉ (adresse e-mail du compte)
+   L'adresse rattache le dossier au compte : elle s'affiche, elle se copie,
+   elle ne se modifie pas. Le champ reste un vrai <input> (donc soumis, donc
+   sélectionnable), en creux plutôt qu'en blanc — un champ qui n'accepte pas
+   la saisie ne doit pas y ressembler.
+   Le verrou visuel n'est qu'un confort : la barrière est côté serveur
+   (CandidatureController::erreurEmailCompte).
+   ══════════════════════════════════════════════════════════════════════════ */
+.field-lock { position: relative; display: block; }
+
+.form-group .field-lock input.is-locked {
+    background: var(--clr-surface);
+    border-color: var(--clr-border);
+    color: var(--clr-txt-s);
+    padding-right: 40px;
+    cursor: default;
+}
+.form-group .field-lock input.is-locked:focus {
+    border-color: var(--clr-border);
+    box-shadow: none;
+}
+
+.field-lock-ic {
+    position: absolute;
+    top: 50%;
+    right: 13px;
+    transform: translateY(-50%);
+    color: var(--clr-txt-l);
+    pointer-events: none;
+}
+
+.field-note {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--clr-txt-l);
+    max-width: 60ch;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MESSAGES
+   Aplat teinté très pâle, filet de la même teinte, texte en encre lisible.
+   Le texte n'est jamais coloré : c'est le bloc qui porte la couleur.
+   ══════════════════════════════════════════════════════════════════════════ */
 .alert {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    padding: 13px 16px;
-    border-radius: 12px;
-    font-size: 13px;
+    gap: 11px;
+    padding: 14px 16px;
+    border-radius: var(--r-carte);
+    font-size: 13.5px;
+    line-height: 1.6;
     margin-bottom: 20px;
 }
 
-.alert-success {
-    background: rgba(34,197,94,.08);
-    border: 1px solid rgba(34,197,94,.28);
-    color: #15803d;
-}
+.alert svg { flex: 0 0 auto; margin-top: 2px; }
 
 .alert-error {
-    background: rgba(239,68,68,.06);
-    border: 1px solid rgba(239,68,68,.22);
-    color: #dc2626;
+    background: color-mix(in srgb, var(--clr-error) 6%, #FFFFFF);
+    border: 1px solid color-mix(in srgb, var(--clr-error) 26%, #E6DFD8);
+    color: var(--clr-error-text);
 }
 
 .alert-info {
-    background: color-mix(in srgb, var(--brand) 7%, transparent);
-    border: 1px solid color-mix(in srgb, var(--brand) 22%, transparent);
-    color: var(--brand);
+    background: var(--brand-wash);
+    border: 1px solid var(--brand-line);
+    color: var(--clr-txt-m);
+}
+.alert-info svg      { color: var(--brand-text); }
+.alert-info strong   { color: var(--clr-txt); font-weight: 600; }
+
+.alert-success {
+    background: color-mix(in srgb, var(--clr-ok) 7%, #FFFFFF);
+    border: 1px solid color-mix(in srgb, var(--clr-ok) 26%, #E6DFD8);
+    color: #35633F;
 }
 
-.alert svg { flex-shrink: 0; margin-top: 1px; }
-
-/* ── Info banner (inside card) ── */
+/* Bandeau posé à l'intérieur d'une carte : il s'aligne sur la gouttière. */
 .info-banner {
-    margin: 0 28px 20px;
+    margin: 0 var(--gouttiere) 20px;
     padding: 13px 16px;
-    background: rgba(34,197,94,.07);
-    border: 1px solid rgba(34,197,94,.25);
-    border-radius: 12px;
-    font-size: 12.5px;
-    color: #166534;
+    background: var(--brand-wash);
+    border: 1px solid var(--brand-line);
+    border-radius: var(--r-carte);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--clr-txt-m);
     display: flex;
-    gap: 8px;
+    gap: 9px;
     align-items: flex-start;
 }
+.info-banner svg { flex: 0 0 auto; margin-top: 2px; color: var(--brand-text); }
 
-/* ── CTA footer (preinscription) ── */
+/* ══════════════════════════════════════════════════════════════════════════
+   PIED DE NAVIGATION
+   ══════════════════════════════════════════════════════════════════════════ */
 .cand-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding-top: 24px;
+    padding-top: 28px;
     flex-wrap: wrap;
 }
 
-/* ── Navigation footer (inscription wizard) ── */
+/* Le lien secondaire du pied est conditionnel (il ne s'affiche que si
+   l'inscription est ouverte). Sans cette règle, le bouton d'envoi resté seul
+   glissait à gauche au lieu de tenir sa place à droite. Un <span> vide servait
+   auparavant de calage : il devenait une ligne fantôme dans la pile mobile. */
+.cand-footer .btn-primary { margin-left: auto; }
+
+/* Réassurance de dernière seconde, à l'endroit où la question se pose : juste
+   au-dessus du bouton, pas en bandeau au milieu de la page. */
+.cand-footer-note {
+    margin-top: 20px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--clr-txt-l);
+}
+
 .nav-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding-top: 24px;
+    padding-top: 28px;
 }
 
 .nav-center { flex: 1; text-align: center; }
 
-/* ── Buttons ── */
+/* Étape 1 : il n'y a pas d'arrière. Le pied ne porte que l'action réelle,
+   alignée à droite, plutôt qu'un bouton « Précédent » grisé qui occupe la
+   moitié de la largeur pour ne rien faire. */
+.nav-footer.nav-end { justify-content: flex-end; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   BOUTONS
+   Un seul bouton plein par écran, dans la couleur de l'établissement. Le
+   pressé assombrit, et c'est tout : pas de translation, pas d'ombre qui
+   grandit, pas de lueur.
+   ══════════════════════════════════════════════════════════════════════════ */
 .btn-primary {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    background: var(--brand);
+    justify-content: center;
+    gap: 9px;
+    background: var(--brand-solid);
     color: #fff;
-    border: none;
-    border-radius: 100px;
-    padding: 12px 26px;
+    border: 1px solid var(--brand-solid);
+    border-radius: var(--r-champ);
+    padding: 12px 22px;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
     font-family: inherit;
+    line-height: 1.2;
     cursor: pointer;
     text-decoration: none;
-    transition: filter .2s, transform .1s;
+    white-space: nowrap;
+    transition: background .13s ease, border-color .13s ease;
 }
 
-.btn-primary:hover  { filter: brightness(1.08); }
-.btn-primary:active { transform: scale(.97); }
-.btn-primary:disabled { opacity: .5; cursor: default; filter: none; }
+.btn-primary:hover:not(:disabled) { background: var(--brand-hover); border-color: var(--brand-hover); }
+.btn-primary:active:not(:disabled){ background: var(--brand-press); border-color: var(--brand-press); }
+.btn-primary:disabled             { opacity: .45; cursor: default; }
+.btn-primary svg                  { flex: 0 0 auto; }
 
 .btn-ghost {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    background: none;
-    color: var(--clr-txt-m, #63596E);
-    border: 1.5px solid var(--clr-border, #E8E4F0);
-    border-radius: 100px;
-    padding: 11px 22px;
+    justify-content: center;
+    gap: 7px;
+    background: transparent;
+    color: var(--clr-txt-s);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--r-champ);
+    padding: 11px 20px;
     font-size: 13.5px;
-    font-weight: 600;
+    font-weight: 500;
     font-family: inherit;
+    line-height: 1.2;
     cursor: pointer;
     text-decoration: none;
-    transition: border-color .2s, color .2s;
+    white-space: nowrap;
+    transition: border-color .13s ease, color .13s ease, background .13s ease;
 }
 
-.btn-ghost:hover  { border-color: var(--clr-txt-m); color: var(--clr-txt); }
-.btn-ghost:disabled { opacity: .35; cursor: default; }
+.btn-ghost:hover:not(:disabled) {
+    border-color: var(--clr-txt-l);
+    color: var(--clr-txt);
+    background: var(--clr-surface);
+}
+.btn-ghost:disabled { opacity: .4; cursor: default; }
 
 .btn-link {
     background: none;
     border: none;
-    color: var(--clr-txt-m, #63596E);
+    color: var(--clr-txt-s);
     font-size: 13.5px;
-    font-weight: 600;
+    font-weight: 500;
     font-family: inherit;
     cursor: pointer;
-    text-decoration: none;
-    transition: color .2s;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--clr-border);
+    transition: color .13s ease, text-decoration-color .13s ease;
     padding: 0;
 }
 
-.btn-link:hover { color: var(--brand); text-decoration: underline; }
+.btn-link:hover { color: var(--clr-txt); text-decoration-color: currentColor; }
 
-/* ── Filière pills ── */
+/* Anneau de focus commun à tout ce qui se clique. */
+.btn-primary:focus-visible,
+.btn-ghost:focus-visible,
+.btn-link:focus-visible,
+.btn-pay:focus-visible,
+.cand-back:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: var(--r-champ);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CHOIX DE FILIÈRE
+   Deux colonnes de pastilles. La sélection est un aplat de marque, pas un
+   contour épaissi : un contour qui grossit décale le texte d'un pixel.
+   ══════════════════════════════════════════════════════════════════════════ */
 .filiere-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -441,37 +711,229 @@ body {
 
 .filiere-pill { cursor: pointer; }
 
-.filiere-pill input[type="radio"] { display: none; }
+.filiere-pill input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
 
 .filiere-pill span {
     display: block;
     text-align: center;
-    padding: 10px 14px;
-    border: 2px solid var(--clr-border, #E8E4F0);
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--clr-txt-m, #63596E);
-    transition: border-color .15s, background .15s, color .15s;
+    padding: 11px 14px;
+    background: var(--clr-card);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--r-champ);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--clr-txt-m);
+    transition: border-color .13s ease, background .13s ease, color .13s ease;
     user-select: none;
 }
 
 .filiere-pill:hover span {
-    border-color: var(--brand);
-    color: var(--brand);
+    border-color: var(--brand-line);
+    background: var(--brand-wash);
+    color: var(--clr-txt);
 }
 
 .filiere-pill input:checked + span {
-    background: var(--brand);
-    border-color: var(--brand);
+    background: var(--brand-solid);
+    border-color: var(--brand-solid);
     color: #fff;
+    font-weight: 600;
 }
 
-/* ── Upload zones ── */
-.uploads-list {
+.filiere-pill input:focus-visible + span {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SITUATION DE BOURSE (spec §5.2)
+   Trois réponses exclusives, présentées comme des lignes d'une même liste et
+   non comme trois cartes flottantes. Le fond était lu sur --bg-main : sur un
+   poste en thème sombre, la carte virait au noir sous un texte resté en
+   encre foncée. Tout est désormais en clair, en dur.
+   ══════════════════════════════════════════════════════════════════════════ */
+.bourse-block {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--clr-border-s);
+}
+
+.bourse-block > h3 {
+    font-size: 1.02rem;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -.012em;
+    color: var(--clr-txt);
+    margin-bottom: 6px;
+}
+.bourse-block > h3 .req { color: var(--brand-text); font-size: .8em; }
+
+.bourse-block > .bourse-lead {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--clr-txt-s);
+    margin-bottom: 16px;
+    max-width: 58ch;
+}
+
+/* Liste d'options : un seul contour autour du groupe, des filets entre les
+   lignes. Trois boîtes séparées donnaient trois ombres de contour à lire. */
+.bourse-options {
+    display: block;
+    border: 1px solid var(--clr-border);
+    border-radius: var(--r-carte);
+    overflow: hidden;
+    background: var(--clr-card);
+}
+
+.bourse-option { display: block; cursor: pointer; }
+
+.bourse-option + .bourse-option .bourse-option-body {
+    border-top: 1px solid var(--clr-border-s);
+}
+
+.bourse-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.bourse-option-body {
     display: flex;
-    flex-direction: column;
+    align-items: flex-start;
+    gap: 13px;
+    padding: 15px 17px;
+    background: var(--clr-card);      /* en dur : plus aucun token bascule */
+    transition: background .13s ease;
+}
+
+.bourse-option:hover .bourse-option-body { background: var(--clr-surface); }
+
+.bourse-option input:checked + .bourse-option-body {
+    background: var(--brand-wash);
+}
+
+/* Anneau de sélection dessiné en CSS — aucune image, aucun glyphe. */
+.bourse-radio {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    border: 1.5px solid var(--clr-txt-l);
+    border-radius: 999px;
+    background: var(--clr-card);
+    position: relative;
+    transition: border-color .13s ease, background .13s ease;
+}
+.bourse-option:hover .bourse-radio { border-color: var(--clr-txt-s); }
+
+.bourse-option input:checked + .bourse-option-body .bourse-radio {
+    border-color: var(--brand-solid);
+}
+.bourse-option input:checked + .bourse-option-body .bourse-radio::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 999px;
+    background: var(--brand-solid);
+}
+
+/* Focus clavier : l'anneau doit rester visible sans souris. */
+.bourse-option input:focus-visible + .bourse-option-body {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+}
+
+.bourse-option-text { min-width: 0; }
+
+.bourse-option-title {
+    display: block;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--clr-txt);
+    line-height: 1.4;
+}
+
+.bourse-option-hint {
+    display: block;
+    margin-top: 3px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--clr-txt-s);
+}
+
+/* Champs conditionnels — masqués par défaut, révélés par le JS. Sans
+   JavaScript tout reste visible, et la validation serveur fait foi. */
+.bourse-conditional {
+    margin-top: 14px;
+    padding: 16px;
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--r-carte);
+}
+.bourse-conditional[hidden] { display: none; }
+.bourse-conditional .form-group input { background: var(--clr-card); }
+
+/* Note explicative. Filet à gauche plutôt qu'aplat teinté : la mention se
+   remarque sans ajouter un bloc de couleur de plus à l'écran. */
+.bourse-note {
+    display: block;
+    margin-top: 16px;
+    padding: 0 0 0 14px;
+    border-left: 2px solid var(--clr-border);
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--clr-txt-s);
+    max-width: 62ch;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PIÈCES DU DOSSIER (spec §5.3)
+   Les zones en pointillé de 2 px, empilées sept ou huit fois, donnaient à
+   l'étape 2 son air de formulaire d'atelier. La liste devient un tableau de
+   lignes : un contour autour du groupe, un filet entre les lignes, l'état à
+   gauche et l'exigence à droite.
+   ══════════════════════════════════════════════════════════════════════════ */
+.pieces-context {
+    display: flex;
+    align-items: baseline;
     gap: 8px;
+    flex-wrap: wrap;
+    padding: 12px 15px;
+    margin-bottom: 16px;
+    background: var(--brand-wash);
+    border: 1px solid var(--brand-line);
+    border-radius: var(--r-carte);
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--clr-txt-m);
+}
+.pieces-context strong { color: var(--clr-txt); font-weight: 600; }
+.pieces-context a {
+    color: var(--brand-text);
+    font-weight: 600;
+    text-underline-offset: 3px;
+}
+
+.pieces-formats {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--clr-txt-l);
+    margin-bottom: 14px;
+}
+
+.uploads-list {
+    display: block;
+    border: 1px solid var(--clr-border);
+    border-radius: var(--r-carte);
+    overflow: hidden;
+    background: var(--clr-card);
 }
 
 .upload-zone {
@@ -479,24 +941,23 @@ body {
     align-items: center;
     gap: 14px;
     padding: 14px 16px;
-    border: 2px dashed #D5D0E0;
-    border-radius: 12px;
     cursor: pointer;
-    transition: border-color .2s, background .2s;
     position: relative;
-    overflow: hidden;
+    transition: background .13s ease;
 }
 
-.upload-zone:hover {
-    border-color: var(--brand);
-    background: color-mix(in srgb, var(--brand) 3%, transparent);
-}
+.upload-zone + .upload-zone { border-top: 1px solid var(--clr-border-s); }
+.upload-zone[hidden]        { display: none; }
+.upload-zone:hover          { background: var(--clr-surface); }
 
-.upload-zone.has-file {
-    border-color: #22c55e;
-    border-style: solid;
-    background: rgba(34,197,94,.04);
-}
+/* Déposée : aplat de marque et pastille pleine. Le vert ouvrait un second
+   registre chromatique pour dire ce que la pastille dit déjà. */
+.upload-zone.has-file       { background: var(--brand-wash); }
+.upload-zone.has-file:hover { background: var(--brand-wash-2); }
+
+/* Pièce apparue à cause de la situation de bourse : signalée par son badge,
+   pas par un fond de plus. */
+.upload-zone.is-bourse { background: transparent; }
 
 .upload-zone input[type="file"] {
     position: absolute;
@@ -507,126 +968,559 @@ body {
     height: 100%;
 }
 
+.upload-zone input[type="file"]:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+}
+
+/* Pastille d'état. Vide, c'est un simple carré en creux : pas d'icône de
+   fichier répétée huit fois. Pleine, elle porte la coche. */
 .upload-ico {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    background: color-mix(in srgb, var(--brand) 10%, transparent);
+    width: 30px;
+    height: 30px;
+    border-radius: var(--r-champ);
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    color: var(--brand);
+    color: var(--clr-txt-l);
+    transition: background .13s ease, border-color .13s ease, color .13s ease;
+}
+
+/* Vide, la pastille porte un « plus » dessiné en CSS. Sans lui la ligne
+   perdait son affordance : les bordures en pointillé disaient « déposez un
+   fichier ici », un carré en creux ne dit rien. Deux barres, aucune image. */
+.upload-ico:not(.done) { position: relative; }
+.upload-ico:not(.done)::before,
+.upload-ico:not(.done)::after {
+    content: '';
+    position: absolute;
+    background: currentColor;
+    border-radius: 1px;
+}
+.upload-ico:not(.done)::before { width: 11px; height: 1.5px; }
+.upload-ico:not(.done)::after  { width: 1.5px; height: 11px; }
+
+.upload-zone:hover .upload-ico:not(.done) {
+    border-color: var(--brand-line);
+    color: var(--brand-text);
 }
 
 .upload-ico.done {
-    background: rgba(34,197,94,.12);
-    color: #16a34a;
+    background: var(--brand-solid);
+    border-color: var(--brand-solid);
+    color: #fff;
 }
 
-.upload-meta  { flex: 1; min-width: 0; }
+/* Sur une ligne déposée, le badge est posé sur l'aplat de marque : il lui faut
+   un fond opaque pour rester détaché. */
+.upload-zone.has-file .upload-badge.obligatoire,
+.upload-zone.has-file .upload-badge.bourse {
+    background: var(--clr-card);
+}
+
+.upload-meta { flex: 1; min-width: 0; }
 
 .upload-name {
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 600;
     color: var(--clr-txt);
+    line-height: 1.4;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
 }
 
 .upload-name .req-dot {
-    width: 6px;
-    height: 6px;
-    background: var(--brand);
-    border-radius: 50%;
+    width: 5px;
+    height: 5px;
+    background: var(--brand-solid);
+    border-radius: 999px;
     flex-shrink: 0;
 }
 
 .upload-hint {
-    font-size: 11.5px;
-    color: var(--clr-txt-l, #A49DB0);
-    margin-top: 2px;
+    display: block;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--clr-txt-l);
+    margin-top: 3px;
+    overflow-wrap: anywhere;
+}
+
+/* Réceptacle vide (pièce déjà déposée, avant tout nouveau choix de fichier) :
+   il ne doit pas ouvrir un blanc sous la ligne. */
+.upload-hint:empty { display: none; }
+
+.upload-existing {
+    display: block;
+    margin-top: 3px;
+    font-size: 12px;
+    line-height: 1.45;
+    font-weight: 500;
+    color: var(--brand-text);
+}
+
+.upload-refus {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--clr-error-text);
 }
 
 .upload-badge {
+    flex: 0 0 auto;
     font-size: 11px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 100px;
+    font-weight: 600;
+    letter-spacing: .01em;
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
 }
 
 .upload-badge.obligatoire {
-    background: color-mix(in srgb, var(--brand) 10%, transparent);
-    color: var(--brand);
+    background: var(--brand-wash-2);
+    color: var(--brand-text);
+}
+
+.upload-badge.bourse {
+    background: var(--brand-wash-2);
+    color: var(--brand-text);
 }
 
 .upload-badge.optionnel {
-    background: rgba(0,0,0,.05);
-    color: var(--clr-txt-l);
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    color: var(--clr-txt-s);
 }
 
-/* ── Success card ── */
-.success-icon {
-    width: 72px;
-    height: 72px;
-    background: rgba(34,197,94,.1);
-    border-radius: 50%;
+/* ══════════════════════════════════════════════════════════════════════════
+   ÉTAPE 3 — RÈGLEMENT
+   Ces règles vivaient dans un <style> collé en bas du gabarit. Elles
+   rejoignent la feuille : même échelle de rayons, mêmes filets, et un seul
+   chiffre en couleur — le total.
+   ══════════════════════════════════════════════════════════════════════════ */
+.pay-breakdown {
+    border: 1px solid var(--clr-border);
+    border-radius: var(--r-carte);
+    overflow: hidden;
+    background: var(--clr-card);
+}
+
+.pay-line {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 13px 16px;
+    font-size: 14px;
+    color: var(--clr-txt-s);
+    border-bottom: 1px solid var(--clr-border-s);
+}
+.pay-line strong {
+    color: var(--clr-txt);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
-.dossier-summary {
-    background: var(--clr-bg, #FAF9F5);
-    border-radius: 12px;
-    padding: 16px 20px;
-    margin: 20px 0;
+.pay-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 16px;
+    background: var(--clr-inset);
 }
-
-.dossier-summary dt {
-    font-size: 10.5px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .07em;
-    color: var(--clr-txt-l);
-    margin-bottom: 2px;
-}
-
-.dossier-summary dd {
+.pay-total span:first-child {
     font-size: 14px;
     font-weight: 600;
     color: var(--clr-txt);
-    margin-bottom: 12px;
 }
 
-.dossier-summary dd:last-child { margin-bottom: 0; }
+/* Le total est le seul chiffre que le candidat cherche : il est le seul
+   coloré de l'écran, et le seul à ce corps. */
+.pay-total-amount {
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -.02em;
+    color: var(--brand-text);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
 
-/* ── Payment placeholder ── */
-.pay-lock {
+.pay-methods {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.pay-method-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 13px;
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--clr-txt-s);
+}
+
+.pay-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding-top: 4px;
+}
+
+.btn-pay {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--brand-solid);
+    color: #fff;
+    border: 1px solid var(--brand-solid);
+    border-radius: var(--r-champ);
+    padding: 14px 26px;
+    font-size: .98rem;
+    font-weight: 600;
+    font-family: inherit;
+    line-height: 1.2;
+    cursor: pointer;
+    width: 100%;
+    transition: background .13s ease, border-color .13s ease;
+}
+.btn-pay:hover:not(:disabled)  { background: var(--brand-hover); border-color: var(--brand-hover); }
+.btn-pay:active:not(:disabled) { background: var(--brand-press); border-color: var(--brand-press); }
+.btn-pay:disabled              { cursor: not-allowed; opacity: .65; }
+
+.pay-disclaimer {
+    font-size: 12.5px;
+    color: var(--clr-txt-l);
+    line-height: 1.6;
+    text-align: center;
+    max-width: 52ch;
+    margin: 0 auto;
+}
+
+/* Récapitulatif du dossier : une définition par ligne, libellé à gauche en
+   encre douce, valeur à droite. Les libellés étaient en capitales espacées
+   de 10,5 px — trois sur-titres empilés pour trois lignes de contenu. */
+.dossier-summary {
+    border: 1px solid var(--clr-border);
+    border-radius: var(--r-carte);
+    overflow: hidden;
+    background: var(--clr-card);
+}
+
+.dossier-summary dt {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--clr-txt-l);
+    padding: 13px 16px 0;
+}
+
+.dossier-summary dd {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--clr-txt);
+    padding: 2px 16px 13px;
+    line-height: 1.45;
+}
+
+.dossier-summary dd + dt { border-top: 1px solid var(--clr-border-s); }
+
+@media (min-width: 560px) {
+    /* Deux colonnes : le libellé tient sur la gauche, la valeur s'aligne à
+       droite. En dessous de 560 px la pile reste plus lisible. */
+    .dossier-summary {
+        display: grid;
+        grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+    }
+    .dossier-summary dt {
+        padding: 13px 8px 13px 16px;
+        align-self: center;
+    }
+    .dossier-summary dd {
+        padding: 13px 16px 13px 8px;
+        align-self: center;
+    }
+    .dossier-summary dd + dt,
+    .dossier-summary dt:not(:first-of-type) { border-top: 1px solid var(--clr-border-s); }
+    .dossier-summary dd:not(:first-of-type) { border-top: 1px solid var(--clr-border-s); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CONFIRMATION (spec §5.4)
+   Une seule information mérite du poids : la référence, que le candidat va
+   noter ou photographier. Tout le reste redescend d'un cran. Composition
+   alignée à gauche — on lit une référence, on ne la contemple pas.
+   ══════════════════════════════════════════════════════════════════════════ */
+.confirm-card {
+    background: var(--clr-card);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--r-carte);
+    padding: 32px var(--gouttiere);
+    text-align: left;
+}
+
+/* Pastille de statut à hauteur de texte : la coche n'est pas le sujet de la
+   page, elle en est la ponctuation. */
+.confirm-mark {
+    width: 32px;
+    height: 32px;
+    margin: 0 0 18px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--brand-solid);
+    color: #fff;
+}
+.confirm-mark svg { width: 17px; height: 17px; }
+
+.confirm-card h1 {
+    font-size: clamp(1.4rem, 4.4vw, 1.7rem);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -.022em;
+    color: var(--clr-txt);
+    margin-bottom: 10px;
+}
+
+.confirm-card > p.confirm-lead {
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: var(--clr-txt-m);
+    max-width: 54ch;
+    margin: 0 0 24px;
+}
+
+/* La référence : seul bloc de la page à porter l'accent. */
+.confirm-reference {
+    display: block;
+    padding: 18px;
+    margin-bottom: 18px;
+    background: var(--clr-inset);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--r-carte);
+}
+.confirm-reference .label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--clr-txt-s);
+    margin-bottom: 8px;
+}
+.confirm-reference .value {
+    display: block;
+    font-family: var(--f-mono);
+    font-size: clamp(17px, 4.4vw, 21px);
+    font-weight: 600;
+    letter-spacing: .01em;
+    color: var(--brand-text);
+    word-break: break-all;
+    user-select: all;
+}
+.confirm-reference .code-court {
+    display: block;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--clr-border);
+    font-size: 12.5px;
+    color: var(--clr-txt-s);
+}
+.confirm-reference .code-court b {
+    font-family: var(--f-mono);
+    letter-spacing: .1em;
+    color: var(--clr-txt);
+}
+
+/* Rappel « vous n'êtes pas encore inscrit » : le point de la spec §2 sur
+   lequel l'interface doit rester explicite, sous peine de litiges. C'est le
+   seul endroit du parcours où l'ambre a le droit d'apparaître. */
+.confirm-warning {
+    display: block;
+    text-align: left;
+    padding: 2px 0 2px 15px;
+    margin-bottom: 24px;
+    border-left: 2px solid var(--clr-warn);
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--clr-txt-m);
+    max-width: 60ch;
+}
+.confirm-warning strong { color: var(--clr-warn-text); font-weight: 600; }
+
+.confirm-steps {
+    text-align: left;
+    list-style: none;
+    counter-reset: etape;
+    margin-bottom: 24px;
+    border-top: 1px solid var(--clr-border-s);
+}
+.confirm-steps li {
+    counter-increment: etape;
+    display: flex;
+    gap: 13px;
+    align-items: flex-start;
+    padding: 14px 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--clr-txt-m);
+    border-bottom: 1px solid var(--clr-border-s);
+}
+.confirm-steps li:last-child { border-bottom: none; }
+.confirm-steps li::before {
+    content: counter(etape);
+    flex: 0 0 auto;
+    width: 21px;
+    height: 21px;
+    margin-top: 1px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--brand-wash-2);
+    color: var(--brand-text);
+    font-size: 11.5px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.confirm-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.confirm-meta {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--clr-border-s);
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--clr-txt-l);
+    max-width: 62ch;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ÉCRANS DE SUCCÈS ET D'ATTENTE (préinscription, paiement, candidature fermée)
+   ══════════════════════════════════════════════════════════════════════════ */
+.success-icon {
     width: 64px;
     height: 64px;
-    background: color-mix(in srgb, var(--brand) 10%, transparent);
-    border-radius: 50%;
+    background: color-mix(in srgb, var(--clr-ok) 12%, #FFFFFF);
+    border-radius: 999px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 20px;
-    color: var(--brand);
+    margin: 0 auto 22px;
 }
 
-/* ── Responsive ── */
+.pay-lock {
+    width: 60px;
+    height: 60px;
+    background: var(--brand-wash-2);
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 22px;
+    color: var(--brand-text);
+}
+
+/* Barre de progression à trois paliers (spec §9.1). */
+.progress-paliers { display: block; }
+
+.progress-track {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+.progress-track span {
+    flex: 1;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--clr-border);
+}
+.progress-track span.atteint { background: var(--brand-solid); }
+
+.progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--clr-txt-l);
+}
+.progress-labels b {
+    font-weight: 600;
+    color: var(--clr-txt);
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin .9s linear infinite; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+    :root         { --gouttiere: 18px; }
+    .cand-topbar  { padding: 12px 16px; }
+    .cand-page    { padding: 28px 14px 64px; }
+    .cand-lede    { margin-bottom: 24px; }
+    .stepper      { margin-bottom: 28px; padding-bottom: 16px; }
+
+    /* Le rail garde ses trois pastilles mais ne nomme que l'étape en cours :
+       trois libellés côte à côte ne tiennent pas sous 640 px, et les tronquer
+       en « Info… / Piè… / Paie… » ne renseigne personne. */
+    .step-name              { display: none; }
+    .step.active .step-name { display: block; max-width: 42vw; }
+    .step-connector         { margin: 0 10px; min-width: 10px; }
+}
+
 @media (max-width: 540px) {
-    .form-row              { grid-template-columns: 1fr; }
-    .filiere-grid          { grid-template-columns: 1fr 1fr; }
-    .cand-page             { padding: 24px 14px 60px; }
-    .form-section          { padding: 18px 18px; }
-    .info-banner           { margin: 0 18px 16px; }
-    .cand-card-head        { padding: 20px 18px; }
-    .stepper               { gap: 0; }
-    .step-connector        { width: 36px; }
-    .step-name             { max-width: 60px; font-size: 9.5px; }
-    .cand-footer           { flex-direction: column-reverse; align-items: stretch; text-align: center; }
-    .cand-footer .btn-link { order: 2; }
+    .form-row     { grid-template-columns: 1fr; }
+    .filiere-grid { grid-template-columns: 1fr; }
+    /* `margin-left:auto` cale le bouton à droite en ligne ; en colonne il le
+       ferait rétrécir à la largeur de son texte au lieu de s'étirer. */
+    .cand-footer  { flex-direction: column-reverse; align-items: stretch; text-align: center; }
+    .cand-footer .btn-link    { order: 2; }
+    .cand-footer .btn-primary { margin-left: 0; }
+    .cand-footer-note         { text-align: center; }
+
+    /* Le pied de navigation passe en pile : le bouton d'action d'abord, le
+       retour en dessous. Deux boutons serrés côte à côte sur 320 px forcent
+       le libellé « Continuer vers le paiement » à passer à la ligne. */
+    .nav-footer   { flex-direction: column-reverse; align-items: stretch; }
+    .nav-footer .btn-primary,
+    .nav-footer .btn-ghost { width: 100%; }
+    .nav-center   { display: none; }
+
+    /* Le badge « Requis » restait sur la même ligne et comprimait le libellé
+       de la pièce à trois mots par ligne. La méta occupe désormais toute la
+       largeur restante, ce qui renvoie le badge à la ligne suivante, aligné
+       sous le texte. */
+    .upload-zone  { flex-wrap: wrap; row-gap: 8px; }
+    .upload-meta  { flex: 1 1 calc(100% - 44px); }
+    .upload-badge { order: 3; margin-left: 44px; }
+    .confirm-actions .btn-primary { width: 100%; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MOUVEMENT RÉDUIT
+   Les transitions de cette feuille ne portent que sur la couleur, mais la
+   règle vaut pour la roue d'attente du bouton de paiement.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

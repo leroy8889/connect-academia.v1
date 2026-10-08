@@ -8,6 +8,7 @@ $parSerie         = $parSerie ?? [];
 $dernieres        = array_slice($dernieres ?? [], 0, 5);
 $activiteRecente  = array_slice($activiteRecente ?? [], 0, 5);
 $activiteMatieres = $activiteMatieres ?? [];
+$suivi            = $suivi ?? null;
 
 $totalVues = array_sum(array_column($parSerie, 'nb'));
 
@@ -274,6 +275,68 @@ $kpiIcons = [
       </div>
     </section>
   </div>
+
+  <?php if (!empty($suivi)): ?>
+  <!-- ── Suivi des candidatures (spec §11) ──────────────────────────────
+       Le super administrateur voit ici, sans quitter son accueil, l'état de
+       chaque parcours : entonnoir de conversion, derniers dossiers déposés,
+       et le nombre de dossiers à 50 % qui traînent depuis plus de 15 jours. -->
+  <section class="cd-chart cd-chart-flush" style="margin-bottom:18px;">
+    <div class="cd-chart-head cd-chart-head-pad">
+      <div>
+        <h3 class="cd-chart-title">Suivi des candidatures</h3>
+        <p class="cd-chart-desc">
+          Préinscriptions et inscriptions, tous établissements
+          <?php if ((int)$suivi['attente'] > 0): ?>
+            &nbsp;·&nbsp; <strong style="color:#B45309;"><?= (int)$suivi['attente'] ?> dossier<?= $suivi['attente'] > 1 ? 's' : '' ?> à 50 % en attente depuis plus de 15 jours</strong>
+          <?php endif; ?>
+        </p>
+      </div>
+      <a href="<?= url('/admin/dossiers') ?>" class="cd-link">Tous les dossiers</a>
+    </div>
+
+    <div class="cd-stats" style="border-bottom:1px solid var(--border,rgba(31,30,29,.08));">
+      <?php foreach ($suivi['entonnoir'] as $i => $etape): ?>
+      <div class="cd-stat">
+        <div class="cd-stat-k"><?= e($etape['libelle']) ?></div>
+        <div class="cd-stat-v"><?= number_format((int)$etape['valeur'], 0, ',', ' ') ?></div>
+        <div class="cd-stat-s"><?= $i === 0 ? 'base' : number_format((float)$etape['taux'], 1, ',', ' ') . ' % de l\'étape précédente' ?></div>
+      </div>
+      <?php endforeach; ?>
+    </div>
+
+    <div class="cd-feed">
+      <?php foreach ($suivi['derniers'] as $d): ?>
+      <div class="cd-feed-item">
+        <div class="cd-avatar cd-avatar-soft">
+          <?= strtoupper(mb_substr((string)($d['nom_complet'] ?? 'C'), 0, 2)) ?>
+        </div>
+        <div class="cd-feed-main">
+          <div class="cd-feed-line">
+            <strong><?= e($d['nom_complet'] ?? 'Candidat') ?></strong>
+            <span class="cd-pill" style="background:rgba(139,82,250,.12);color:#7440D9;"><?= e($d['type_libelle']) ?></span>
+          </div>
+          <span><?= e($d['etab_nom'] ?? '') ?><?= !empty($d['reference']) ? ' · ' . e($d['reference']) : '' ?></span>
+        </div>
+        <div class="cd-feed-side">
+          <span class="cd-pill <?= (int)$d['progression'] >= 100 ? 'cd-pill-ok' : '' ?>"
+                <?= (int)$d['progression'] < 100 ? 'style="background:rgba(26,26,26,.05);color:var(--txt-m);"' : '' ?>>
+            <?= e($d['statut_libelle']) ?> · <?= (int)$d['progression'] ?> %
+          </span>
+          <?php if (!empty($d['eleve_id'])): ?>
+            <a class="cd-link" href="<?= url('/admin/utilisateurs/' . (int)$d['eleve_id']) ?>">Traçabilité</a>
+          <?php else: ?>
+            <span class="cd-feed-date"><?= !empty($d['soumis_le']) ? date('d M Y', strtotime((string)$d['soumis_le'])) : '' ?></span>
+          <?php endif; ?>
+        </div>
+      </div>
+      <?php endforeach; ?>
+      <?php if (empty($suivi['derniers'])): ?>
+      <p class="cd-empty">Aucun dossier déposé pour l'instant</p>
+      <?php endif; ?>
+    </div>
+  </section>
+  <?php endif; ?>
 
   <!-- ── Rangée 3 : listes ─────────────────────────────────── -->
   <div class="cd-row2">

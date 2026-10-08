@@ -111,8 +111,6 @@ body { font-family: "DejaVu Sans", sans-serif; font-size: 9.5pt; color: #111; li
 
   <p class="texte">a bien été <b>enregistrée</b> auprès de <?= $h($etabNom) ?>. Cette attestation n'a pas valeur d'admission définitive ; elle atteste uniquement de l'enregistrement du dossier dans notre système.</p>
 
-  <p class="texte">Pour finaliser votre admission, vous devrez fournir l'ensemble des pièces justificatives correspondant à votre niveau d'entrée et procéder au règlement des frais de dossier.</p>
-
   <table class="pied">
     <tr>
       <td class="pied-g">

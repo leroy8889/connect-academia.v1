@@ -60,8 +60,8 @@ $router->get('/api/apprentissage/series',                   'Apprentissage\Resso
 $router->post('/api/apprentissage/ia/question',             'Apprentissage\IaController@question',           ['auth', 'csrf']);
 $router->get('/api/apprentissage/ia/historique/{id}',       'Apprentissage\IaController@historique',         ['auth']);
 $router->post('/api/apprentissage/ia/nouvelle-conversation','Apprentissage\IaController@nouvelleConversation',['auth', 'csrf']);
-$router->post('/api/apprentissage/progression',             'Apprentissage\ProgressionController@update',    ['auth']);
-$router->post('/api/apprentissage/favoris/{id}',            'Apprentissage\FavorisController@toggle',        ['auth']);
+$router->post('/api/apprentissage/progression',             'Apprentissage\ProgressionController@update',    ['auth', 'csrf']);
+$router->post('/api/apprentissage/favoris/{id}',            'Apprentissage\FavorisController@toggle',        ['auth', 'csrf']);
 
 // ── COMMUNAUTÉ ────────────────────────────────────────────────────────────
 $router->get('/communaute',                                 'Communaute\FeedController@index',               ['auth']);
@@ -75,9 +75,9 @@ $router->get('/api/communaute/posts',                       'Communaute\PostCont
 $router->post('/api/communaute/posts',                      'Communaute\PostController@store',               ['auth', 'csrf']);
 $router->put('/api/communaute/posts/{id}',                  'Communaute\PostController@update',              ['auth', 'csrf']);
 $router->delete('/api/communaute/posts/{id}',               'Communaute\PostController@destroy',             ['auth', 'csrf']);
-$router->post('/api/communaute/posts/{id}/like',            'Communaute\PostController@like',                ['auth']);
+$router->post('/api/communaute/posts/{id}/like',            'Communaute\PostController@like',                ['auth', 'csrf']);
 $router->post('/api/communaute/posts/{id}/report',          'Communaute\PostController@report',              ['auth', 'csrf']);
-$router->post('/api/communaute/posts/{id}/bookmark',        'Communaute\PostController@bookmark',            ['auth']);
+$router->post('/api/communaute/posts/{id}/bookmark',        'Communaute\PostController@bookmark',            ['auth', 'csrf']);
 
 $router->get('/api/communaute/posts/{id}/comments',         'Communaute\CommentController@index',            ['auth']);
 $router->post('/api/communaute/posts/{id}/comments',        'Communaute\CommentController@store',            ['auth', 'csrf']);
@@ -89,15 +89,15 @@ $router->post('/api/communaute/salons/{id}/messages',       'Communaute\ChatCont
 
 $router->get('/api/notifications',                          'Communaute\NotificationController@index',       ['auth']);
 $router->get('/api/notifications/count',                    'Communaute\NotificationController@count',       ['auth']);
-$router->patch('/api/notifications/read-all',               'Communaute\NotificationController@readAll',     ['auth']);
-$router->patch('/api/notifications/{id}/read',              'Communaute\NotificationController@read',        ['auth']);
+$router->patch('/api/notifications/read-all',               'Communaute\NotificationController@readAll',     ['auth', 'csrf']);
+$router->patch('/api/notifications/{id}/read',              'Communaute\NotificationController@read',        ['auth', 'csrf']);
 
 $router->post('/api/users/{id}/follow',                     'Communaute\UserController@follow',              ['auth', 'csrf']);
 $router->get('/api/users/search',                           'Communaute\UserController@search',              ['auth']);
 $router->post('/api/communaute/profil/update',              'Communaute\UserController@updateProfile',       ['auth', 'csrf']);
 
 $router->get('/api/communaute/comments/{id}/replies',       'Communaute\CommentController@replies',          ['auth']);
-$router->post('/api/communaute/comments/{id}/like',         'Communaute\CommentController@likeComment',      ['auth']);
+$router->post('/api/communaute/comments/{id}/like',         'Communaute\CommentController@likeComment',      ['auth', 'csrf']);
 
 // ── ADMIN ─────────────────────────────────────────────────────────────────
 $router->get('/Administratorconnect/login',                 'Admin\AdminAuthController@showLogin');
@@ -160,6 +160,31 @@ $router->delete('/admin/api/annonces/{id}',                 'Admin\AnnoncesContr
 $router->get('/api/annonces/active',                        'Admin\AnnoncesController@activeForHub',         ['auth']);
 
 $router->get('/admin/paiement',                                      'Admin\PaiementController@index',               ['admin']);
+// ── Suivi des commissions (spec §10.3) ────────────────────────────────────
+// Volontairement HORS des préfixes AdminPermissions : c'est la vue comptable
+// transversale de la plateforme, réservée au super administrateur — même
+// principe que /admin/securite.
+$router->get('/admin/commissions',                                   'Admin\SuiviCommissionsController@index',       ['admin']);
+$router->post('/admin/commissions/{id}/statut',                      'Admin\SuiviCommissionsController@changerStatut', ['admin', 'csrf']);
+// Encaissement tranche par tranche (40/30/30) : c'est le super administrateur
+// qui voit l'argent arriver, l'établissement lit le résultat sur son tableau.
+$router->post('/admin/commissions/tranches/{id}',                    'Admin\SuiviCommissionsController@tranche',      ['admin', 'csrf']);
+// Abandon d'année — super administrateur uniquement (garde doublée côté
+// contrôleur : une route reste appelable à la main).
+$router->post('/admin/commissions/{id}/abandon',                     'Admin\SuiviCommissionsController@abandon',      ['admin', 'csrf']);
+$router->post('/admin/commissions/{id}/abandon/lever',               'Admin\SuiviCommissionsController@leverAbandon', ['admin', 'csrf']);
+$router->post('/admin/commissions/{id}/revision/clore',              'Admin\SuiviCommissionsController@cloreRevision', ['admin', 'csrf']);
+
+// ── Traçabilité super administrateur (spec §11, §13.4) ────────────────────
+// Hors préfixes AdminPermissions : réservé au super administrateur, comme
+// /admin/securite. Le journal est en CONSULTATION SEULE — aucune route ne
+// permet d'en modifier ou d'en supprimer une entrée (spec §11.3).
+$router->get('/admin/utilisateurs/{id}',                        'Admin\TracabiliteController@utilisateur',    ['admin']);
+$router->get('/admin/dossiers',                                 'Admin\TracabiliteController@dossiers',       ['admin']);
+$router->get('/admin/journal',                                  'Admin\TracabiliteController@journal',        ['admin']);
+$router->get('/admin/tableaux-de-bord',                         'Admin\TracabiliteController@tableauxDeBord', ['admin']);
+$router->post('/admin/etablissements/{id}/taux',                'Admin\TracabiliteController@modifierTaux',   ['admin', 'csrf']);
+$router->post('/admin/dossiers/{id}/revoquer-jeton',            'Admin\TracabiliteController@revoquerJeton',  ['admin', 'csrf']);
 $router->get('/admin/api/paiement/transactions',                     'Admin\PaiementController@transactions',         ['admin']);
 $router->post('/admin/api/paiement/transactions/{id}/confirmer',     'Admin\PaiementController@confirmer',            ['admin', 'csrf']);
 $router->post('/admin/api/paiement/sync',                            'Admin\PaiementController@sync',                  ['admin', 'csrf']);
@@ -170,6 +195,15 @@ $router->get('/orientation',                                    'Orientation\Mar
 // Vérification d'authenticité des documents (scan du QR code imprimé sur les
 // récépissés de préinscription et attestations d'inscription) — public
 $router->get('/verifier/{token}',                               'Orientation\VerificationController@show');
+
+// ── Vérification d'un DOSSIER par scan QR / code court (spec §7) ───────────
+// À distinguer de /verifier/{token} au-dessus, qui atteste l'authenticité d'un
+// DOCUMENT et reste public. Ici l'agent consulte l'état réel d'un dossier et
+// peut décider : authentification exigée, cloisonnement par établissement,
+// limitation de débit à 30 tentatives/minute/IP, et journalisation de TOUS les
+// scans — succès comme échecs.
+$router->get('/v/{token}',                                      'Orientation\VerificationDossierController@show');
+$router->post('/verification/code-court',                       'Orientation\VerificationDossierController@parCodeCourt', ['csrf']);
 $router->get('/orientation/universites',                        'Orientation\MarketplaceController@universites');
 $router->get('/orientation/grandes-ecoles',                     'Orientation\MarketplaceController@grandesEcoles');
 $router->get('/orientation/recherche',                          'Orientation\MarketplaceController@recherche');
@@ -202,6 +236,10 @@ $router->get('/orientation/{slug}/inscription/etape-3',                 'Orienta
 $router->post('/orientation/{slug}/inscription/etape-3/payer',          'Orientation\CandidatureController@payEtape3',         ['csrf']);
 $router->get('/orientation/{slug}/inscription/retour',                  'Orientation\CandidatureController@retourPaiement');
 $router->get('/orientation/{slug}/inscription/succes',                  'Orientation\CandidatureController@inscriptionSucces');
+// Étape 3 en mode présentiel (défaut) : écran de confirmation « Dossier envoyé ».
+// L'identifiant du dossier circule haché (Core\Hashid) et l'appartenance est
+// revérifiée en base — cf. spec §5.4 et §15.1.
+$router->get('/orientation/{slug}/inscription/confirmation',            'Orientation\CandidatureController@inscriptionConfirmation');
 
 // Webhook MoneyFusion orientation
 $router->post('/webhook/orientation/payin',                             'Orientation\PaiementOrientationController@webhookPayin');
@@ -222,6 +260,13 @@ $router->post('/admin/orientation/{id}/modifier',               'Admin\Orientati
 $router->get('/admin/orientation/{id}/paiement',                'Admin\OrientationController@showPaiement',          ['admin']);
 $router->post('/admin/orientation/{id}/paiement',               'Admin\OrientationController@updatePaiement',        ['admin', 'csrf']);
 $router->post('/admin/orientation/{id}/activer-inscription',    'Admin\OrientationController@activerInscription',    ['admin', 'csrf']);
+
+// Formations & grille tarifaire (scolarité par niveau et situation de bourse).
+// Mêmes tables que /gestionnaire/filieres : le super administrateur et le
+// gestionnaire alimentent un seul catalogue, jamais deux.
+$router->post('/admin/orientation/{id}/formations',             'Admin\OrientationController@storeFiliere',          ['admin', 'csrf']);
+$router->post('/admin/orientation/{id}/formations/{fid}/tarifs','Admin\OrientationController@tarifsFiliere',         ['admin', 'csrf']);
+$router->post('/admin/orientation/{id}/formations/{fid}/delete','Admin\OrientationController@destroyFiliere',        ['admin', 'csrf']);
 
 // Paiements globaux (tous établissements)
 $router->get('/admin/orientation/paiements',                    'Admin\PaiementsOrientationController@index',        ['admin']);
@@ -282,7 +327,19 @@ $router->post('/eleve/orientation/notifications/tout-lu',       'Orientation\Esp
 $router->get('/eleve/orientation/document/{hash}',            'Orientation\EspaceEleveOrientationController@document',   ['auth']);
 $router->get('/eleve/orientation/dossier/{hash}/recepisse',    'Orientation\EspaceEleveOrientationController@recepisse',   ['auth']);
 $router->get('/eleve/orientation/dossier/{hash}/attestation',  'Orientation\EspaceEleveOrientationController@attestation', ['auth']);
+// Reçu de règlement de scolarité : preuve du VERSEMENT, à ne pas confondre
+// avec l'attestation, qui prouve l'inscription. Rendu à la demande.
+$router->get('/eleve/orientation/dossier/{hash}/recu',         'Orientation\EspaceEleveOrientationController@recuInscription', ['auth']);
 $router->get('/eleve/orientation/dossier/{hash}',              'Orientation\EspaceEleveOrientationController@dossier', ['auth']);
+// Mise à jour de la situation de bourse par l'étudiant (spec §9.4).
+// Possible à tout moment, y compris après l'inscription définitive : elle ne
+// modifie ni le statut du dossier, ni la commission.
+$router->post('/eleve/orientation/dossier/{hash}/bourse',     'Orientation\EspaceEleveOrientationController@updateBourse', ['auth', 'csrf']);
+// Complément de dossier (spec §9.3) : remplacer une pièce refusée, déposer une
+// pièce demandée. Sans ces routes, une notification « pièce non conforme » ne
+// mène nulle part et le dossier reste bloqué jusqu'à un appel téléphonique.
+$router->post('/eleve/orientation/dossier/{hash}/piece',      'Orientation\EspaceEleveOrientationController@remplacerPiece',  ['auth', 'csrf']);
+$router->post('/eleve/orientation/dossier/{hash}/renvoyer',   'Orientation\EspaceEleveOrientationController@renvoyerDossier', ['auth', 'csrf']);
 
 // ── GESTIONNAIRE — Authentification (espace dédié) ───────────────────────
 $router->get('/gestionnaire/login',                             'Gestionnaire\GestionnaireAuthController@showLogin');
@@ -296,13 +353,36 @@ $router->get('/gestionnaire/bilan',                             'Gestionnaire\Ge
 $router->get('/gestionnaire/commissions',                       'Gestionnaire\CommissionGestionnaireController@index',  ['gestionnaire']);
 
 // ── GESTIONNAIRE — Candidatures ───────────────────────────────────────────
+// Écran de scan du guichet (spec §8.5) : caméra si le navigateur sait décoder,
+// sinon appareil photo du téléphone, et dans tous les cas saisie du code court.
+$router->get('/gestionnaire/scanner',                           'Gestionnaire\ScannerController@index',                      ['gestionnaire']);
 $router->get('/gestionnaire/candidatures',                      'Gestionnaire\CandidatureGestionnaireController@index',       ['gestionnaire']);
 $router->get('/gestionnaire/candidatures/creer',                'Gestionnaire\CandidatureGestionnaireController@create',      ['gestionnaire']);
 $router->post('/gestionnaire/candidatures/creer',               'Gestionnaire\CandidatureGestionnaireController@store',       ['gestionnaire', 'csrf']);
 $router->get('/gestionnaire/candidatures/{id}',                 'Gestionnaire\CandidatureGestionnaireController@show',        ['gestionnaire']);
 $router->get('/gestionnaire/candidatures/{id}/recepisse',       'Gestionnaire\CandidatureGestionnaireController@recepisse',   ['gestionnaire']);
 $router->get('/gestionnaire/candidatures/{id}/attestation',     'Gestionnaire\CandidatureGestionnaireController@attestation', ['gestionnaire']);
+// Reçu de règlement de scolarité, réimprimable au guichet (rendu à la demande).
+$router->get('/gestionnaire/candidatures/{id}/recu',            'Gestionnaire\CandidatureGestionnaireController@recu',        ['gestionnaire']);
+// Consultation d'une pièce justificative. Elle transite par l'application au
+// lieu d'une URL signée Backblaze : les pièces sont chiffrées au repos
+// (AES-256-GCM), et l'appartenance du dossier est revérifiée à chaque ouverture.
+$router->get('/gestionnaire/candidatures/{id}/document/{documentId}', 'Gestionnaire\CandidatureGestionnaireController@document', ['gestionnaire']);
 $router->post('/gestionnaire/candidatures/{id}/statut',         'Gestionnaire\CandidatureGestionnaireController@updateStatut',['gestionnaire', 'csrf']);
+// ── Zone décision (spec §8.2 → §8.4) ──────────────────────────────────────
+// Chaque décision passe par la machine à états : aucune de ces routes n'écrit
+// directement la colonne `statut`. L'appartenance du dossier à l'établissement
+// est revérifiée côté service, jamais déduite de l'URL.
+$router->post('/gestionnaire/candidatures/{id}/valider-50',     'Gestionnaire\DecisionDossierController@valider50',     ['gestionnaire', 'csrf']);
+$router->post('/gestionnaire/candidatures/{id}/demander-piece', 'Gestionnaire\DecisionDossierController@demanderPiece', ['gestionnaire', 'csrf']);
+$router->post('/gestionnaire/candidatures/{id}/rejeter',        'Gestionnaire\DecisionDossierController@rejeter',       ['gestionnaire', 'csrf']);
+$router->post('/gestionnaire/candidatures/{id}/valider-100',    'Gestionnaire\DecisionDossierController@valider100',    ['gestionnaire', 'csrf']);
+$router->post('/gestionnaire/candidatures/{id}/prolonger',      'Gestionnaire\DecisionDossierController@prolonger',     ['gestionnaire', 'csrf']);
+$router->post('/gestionnaire/candidatures/{id}/relancer',       'Gestionnaire\DecisionDossierController@relancer',      ['gestionnaire', 'csrf']);
+// Retour arrière sur la dernière décision (droit à l'erreur du guichet).
+// L'état rendu n'est pas dans l'URL : il est déduit de l'état réel du dossier.
+$router->post('/gestionnaire/candidatures/{id}/annuler-decision', 'Gestionnaire\DecisionDossierController@annuler',   ['gestionnaire', 'csrf']);
+$router->post('/gestionnaire/candidatures/{id}/piece/{documentId}', 'Gestionnaire\DecisionDossierController@deciderPiece', ['gestionnaire', 'csrf']);
 $router->get('/gestionnaire/candidatures/{id}/modifier',        'Gestionnaire\CandidatureGestionnaireController@edit',        ['gestionnaire']);
 $router->post('/gestionnaire/candidatures/{id}/modifier',       'Gestionnaire\CandidatureGestionnaireController@update',      ['gestionnaire', 'csrf']);
 $router->post('/gestionnaire/candidatures/{id}/sms',            'Gestionnaire\CandidatureGestionnaireController@sendSms',     ['gestionnaire', 'csrf']);
@@ -331,6 +411,7 @@ $router->get('/gestionnaire/filieres',                          'Gestionnaire\Fi
 $router->post('/gestionnaire/filieres',                         'Gestionnaire\FiliereController@store',              ['gestionnaire', 'csrf']);
 $router->post('/gestionnaire/filieres/{id}',                    'Gestionnaire\FiliereController@update',             ['gestionnaire', 'csrf']);
 $router->post('/gestionnaire/filieres/{id}/delete',             'Gestionnaire\FiliereController@destroy',            ['gestionnaire', 'csrf']);
+$router->post('/gestionnaire/filieres/{id}/tarifs',             'Gestionnaire\FiliereController@tarifs',             ['gestionnaire', 'csrf']);
 $router->post('/gestionnaire/filieres/{id}/specialites',        'Gestionnaire\FiliereController@storeSpecialite',    ['gestionnaire', 'csrf']);
 $router->post('/gestionnaire/specialites/{id}',                 'Gestionnaire\FiliereController@updateSpecialite',   ['gestionnaire', 'csrf']);
 $router->post('/gestionnaire/specialites/{id}/delete',          'Gestionnaire\FiliereController@destroySpecialite',  ['gestionnaire', 'csrf']);

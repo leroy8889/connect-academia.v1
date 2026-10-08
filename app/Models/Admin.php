@@ -284,10 +284,33 @@ class Admin extends BaseModel
                    u.created_at, u.posts_count,
                    s.nom AS serie, m.nom AS matiere,
                    ab.plan AS ab_plan, ab.statut AS ab_statut, ab.fin AS ab_fin,
+                   u.statut_parcours,
+                   -- 'inscrit' est le statut HÉRITÉ ; la machine à états écrit
+                   -- désormais 'valide_100' (Models\Orientation\DossierStatut).
+                   -- Les deux doivent être comptés, sinon la carte n'affiche
+                   -- plus aucun élève inscrit depuis la refonte.
                    (SELECT GROUP_CONCAT(DISTINCT e.nom ORDER BY e.nom SEPARATOR ', ')
                       FROM dossiers_inscription di
                       JOIN etablissements e ON e.id = di.etablissement_id
-                     WHERE di.eleve_id = u.id AND di.statut = 'inscrit') AS etabs_inscrit
+                     WHERE di.eleve_id = u.id
+                       AND di.statut IN ('inscrit', 'valide_100')) AS etabs_inscrit,
+                   -- Suivi §11.1 : une préinscription est un acte léger (ligne
+                   -- dans `preinscriptions`), un dossier d'inscription porte le
+                   -- cycle de vie complet. Les deux se comptent séparément.
+                   (SELECT COUNT(*)
+                      FROM dossiers_inscription dp
+                      JOIN preinscriptions pp ON pp.dossier_id = dp.id
+                     WHERE dp.eleve_id = u.id) AS nb_preinscriptions,
+                   (SELECT COUNT(*)
+                      FROM dossiers_inscription dd
+                      LEFT JOIN preinscriptions pd ON pd.dossier_id = dd.id
+                     WHERE dd.eleve_id = u.id AND pd.id IS NULL) AS nb_dossiers,
+                   (SELECT dl.statut
+                      FROM dossiers_inscription dl
+                      LEFT JOIN preinscriptions pl ON pl.dossier_id = dl.id
+                     WHERE dl.eleve_id = u.id AND pl.id IS NULL
+                     ORDER BY COALESCE(dl.soumis_le, dl.date_creation) DESC
+                     LIMIT 1) AS dernier_dossier_statut
             FROM users u
             LEFT JOIN series s ON s.id = u.serie_id
             LEFT JOIN ressources top_r ON top_r.id = (

@@ -16,12 +16,17 @@ class DocumentStorage
     private S3Client $s3;
     private string $bucket;
 
+    /**
+     * Types acceptés par `upload()` / `uploadChiffre()` : PDF + tous les formats
+     * image bitmap (cf. IMAGE_MIME_WHITELIST plus bas — le SVG en est exclu).
+     *
+     * C'est la borne technique du stockage. La règle métier des pièces
+     * justificatives, elle, vit dans Services\Orientation\PieceDossier, qui est
+     * plus stricte (taille) et s'applique AVANT d'arriver ici.
+     */
     private const MIME_WHITELIST = [
         'application/pdf',
-        'image/jpeg',
-        'image/png',
-        'image/webp',
-        'image/gif',
+        ...self::IMAGE_MIME_WHITELIST,
     ];
 
     private const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 Mo
@@ -96,7 +101,24 @@ class DocumentStorage
         return $map[$mime] ?? 'bin';
     }
 
-    public function __construct()
+    /**
+     * Durée TOTALE maximale d'un appel B2, en secondes.
+     *
+     * Elle valait 0 — « pas de limite » — pour ne pas couper un gros upload
+     * serveur. Le raisonnement tenait pour la vidéo (qui passe désormais en
+     * direct navigateur → B2, cf. presign()), mais il transformait le moindre
+     * B2 qui accepte la connexion puis se tait en requête web suspendue jusqu'au
+     * `max_execution_time` de PHP. Or ce dépassement-là est une erreur FATALE,
+     * pas une exception : elle échappe au handler global et la page arrive
+     * ENTIÈREMENT BLANCHE chez l'utilisateur, quel que soit son appareil.
+     *
+     * Une pièce justificative pèse au plus 3 Mo : 90 secondes couvrent très
+     * largement une connexion mobile gabonaise, et rendent au candidat un
+     * message d'erreur lisible au lieu d'un écran vide.
+     */
+    private const TIMEOUT_TOTAL_SECONDES = 90;
+
+    public function __construct(?int $timeoutTotal = null)
     {
         $keyId      = $_ENV['B2_KEY_ID']          ?? '';
         $appKey     = $_ENV['B2_APPLICATION_KEY']  ?? '';
@@ -117,10 +139,14 @@ class DocumentStorage
                 'key'    => $keyId,
                 'secret' => $appKey,
             ],
-            // Échec RAPIDE si B2 est injoignable (évite les requêtes web qui
-            // pendent jusqu'au timeout FastCGI). 'timeout' => 0 : pas de limite
-            // sur la durée TOTALE, pour ne pas couper un gros upload serveur.
-            'http'                    => ['connect_timeout' => 8, 'timeout' => 0],
+            // Échec RAPIDE si B2 est injoignable, et échec BORNÉ s'il répond
+            // puis se tait (cf. TIMEOUT_TOTAL_SECONDES). Un appelant qui pousse
+            // volontairement un très gros fichier depuis le serveur peut passer
+            // sa propre valeur, ou 0 pour lever la borne.
+            'http'                    => [
+                'connect_timeout' => 8,
+                'timeout'         => $timeoutTotal ?? self::TIMEOUT_TOTAL_SECONDES,
+            ],
             'retries'                 => 2,
         ]);
     }
@@ -151,6 +177,84 @@ class DocumentStorage
         }
 
         return $cle;
+    }
+
+    /**
+     * Upload CHIFFRÉ d'une pièce du dossier d'inscription (AES-256-GCM).
+     *
+     * Réservé aux documents personnels du parcours d'inscription : acte de
+     * naissance, pièce d'identité, photo, relevés. Ces octets-là ne doivent
+     * jamais exister en clair ailleurs que dans la mémoire de l'application.
+     *
+     * Trois conséquences à connaître avant d'appeler cette méthode :
+     *
+     *  1. l'objet stocké N'EST PLUS le fichier : c'est son enveloppe chiffrée.
+     *     Une URL signée B2 rendrait donc un binaire illisible — la lecture
+     *     DOIT passer par self::getContentClair(), donc par un point de sortie
+     *     de l'application qui a d'abord vérifié les droits ;
+     *  2. le contenu est scellé sur SA clé de stockage (donnée associée) :
+     *     déplacer ou renommer l'objet dans le bucket le rend indéchiffrable.
+     *     C'est voulu — cela interdit d'intervertir les pièces de deux
+     *     candidats depuis la console B2 ;
+     *  3. le Content-Type annoncé à B2 devient `application/octet-stream`.
+     *     Le vrai type reste en base (`documents_orientation.mime_type`), et
+     *     c'est lui qui est servi au navigateur au moment de la consultation.
+     *
+     * Le fichier est validé AVANT chiffrement, avec exactement les mêmes règles
+     * que self::upload() : chiffrer d'abord reviendrait à accepter n'importe
+     * quel contenu, puisque `finfo` ne verrait plus qu'un binaire opaque.
+     *
+     * @param string $tmpPath  Chemin temporaire (issu de $_FILES)
+     * @param string $cle      Clé de destination dans le bucket
+     * @param string $mimeType MIME déclaré — validé contre le fichier réel
+     * @return string          La clé B2 stockée
+     */
+    public function uploadChiffre(string $tmpPath, string $cle, string $mimeType): string
+    {
+        $this->validerFichier($tmpPath, $mimeType);
+
+        $clair = @file_get_contents($tmpPath);
+        if ($clair === false) {
+            throw new \RuntimeException('[DocumentStorage] Fichier temporaire illisible avant chiffrement.');
+        }
+
+        // La donnée associée est la clé de stockage : le contenu ne se
+        // déchiffrera qu'à cet emplacement précis (cf. Core\Crypto).
+        $enveloppe = \Core\Crypto::chiffrer($clair, $cle);
+
+        // Le clair ne survit pas à la ligne suivante : rien ne le retient en
+        // mémoire jusqu'à la fin de la requête.
+        unset($clair);
+
+        try {
+            $this->s3->putObject([
+                'Bucket'      => $this->bucket,
+                'Key'         => $cle,
+                'Body'        => $enveloppe,
+                'ContentType' => 'application/octet-stream',
+                'ACL'         => 'private',
+                // Repère opérationnel : permet d'auditer le bucket sans
+                // télécharger les objets (`headObject` suffit).
+                'Metadata'    => ['ca-chiffre' => '1'],
+            ]);
+        } catch (S3Exception $e) {
+            throw new \RuntimeException('[DocumentStorage] Upload chiffré échoué : ' . $e->getAwsErrorMessage(), 0, $e);
+        }
+
+        return $cle;
+    }
+
+    /**
+     * Contenu EN CLAIR d'un objet, qu'il ait été stocké chiffré ou non.
+     *
+     * Point de lecture unique des pièces de dossier. Les objets déposés avant
+     * l'activation du chiffrement n'ont pas d'enveloppe : ils sont rendus tels
+     * quels (cf. Core\Crypto::dechiffrerSiBesoin) — aucune migration, aucune
+     * pièce perdue.
+     */
+    public function getContentClair(string $cle): string
+    {
+        return \Core\Crypto::dechiffrerSiBesoin($this->getContent($cle), $cle);
     }
 
     /**

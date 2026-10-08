@@ -177,8 +177,6 @@ body{font-family:Georgia,'Times New Roman',serif;background:#fff;color:#111;font
 
   <p class="texte">a bien été <b>enregistrée</b> auprès de <?= $h($etabNom) ?>. Cette attestation n'a pas valeur d'admission définitive&nbsp;; il atteste uniquement de l'enregistrement du dossier dans notre système.</p>
 
-  <p class="texte">Pour finaliser votre admission, vous devrez fournir l'ensemble des pièces justificatives correspondant à votre niveau d'entrée et procéder au règlement des frais de dossier.</p>
-
   <!-- Signature + QR d'authenticité -->
   <div class="pied">
     <div class="pied-gauche">
